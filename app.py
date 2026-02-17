@@ -16,7 +16,7 @@ if 'texto' not in st.session_state:
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS CORRIGIDO: LUPA MANTIDA E X POSICIONADO AO LADO
+# CSS FINAL - POSICIONANDO OS DOIS ÍCONES DENTRO DA BARRA
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -43,7 +43,7 @@ st.markdown(f"""
         font-weight: 900 !important;
     }}
 
-    /* CAIXA DE TEXTO */
+    /* CAIXA DE TEXTO PRINCIPAL */
     [data-testid="stWidgetLabel"] {{ display: none !important; }}
     
     .stTextInput > div {{
@@ -56,44 +56,48 @@ st.markdown(f"""
         height: 55px !important;
         background-color: transparent !important;
         border: none !important;
-        padding: 0px 120px 0px 20px !important;
+        padding: 0px 140px 0px 20px !important; /* Espaço para X e Lupa */
         font-size: 20px !important;
         line-height: 55px !important;
     }}
 
     [data-testid="InputInstructions"] {{ display: none !important; }}
 
-    /* LUPA (MANTIDA EM 10px / 60px) */
-    div[data-testid="column"]:nth-of-type(2) button:not(.clear-btn) {{
+    /* ESTILO PARA OS BOTÕES FLUTUANTES */
+    .stButton button {{
         position: absolute !important;
         background: transparent !important;
         border: none !important;
+        padding: 0 !important;
+        z-index: 9999 !important;
+        box-shadow: none !important;
+    }}
+    
+    .stButton button:hover {{
+        background: transparent !important;
+        border: none !important;
+    }}
+
+    /* POSIÇÃO DA LUPA (CONFORME SEU AJUSTE) */
+    .btn-lupa button {{
         font-size: 40px !important;
         color: black !important;
-        padding: 0 !important;
-        top: 100px !important;    
-        right: 100px !important;  
+        top: -46px !important; /* Ajuste para subir para dentro da barra */
+        right: 35px !important; 
         filter: drop-shadow(2px 4px 5px rgba(0,0,0,0.4)) !important;
-        z-index: 9999 !important;
     }}
 
-    /* ICONE X (LIMPAR) */
-    .stButton button.clear-btn {{
-        position: absolute !important;
-        background: transparent !important;
-        border: none !important;
+    /* POSIÇÃO DO X (AO LADO DA LUPA) */
+    .btn-limpar button {{
         font-size: 25px !important;
         color: #888 !important;
-        top: 30px !important;   /* Ajustado para alinhar com o centro do texto */
-        right: 70px !important; /* À esquerda da lupa */
-        z-index: 10000 !important;
-        padding: 0 !important;
+        top: -38px !important; /* Ajuste para centralizar o X verticalmente */
+        right: 95px !important;
     }}
 
-    [data-testid="column"] {{
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    /* Remove a caixa branca quadrada que o Streamlit cria em volta dos botões */
+    [data-testid="column"] div:has(button) {{
+        background: transparent !important;
     }}
 
     small {{ display: none !important; }}
@@ -113,25 +117,28 @@ except:
 st.title("🏹 Tradutor Ticuna v0.1")
 st.markdown('<h3 class="texto-fixo-branco">Digite para Traduzir:</h3>', unsafe_allow_html=True)
 
-# ESTRUTURA
-col_main, col_btn = st.columns([0.85, 0.15])
+# TUDO DENTRO DE UM CONTAINER ÚNICO PARA NÃO ESPALHAR
+container = st.container()
 
-with col_main:
-    # Vinculamos o input ao session_state para que o X possa limpá-lo
-    texto_input = st.text_input("", value=st.session_state.texto, placeholder="Pesquise uma palavra...", label_visibility="collapsed", key="txt_principal")
+with container:
+    # Input principal
+    texto_input = st.text_input("", value=st.session_state.texto, placeholder="Pesquise uma palavra...", label_visibility="collapsed", key="input_principal")
     st.session_state.texto = texto_input
 
-with col_btn:
-    # Botão de Lupa
-    submit_botao = st.button("🔍")
-    
-    # Botão X (Criado na mesma coluna para evitar que suma)
-    if st.session_state.texto != "":
-        if st.button("✖", key="clear_bt"):
+    # Botão de Lupa (Dentro de uma div para controle total)
+    st.markdown('<div class="btn-lupa">', unsafe_allow_html=True)
+    submit_botao = st.button("🔍", key="search_btn")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Botão X (Só aparece se tiver texto)
+    if st.session_state.texto:
+        st.markdown('<div class="btn-limpar">', unsafe_allow_html=True)
+        if st.button("✖", key="clear_btn"):
             st.session_state.texto = ""
             st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
-# Lógica de Tradução
+# LÓGICA DE TRADUÇÃO
 if submit_botao or (st.session_state.texto != ""):
     if st.session_state.texto:
         t_norm = normalizar(st.session_state.texto)
