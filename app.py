@@ -33,10 +33,15 @@ st.markdown(f"""
         font-weight: bold !important;
     }}
 
-    /* RESULTADO DA TRADUÇÃO COM SOMBREAMENTO PRETO FORTE */
+    /* RESULTADO DA TRADUÇÃO COM SOMBREAMENTO PRETO FORTE (Efeito Neon Reverso) */
     .resultado-traducao {{
         color: white !important;
-        text-shadow: 4px 4px 12px #000000, -2px -2px 10px #000000, 2px -2px 10px #000000, -2px 2px 10px #000000 !important;
+        text-shadow: 
+            2px 2px 0px #000, 
+            -2px -2px 0px #000, 
+            2px -2px 0px #000, 
+            -2px 2px 0px #000,
+            0px 0px 15px #000 !important;
         font-size: 34px !important;
         text-align: center;
         padding: 20px;
@@ -51,12 +56,8 @@ st.markdown(f"""
     
     [data-testid="stForm"] label p {{ color: #1E1E1E !important; text-shadow: none !important; }}
     
-    /* Remove fundos coloridos de alertas padrão do Streamlit */
-    .stAlert {{
-        background-color: transparent !important;
-        border: none !important;
-        padding: 0px !important;
-    }}
+    /* Força o sumiço das caixas coloridas do Streamlit */
+    .stAlert {{ background: transparent !important; border: none !important; }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -77,7 +78,6 @@ st.markdown("### 🎤 Fale para Traduzir")
 
 col1, col2, col3 = st.columns([1, 5, 1])
 with col2:
-    # Captura o áudio
     audio_data = mic_recorder(
         start_prompt="Clique para falar 🎤", 
         stop_prompt="Traduzir fala ⏹️", 
@@ -89,34 +89,42 @@ if audio_data:
     status_msg.markdown('<p class="texto-fixo-branco">Identificando sua voz...</p>', unsafe_allow_html=True)
     
     try:
-        # CONVERSÃO DE VOZ PARA TEXTO USANDO O GEMINI (FORMATO OTIMIZADO)
-        blob = {"mime_type": "audio/wav", "data": audio_data['bytes']}
+        # TENTATIVA DE TRANSCRIÇÃO OTIMIZADA
+        # Criamos o objeto de áudio para o Gemini
+        audio_part = {
+            "mime_type": "audio/wav",
+            "data": audio_data['bytes']
+        }
+        
+        # Chamada direta sem frescuras para evitar o erro 400/404
         response = model.generate_content([
-            "Aja como um transcritor. Transcreva apenas a palavra dita neste áudio, sem pontuação ou comentários.",
-            blob
+            "Transcreva apenas a palavra ou frase dita neste áudio. Não responda nada além do texto transcrito.",
+            audio_part
         ])
         
-        texto_falado = response.text.strip()
+        texto_falado = response.text.strip().replace(".", "").replace("!", "")
         t_norm = normalizar(texto_falado)
         
         # BUSCA NA PLANILHA
         res = df[df['BUSCA_PT'] == t_norm]
         
-        status_msg.empty() # Limpa o "Identificando..."
+        status_msg.empty()
 
         if not res.empty:
             trad = res['TICUNA'].values[0]
             st.markdown(f'<p class="texto-fixo-branco">Você disse: "{texto_falado}"</p>', unsafe_allow_html=True)
             st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
             
-            # GERA VOZ SINTÉTICA (TTS)
-            gTTS(text=trad, lang='pt-br').save("voz_fala.mp3")
+            # GERA VOZ SINTÉTICA (A que você gosta)
+            tts = gTTS(text=trad, lang='pt-br')
+            tts.save("voz_fala.mp3")
             st.audio("voz_fala.mp3", autoplay=True)
         else:
             st.markdown(f'<p class="texto-fixo-branco">A palavra "{texto_falado}" não está na planilha.</p>', unsafe_allow_html=True)
 
     except Exception as e:
         status_msg.empty()
+        # Se a IA falhar, mostramos a mensagem em BRANCO
         st.markdown('<p class="texto-fixo-branco">Erro ao processar voz. Tente falar novamente ou digite.</p>', unsafe_allow_html=True)
 
 # --- SEÇÃO DE DIGITAÇÃO ---
@@ -129,6 +137,7 @@ with st.form("form_digitar"):
         
         if not res.empty:
             trad = res['TICUNA'].values[0]
+            # SOMBREAMENTO PRETO AQUI TAMBÉM
             st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
             gTTS(text=trad, lang='pt-br').save("voz_digito.mp3")
             st.audio("voz_digito.mp3", autoplay=True)
