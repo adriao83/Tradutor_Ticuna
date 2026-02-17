@@ -12,20 +12,29 @@ img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png
 st.markdown(
     f"""
     <style>
-    .stApp {{
+    /* Força o fundo em todas as camadas principais */
+    [data-testid="stAppViewContainer"], .stApp {{
         background-image: url("{img}");
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        min-height: 100vh;
+        background-size: cover !important;
+        background-position: center center !important;
+        background-repeat: no-repeat !important;
+        background-attachment: fixed !important;
+        width: 100vw;
+        height: 100vh;
     }}
+
+    /* Remove fundos extras que podem estar tapando a imagem */
+    [data-testid="stHeader"], [data-testid="stToolbar"] {{
+        background: rgba(0,0,0,0) !important;
+    }}
+
     .stForm {{
         background-color: rgba(255, 255, 255, 0.9);
         padding: 20px;
         border-radius: 15px;
         box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
     }}
+
     h1 {{
         color: white;
         text-shadow: 2px 2px 5px #000;
