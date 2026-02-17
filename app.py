@@ -7,7 +7,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹")
 
 # --- CONFIGURAÇÃO DA IMAGEM DE FUNDO ---
 # COLE O LINK QUE COPIOU ENTRE AS ASPAS ABAIXO:
-url_da_imagem = "https://github.com/adriao83/Tradutor_Ticuna/blob/main/fundo_tradutor.png" 
+url_da_imagem = "https://github.com/adriao83/Tradutor_Ticuna/blob/main/fundo.png" 
 
 st.markdown(
     f"""
