@@ -5,55 +5,34 @@ import re
 
 st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹")
 
-# Link direto para sua imagem
-img_url = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
+# Link da sua foto
+img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# Estilo corrigido para evitar o erro TypeError
-estilo = """
-<style>
-.stApp {{
-    background-image: url("{0}");
-    background-size: cover;
-    background-position: center;
-}}
-.stForm {{
-    background: rgba(255, 255, 255, 0.9);
-    padding: 20px;
-    border-radius: 10px;
-}}
-h1 {{
-    color: white;
-    text-shadow: 2px 2px #000;
-}}
-</style>
-""".format(img_url)
+# Forma de colocar o fundo que não causa erro de TypeError
+st.markdown(
+    f'<style>.stApp {{ background-image: url("{img}"); background-size: cover; }}</style>',
+    unsafe_content_allowed=True
+)
 
-st.markdown(estilo, unsafe_content_allowed=True)
-
-def limpar(txt):
-    return re.sub(r'[^a-zA-Z0-9]', '', str(txt)).lower() if pd.notna(txt) else ""
+def normalizar(t):
+    return re.sub(r'[^a-zA-Z0-9]', '', str(t)).lower() if pd.notna(t) else ""
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
 try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
-    df['BUSCA'] = df['PORTUGUES'].apply(limpar)
+    df['BUSCA'] = df['PORTUGUES'].apply(normalizar)
 
-    with st.form("busca"):
-        palavra = st.text_input("Digite em Português:")
-        enviar = st.form_submit_button("🔍 PESQUISAR")
-
-    if enviar and palavra:
-        res = df[df['BUSCA'] == limpar(palavra)]
-        if not res.empty:
-            ticuna_res = res['TICUNA'].values[0]
-            st.info(f"Português: {res['PORTUGUES'].values[0]}")
-            st.success(f"### Ticuna: {ticuna_res}")
-            
-            tts = gTTS(ticuna_res, lang='pt-br')
-            tts.save("audio.mp3")
-            st.audio("audio.mp3")
-        else:
-            st.error("Palavra não encontrada.")
-except Exception as e:
-    st.error("Erro ao carregar a planilha Tradutor_Ticuna.xlsx")
+    with st.form("meu_form"):
+        texto = st.text_input("Digite em Português:")
+        if st.form_submit_button("PESQUISAR"):
+            res = df[df['BUSCA'] == normalizar(texto)]
+            if not res.empty:
+                tic = res['TICUNA'].values[0]
+                st.success(f"### Ticuna: {tic}")
+                gTTS(tic, lang='pt-br').save("a.mp3")
+                st.audio("a.mp3")
+            else:
+                st.error("Não encontrado.")
+except:
+    st.error("Erro ao carregar a planilha.")
