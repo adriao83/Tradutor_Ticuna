@@ -5,23 +5,55 @@ import re
 
 st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹")
 
+# --- CONFIGURAÇÃO DA IMAGEM DE FUNDO ---
+# COLE O LINK QUE COPIOU ENTRE AS ASPAS ABAIXO:
+url_da_imagem = "https://github.com/adriao83/Tradutor_Ticuna/blob/main/fundo_tradutor.png" 
+
+st.markdown(
+    f"""
+    <style>
+    .stApp {{
+        background-image: url("{url_da_imagem}");
+        background-attachment: fixed;
+        background-size: cover;
+        background-position: center;
+    }}
+    
+    /* Caixa branca para o texto não sumir no fundo */
+    .stForm {{
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 20px;
+        border-radius: 15px;
+        border: 2px solid #2e7d32;
+    }}
+
+    /* Título com sombra para destacar na foto */
+    h1 {{
+        color: white;
+        text-shadow: 2px 2px 4px #000000;
+        text-align: center;
+        background-color: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+    }}
+    </style>
+    """,
+    unsafe_content_allowed=True
+)
+
 def normalizar(texto):
     if pd.isna(texto): return ""
     return re.sub(r'[^a-zA-Z0-9]', '', str(texto)).lower()
 
 st.title("🏹 Tradutor Ticuna v0.1")
-st.write("Protótipo de Preservação - Língua Magüta")
 
 try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
     df['PORT_BUSCA'] = df['PORTUGUES'].apply(normalizar)
 
-    # Criamos um formulário para o Enter funcionar automaticamente
-    with st.form(key="busca_tradutor", clear_on_submit=False):
+    with st.form(key="busca_tradutor"):
         palavra_usuario = st.text_input("Digite em Português:")
         submit_button = st.form_submit_button(label="🔍 PESQUISAR TRADUÇÃO")
 
-    # A lógica de busca acontece quando clica no botão OU aperta Enter
     if submit_button:
         if palavra_usuario:
             busca = normalizar(palavra_usuario)
@@ -31,16 +63,16 @@ try:
                 ticuna = resultado['TICUNA'].values[0]
                 port_original = resultado['PORTUGUES'].values[0]
                 
-                st.success(f"**Português:** {port_original}")
-                st.subheader(f"Ticuna: {ticuna}")
+                st.info(f"**Português:** {port_original}")
+                st.success(f"### **Ticuna:** {ticuna}")
                 
                 tts = gTTS(text=ticuna, lang='pt-br')
                 tts.save("audio.mp3")
                 st.audio("audio.mp3")
             else:
-                st.error("Palavra não encontrada. Verifique se digitou corretamente.")
+                st.error("Palavra não encontrada no dicionário.")
         else:
-            st.warning("Por favor, digite uma palavra primeiro.")
+            st.warning("Por favor, digite uma palavra.")
 
 except Exception as e:
-    st.error("Erro ao carregar os dados. Verifique a planilha no GitHub.")
+    st.error("Erro ao carregar a planilha de dados.")
