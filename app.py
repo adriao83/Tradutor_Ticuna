@@ -12,7 +12,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS: MANTENDO SUA LUPA E TEXTO, ADICIONANDO APENAS O X
+# CSS FINALIZADO - FOCO NO X POR CIMA DE TUDO
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -39,7 +39,7 @@ st.markdown(f"""
         font-weight: 900 !important;
     }}
 
-    /* LIMPANDO AS CAMADAS DA CAIXA DE TEXTO */
+    /* CAIXA DE TEXTO */
     [data-testid="stWidgetLabel"] {{ display: none !important; }}
     
     .stTextInput > div {{
@@ -52,14 +52,14 @@ st.markdown(f"""
         height: 55px !important;
         background-color: transparent !important;
         border: none !important;
-        padding: 0px 110px 0px 20px !important; /* Espaço para os dois ícones */
+        padding: 0px 130px 0px 20px !important; /* Espaço aumentado para X e Lupa */
         font-size: 20px !important;
         line-height: 55px !important;
     }}
 
     [data-testid="InputInstructions"] {{ display: none !important; }}
 
-    /* LUPA: EXATAMENTE COMO VOCÊ DEIXOU */
+    /* LUPA: EXATAMENTE COMO VOCÊ DEIXOU (MANTIDA) */
     .stButton button {{
         position: absolute !important;
         background: transparent !important;
@@ -73,14 +73,22 @@ st.markdown(f"""
         z-index: 9999 !important;
     }}
 
-    /* X: POSICIONADO À ESQUERDA DA LUPA */
-    .clear-btn-container button {{
+    /* ÍCONE X: FORÇANDO FICAR POR CIMA */
+    .clear-btn-wrapper {{
+        position: relative;
+        z-index: 10000 !important;
+    }}
+
+    .clear-btn-wrapper button {{
         position: absolute !important;
-        font-size: 25px !important;
-        top: 15px !important;   /* Ajuste fino para o X que é menor */
-        right: 115px !important; 
-        color: #888 !important;
-        filter: none !important;
+        font-size: 22px !important;
+        top: -45px !important;   /* Ajuste esse valor se o X sumir */
+        right: 120px !important; /* À esquerda da lupa */
+        color: #999 !important;
+        background: transparent !important;
+        border: none !important;
+        cursor: pointer !important;
+        z-index: 10001 !important;
     }}
 
     [data-testid="column"] {{
@@ -110,22 +118,31 @@ st.markdown('<h3 class="texto-fixo-branco">Digite para Traduzir:</h3>', unsafe_a
 col_main, col_btn = st.columns([0.85, 0.15])
 
 with col_main:
-    # Usei um truque simples: se clicar no X, ele recarrega a página vazia
-    texto_input = st.text_input("", placeholder="Pesquise uma palavra...", label_visibility="collapsed", key="main_input")
+    # Usei session_state para o X funcionar de verdade
+    if 'campo_texto' not in st.session_state:
+        st.session_state.campo_texto = ""
+
+    texto_input = st.text_input("", value=st.session_state.campo_texto, placeholder="Pesquise uma palavra...", label_visibility="collapsed", key="main_input")
     
-    if texto_input:
-        st.markdown('<div class="clear-btn-container">', unsafe_allow_html=True)
-        if st.button("✖", key="clear"):
-            st.rerun() 
+    # Se digitar, atualiza o estado
+    st.session_state.campo_texto = texto_input
+
+    # Botão X só aparece se tiver texto
+    if st.session_state.campo_texto:
+        st.markdown('<div class="clear-btn-wrapper">', unsafe_allow_html=True)
+        if st.button("✖", key="clear_action"):
+            st.session_state.campo_texto = ""
+            st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
 with col_btn:
     submit_botao = st.button("🔍")
 
 # LÓGICA
-if submit_botao or (texto_input != ""):
-    if texto_input:
-        t_norm = normalizar(texto_input)
+texto_final = st.session_state.campo_texto
+if submit_botao or (texto_final != ""):
+    if texto_final:
+        t_norm = normalizar(texto_final)
         res = df[df['BUSCA_PT'] == t_norm]
         if not res.empty:
             trad = res['TICUNA'].values[0]
