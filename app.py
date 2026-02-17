@@ -12,7 +12,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS AJUSTADO: BAIXANDO O TEXTO PARA O CENTRO E LIMPANDO INSTRUÇÕES
+# CSS PARA LIMPAR CAMADAS SOBREPOSTAS E CENTRALIZAR O TEXTO
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -39,16 +39,30 @@ st.markdown(f"""
         font-weight: 900 !important;
     }}
 
-    /* AJUSTE DO TEXTO DIGITADO: BAIXANDO A MARGEM SUPERIOR */
-    .stTextInput input {{
-        height: 50px !important;
-        padding-top: 12px !important; /* Empurra o texto para baixo para centralizar verticalmente */
-        padding-bottom: 10px !important;
-        padding-left: 20px !important;
-        border-radius: 25px !important;
-        font-size: 20px !important;
+    /* LIMPANDO AS CAMADAS DA CAIXA DE TEXTO */
+    [data-testid="stWidgetLabel"] {{ display: none !important; }} /* Remove o label invisível */
+    
+    .stTextInput {{
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }}
+
+    .stTextInput > div {{
         background-color: white !important;
-        line-height: normal !important;
+        border-radius: 25px !important;
+        height: 55px !important; /* Altura da caixa */
+    }}
+
+    .stTextInput input {{
+        height: 55px !important; /* Mesma altura da div pai */
+        background-color: transparent !important;
+        border: none !important;
+        padding: 0px 60px 0px 20px !important; /* Sem padding no topo/baixo para não empurrar */
+        font-size: 20px !important;
+        display: flex !important;
+        align-items: center !important; /* Centraliza o texto verticalmente */
+        line-height: 55px !important; /* Alinha a linha do texto ao centro */
     }}
 
     /* ESCONDE AS INSTRUÇÕES "PRESS ENTER" */
@@ -63,8 +77,8 @@ st.markdown(f"""
         font-size: 40px !important;
         color: black !important;
         padding: 0 !important;
-        margin-top: -51px !important; 
-        margin-left: -60px !important; 
+        margin-top: -55px !important; /* Ajustado para a nova altura de 55px */
+        margin-left: -65px !important; 
         filter: drop-shadow(2px 4px 5px rgba(0,0,0,0.4)) !important;
         z-index: 10;
     }}
@@ -78,7 +92,6 @@ st.markdown(f"""
     small {{ display: none !important; }}
     </style>
     """, unsafe_allow_html=True)
-
 def normalizar(t):
     return re.sub(r'[^a-zA-Z0-9]', '', str(t)).lower() if pd.notna(t) else ""
 
