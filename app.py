@@ -23,7 +23,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- CSS AJUSTADO ---
+# --- CSS DEFINITIVO (SEM CAIXA EXTRA) ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -35,51 +35,42 @@ st.markdown(f"""
 
     h1, h1 span {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; }}
 
-    /* Removemos o fundo branco genérico que criava o cilindro extra */
-    [data-testid="stVerticalBlockBorderWrapper"] > div:has(.custom-search-bar) {{
-        background: transparent !important;
-    }}
-
-    /* Estilo exclusivo da barra onde está a lupa */
-    .custom-search-bar {{
-        display: flex;
-        align-items: center;
-        background-color: white; /* Mantém o branco apenas aqui */
-        border-radius: 25px;
-        height: 55px;
-        padding: 0 15px;
-        margin-top: 20px;
-    }}
-
-    .custom-search-bar .stTextInput {{
-        flex-grow: 1;
-        margin-bottom: 0px !important;
-    }}
-    
-    .custom-search-bar .stTextInput > div {{
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-    }}
-    
-    .custom-search-bar .stTextInput input {{
-        background: transparent !important;
-        border: none !important;
+    /* ESTILIZAÇÃO DIRETA DA BARRA DE TEXTO (A ÚNICA QUE DEVE EXISTIR) */
+    [data-testid="stTextInput"] > div {{
+        background-color: white !important;
+        border-radius: 25px !important;
         height: 55px !important;
-        font-size: 18px !important;
+        padding-right: 100px !important; /* Espaço para os botões */
+        border: none !important;
+        margin-top: 30px !important;
     }}
 
-    .custom-search-bar button {{
+    [data-testid="stTextInput"] input {{
+        color: #333 !important;
+        font-size: 18px !important;
+        background: transparent !important;
+    }}
+
+    /* CONTAINER DOS BOTÕES SOBREPOSTOS */
+    .btn-container-interno {{
+        display: flex;
+        justify-content: flex-end;
+        gap: 15px;
+        margin-top: -46px; /* Sobe os botões para dentro da barra */
+        margin-right: 25px;
+        position: relative;
+        z-index: 10;
+    }}
+
+    /* Estilo dos ícones (X e Lupa) */
+    button[key="btn_x_clear"], button[key="btn_lupa_search"] {{
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
         font-size: 24px !important;
         color: #555 !important;
-        padding: 0 5px !important;
+        padding: 0 !important;
         cursor: pointer !important;
-        height: 55px !important;
-        display: flex;
-        align-items: center;
     }}
 
     [data-testid="InputInstructions"] {{ display: none !important; }}
@@ -93,30 +84,28 @@ try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
     df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
 except:
-    st.error("Erro: Verifique se o arquivo 'Tradutor_Ticuna.xlsx' está na pasta.")
+    st.error("Erro: Arquivo 'Tradutor_Ticuna.xlsx' não encontrado.")
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- ESTRUTURA DA BARRA ---
-st.markdown('<div class="custom-search-bar">', unsafe_allow_html=True)
-col_input, col_botoes = st.columns([0.85, 0.15])
+# --- CAMPO DE BUSCA ÚNICO (SEM MOLDURAS EXTRAS) ---
+texto_busca = st.text_input(
+    "", 
+    placeholder="Pesquise uma palavra...", 
+    label_visibility="collapsed", 
+    key=f"input_{st.session_state.contador_limpar}"
+)
 
-with col_input:
-    texto_busca = st.text_input(
-        "", 
-        placeholder="Pesquise uma palavra...", 
-        label_visibility="collapsed", 
-        key=f"input_{st.session_state.contador_limpar}"
-    )
-
-with col_botoes:
-    sub_c1, sub_c2 = st.columns(2)
-    with sub_c1:
+# BOTÕES (X e Lupa) - Renderizados logo após o input para sobreposição
+st.markdown('<div class="btn-container-interno">', unsafe_allow_html=True)
+c1, c2 = st.columns([0.88, 0.12]) # Alinhamento fino
+with c2:
+    sub_col1, sub_col2 = st.columns(2)
+    with sub_col1:
         if texto_busca != "":
             st.button("✖", on_click=acao_limpar, key="btn_x_clear")
-    with sub_c2:
+    with sub_col2:
         st.button("🔍", key="btn_lupa_search")
-
 st.markdown('</div>', unsafe_allow_html=True)
 
 # --- LÓGICA DE TRADUÇÃO ---
