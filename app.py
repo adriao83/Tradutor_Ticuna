@@ -53,6 +53,13 @@ st.markdown(f"""
     
     /* Força o sumiço das caixas coloridas do Streamlit */
     .stAlert {{ background: transparent !important; border: none !important; }}
+
+    /* Alinhamento do microfone no canto do campo */
+    div[data-testid="column"] {{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -68,73 +75,55 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- SEÇÃO DE VOZ ---
-st.markdown("### 🎤 Fale para Traduzir")
+# --- SEÇÃO UNIFICADA (DIGITAÇÃO + VOZ NO CANTO) ---
+st.markdown("---")
+with st.form("form_digitar"):
+    col_txt, col_mic = st.columns([0.85, 0.15])
+    
+    with col_txt:
+        texto_input = st.text_input("Digite uma palavra:", placeholder="Ex: Capivara")
+    
+    with col_mic:
+        st.write("") # Espaçador para alinhar com o campo de texto
+        audio_data = mic_recorder(
+            start_prompt="🎤", 
+            stop_prompt="⏹️", 
+            key='gravador'
+        )
+    
+    submit_botao = st.form_submit_button("🔍 TRADUZIR")
 
-col1, col2, col3 = st.columns([1, 5, 1])
-with col2:
-    audio_data = mic_recorder(
-        start_prompt="Clique para falar 🎤", 
-        stop_prompt="Traduzir fala ⏹️", 
-        key='gravador'
-    )
+# LÓGICA DE PROCESSAMENTO (Voz ou Digitação)
+palavra_final = ""
 
 if audio_data:
     status_msg = st.empty()
     status_msg.markdown('<p class="texto-fixo-branco">Identificando sua voz...</p>', unsafe_allow_html=True)
-    
     try:
-        # TENTATIVA DE TRANSCRIÇÃO OTIMIZADA
-        # Criamos o objeto de áudio para o Gemini
-        audio_part = {
-            "mime_type": "audio/wav",
-            "data": audio_data['bytes']
-        }
-        
-        # Chamada direta sem frescuras para evitar o erro 400/404
+        audio_part = {"mime_type": "audio/wav", "data": audio_data['bytes']}
         response = model.generate_content([
             "Transcreva apenas a palavra ou frase dita neste áudio. Não responda nada além do texto transcrito.",
             audio_part
         ])
-        
-        texto_falado = response.text.strip().replace(".", "").replace("!", "")
-        t_norm = normalizar(texto_falado)
-        
-        # BUSCA NA PLANILHA
-        res = df[df['BUSCA_PT'] == t_norm]
-        
+        palavra_final = response.text.strip().replace(".", "").replace("!", "")
         status_msg.empty()
-
-        if not res.empty:
-            trad = res['TICUNA'].values[0]
-            st.markdown(f'<p class="texto-fixo-branco">Você disse: "{texto_falado}"</p>', unsafe_allow_html=True)
-            st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
-            
-            # GERA VOZ SINTÉTICA (A que você gosta)
-            tts = gTTS(text=trad, lang='pt-br')
-            tts.save("voz_fala.mp3")
-            st.audio("voz_fala.mp3", autoplay=True)
-        else:
-            st.markdown(f'<p class="texto-fixo-branco">A palavra "{texto_falado}" não está na planilha.</p>', unsafe_allow_html=True)
-
     except Exception as e:
         status_msg.empty()
-        # Se a IA falhar, mostramos a mensagem em BRANCO
-        st.markdown('<p class="texto-fixo-branco">Erro ao processar voz. Tente falar novamente ou digite.</p>', unsafe_allow_html=True)
+        st.markdown('<p class="texto-fixo-branco">Erro ao processar voz. Tente digitar.</p>', unsafe_allow_html=True)
 
-# --- SEÇÃO DE DIGITAÇÃO ---
-st.markdown("---")
-with st.form("form_digitar"):
-    texto_input = st.text_input("Ou digite uma palavra:", placeholder="Ex: Capivara")
-    if st.form_submit_button("🔍 TRADUZIR"):
-        t_norm = normalizar(texto_input)
-        res = df[df['BUSCA_PT'] == t_norm]
-        
-        if not res.empty:
-            trad = res['TICUNA'].values[0]
-            # SOMBREAMENTO PRETO AQUI TAMBÉM
-            st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
-            gTTS(text=trad, lang='pt-br').save("voz_digito.mp3")
-            st.audio("voz_digito.mp3", autoplay=True)
-        else:
-            st.markdown('<p class="texto-fixo-branco">Palavra não encontrada na planilha.</p>', unsafe_allow_html=True)
+if submit_botao:
+    palavra_final = texto_input
+
+# BUSCA E EXIBIÇÃO FINAL
+if palavra_final:
+    t_norm = normalizar(palavra_final)
+    res = df[df['BUSCA_PT'] == t_norm]
+    
+    if not res.empty:
+        trad = res['TICUNA'].values[0]
+        st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
+        tts = gTTS(text=trad, lang='pt-br')
+        tts.save("voz_trad.mp3")
+        st.audio("voz_trad.mp3", autoplay=True)
+    else:
+        st.markdown(f'<p class="texto-fixo-branco">A palavra "{palavra_final}" não está na planilha.</p>', unsafe_allow_html=True)
