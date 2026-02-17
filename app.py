@@ -14,10 +14,10 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 # Link da sua foto de fundo
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# ESTILO DEFINITIVO PARA FUNDO TOTAL
+# ESTILO DEFINITIVO: FUNDO + TEXTOS BRANCOS + ÍCONES DO TOPO BRANCOS
 st.markdown(f"""
     <style>
-    /* Aplica o fundo na camada principal e garante que cubra tudo */
+    /* Fundo Total */
     [data-testid="stAppViewContainer"] {{
         background-image: url("{img}");
         background-size: cover !important;
@@ -26,19 +26,28 @@ st.markdown(f"""
         background-attachment: fixed !important;
     }}
 
-    /* Remove fundos brancos que podem aparecer em cima da imagem */
+    /* Torna o cabeçalho transparente */
     [data-testid="stHeader"], .stApp {{
         background: rgba(0,0,0,0) !important;
     }}
 
-    /* CAIXA DO FORMULÁRIO COM OPACIDADE */
+    /* --- AJUSTE DOS ÍCONES QUE VOCÊ MARCOU --- */
+    /* Isso força os botões de 'Share', 'GitHub', etc, a ficarem brancos */
+    header [data-testid="stHeaderActionElements"] button, 
+    header [data-testid="stHeaderActionElements"] a,
+    header svg {{
+        color: white !important;
+        fill: white !important;
+    }}
+
+    /* Caixa do Formulário */
     .stForm {{ 
         background-color: rgba(255, 255, 255, 0.9); 
         padding: 20px; 
         border-radius: 15px; 
     }}
     
-    /* TEXTOS EM BRANCO COM SOMBRA PARA LEITURA */
+    /* Textos em Branco com Sombra */
     h1, h3, p, label, .stMarkdown {{
         color: white !important;
         text-shadow: 2px 2px 8px #000000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000 !important;
