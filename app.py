@@ -33,15 +33,10 @@ st.markdown(f"""
         font-weight: bold !important;
     }}
 
-    /* RESULTADO DA TRADUÇÃO COM SOMBREAMENTO PRETO FORTE (Efeito Neon Reverso) */
+    /* RESULTADO DA TRADUÇÃO APENAS COM SOMBREAMENTO PRETO */
     .resultado-traducao {{
         color: white !important;
-        text-shadow: 
-            2px 2px 0px #000, 
-            -2px -2px 0px #000, 
-            2px -2px 0px #000, 
-            -2px 2px 0px #000,
-            0px 0px 15px #000 !important;
+        text-shadow: 2px 2px 15px #000000, -2px -2px 15px #000000, 0px 0px 20px #000000 !important;
         font-size: 34px !important;
         text-align: center;
         padding: 20px;
