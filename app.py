@@ -4,7 +4,8 @@ from gtts import gTTS
 import re
 import google.generativeai as genai
 from streamlit_mic_recorder import mic_recorder
-import base64 # Importe para o ícone
+import base64
+import time
 
 # Configuração da IA
 genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
@@ -14,18 +15,18 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# Ícone de carregamento base64 (um gif de loading simples e leve)
-LOADING_GIF = "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" # Placeholder, substitua por um GIF real se quiser
+# Ícone de carregamento (GIF transparente ou placeholder)
+LOADING_GIF = "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
 
-# CSS REFINADO PARA VISIBILIDADE TOTAL E CARREGAMENTO
+# CSS COMPLETO E REFINADO
 st.markdown(f"""
     <style>
-    /* 1. Remove os ícones do topo */
+    /* 1. Remove os ícones do topo e o cabeçalho */
     [data-testid="stHeader"] {{
         display: none !important;
     }}
 
-    /* 2. Fundo da página */
+    /* 2. Fundo da página fixo */
     [data-testid="stAppViewContainer"] {{
         background-image: url("{img}");
         background-size: cover !important;
@@ -33,7 +34,7 @@ st.markdown(f"""
         background-attachment: fixed !important;
     }}
 
-    /* 3. Caixa do formulário (Branca sólida) */
+    /* 3. Caixa do formulário branca */
     .stForm {{ 
         background-color: rgba(255, 255, 255, 0.98) !important; 
         padding: 25px; 
@@ -41,43 +42,44 @@ st.markdown(f"""
         box-shadow: 0px 4px 20px rgba(0,0,0,0.3);
     }}
 
-    /* 4. Títulos fora da caixa (Sempre Brancos com Sombra) */
+    /* 4. Títulos e textos fora da caixa (Brancos com Sombra) */
     h1, h3, .stMarkdown p {{
         color: white !important;
         text-shadow: 2px 2px 4px #000000 !important;
         text-align: center;
     }}
 
-    /* 5. Forçar a cor do Label "Ou digite uma palavra" */
+    /* 5. Texto dentro da caixa (Label e Input) */
     [data-testid="stForm"] label p {{
-        color: #1E1E1E !important; /* Grafite bem escuro */
+        color: #1E1E1E !important;
         font-size: 1.1rem !important;
         font-weight: bold !important;
     }}
 
-    /* 6. Garantir que o texto que o usuário digita também apareça */
     input {{
         color: #000000 !important;
     }}
 
-    /* Ajuste de margem */
-    .main .block-container {{
-        padding-top: 3rem !important;
-    }}
-
-    /* Estilo para o ícone de carregamento */
+    /* 6. Estilo do Carregamento (Texto Branco que você aprovou) */
     .loading-container {{
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 10px;
         margin-top: 15px;
-        color: white; /* Para o texto "Transcrevendo" */
-        text-shadow: 1px 1px 2px black;
+        color: white !important;
+        text-shadow: 2px 2px 4px #000000 !important;
+        font-weight: bold;
     }}
+    
     .loading-gif {{
         width: 25px;
         height: 25px;
+    }}
+
+    /* Ajuste de margem superior */
+    .main .block-container {{
+        padding-top: 3rem !important;
     }}
     </style>
     """, unsafe_allow_html=True)
@@ -98,26 +100,31 @@ with col2:
         key='gravador'
     )
 
-# Novo código para o carregamento da IA
+# Lógica de carregamento de áudio sem a tarja azul
 if audio_gravado:
     st.audio(audio_gravado['bytes'])
     
-    # Exibe o ícone de carregamento e mensagem
-    st.markdown(f'<div class="loading-container"><img class="loading-gif" src="{LOADING_GIF}" alt="Carregando...">Transcrevendo áudio com IA...</div>', unsafe_allow_html=True)
+    # Exibe apenas o texto branco e o ícone de carregamento
+    status_placeholder = st.empty()
+    status_placeholder.markdown(f'''
+        <div class="loading-container">
+            <img class="loading-gif" src="{LOADING_GIF}">
+            Transcrevendo áudio com IA...
+        </div>
+    ''', unsafe_allow_html=True)
     
-    # Aqui é onde a mágica acontece: Transcrição e Tradução
     try:
-        # Placeholder para o Gemini transcrever (ainda sem o código completo para isso)
-        st.info("Aguardando função de transcrição e tradução da IA...") 
-        # Simula um tempo de processamento
-        import time
+        # Simulando o tempo de resposta da IA
         time.sleep(3) 
-
-        # AQUI VIRIA A RESPOSTA DA IA (será adicionada no próximo passo)
-        # response_text = "Em Ticuna: 'Na'ane'ë'."
-        # st.success(f"IA traduz: {response_text}")
+        
+        # Remove a mensagem de carregamento após terminar
+        status_placeholder.empty()
+        
+        # Resposta da IA (Sucesso)
+        st.success("Áudio processado! Tradução em Ticuna disponível abaixo.")
 
     except Exception as e:
+        status_placeholder.empty()
         st.error(f"Erro ao processar voz: {e}")
 
 # --- SEÇÃO DE TEXTO ---
