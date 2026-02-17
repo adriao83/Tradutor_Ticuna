@@ -19,7 +19,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- CSS CORRIGIDO (CHAVES DUPLAS) ---
+# --- O TRUQUE DO CSS PARA FUNDIR OS BOTÕES NA BARRA ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -29,45 +29,59 @@ st.markdown(f"""
         background-position: center !important;
     }}
 
-    /* FORÇAR TÍTULO SEMPRE BRANCO */
-    h1, h1 span, [data-testid="stMarkdownContainer"] h1 {{
-        color: white !important;
-        text-shadow: 2px 2px 10px #000 !important;
+    /* Mantém o título branco */
+    h1, h1 span {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; }}
+
+    /* Remove as bordas padrão do Streamlit para podermos criar a nossa */
+    [data-testid="stVerticalBlockBorderWrapper"] > div:has(.custom-search-bar) {{
+        background: transparent !important;
     }}
 
-    /* Barra Branca */
-    .stTextInput > div {{
-        background-color: white !important;
-        border-radius: 25px !important;
-        height: 55px !important;
-        padding-right: 85px !important;
-    }}
-
-    /* Container que sustenta os botões */
-    .btn-overlay {{
-        position: relative;
+    /* ESTE É O CONTAINER QUE PARECE UMA CAIXA DE TEXTO */
+    .custom-search-bar {{
         display: flex;
-        justify-content: flex-end; 
-        gap: 15px;                 
-        margin-top: -53px;         /* AJUSTE AQUI PARA SUBIR MAIS: ex -60px */
-        margin-right: 20px;        
-        z-index: 9999;
+        align-items: center;
+        background-color: white;
+        border-radius: 25px;
+        height: 55px;
+        padding: 0 15px;
+        margin-bottom: 20px;
     }}
 
-    /* Estilo individual para os botões ficarem limpos */
-    button[key="btn_x_clear"], button[key="btn_lupa_search"] {{
+    /* Estilo do input dentro da nossa barra fake */
+    .custom-search-bar .stTextInput {{
+        flex-grow: 1;
+        margin-bottom: 0px !important;
+    }}
+    
+    .custom-search-bar .stTextInput > div {{
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
-        font-size: 28px !important; 
-        padding: 0 !important;
-        cursor: pointer !important;
-        line-height: 1 !important;
     }}
     
-    button[key="btn_x_clear"]:hover, button[key="btn_lupa_search"]:hover {{
-        color: #007bff !important;
+    .custom-search-bar .stTextInput input {{
+        background: transparent !important;
+        border: none !important;
+        height: 55px !important;
+        font-size: 18px !important;
     }}
+
+    /* Estilo dos botões que agora estão 'presos' na barra */
+    .custom-search-bar button {{
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        font-size: 24px !important;
+        color: #555 !important;
+        padding: 0 5px !important;
+        cursor: pointer !important;
+        height: 55px !important;
+        display: flex;
+        align-items: center;
+    }}
+
+    .custom-search-bar button:hover {{ color: #007bff !important; }}
 
     [data-testid="InputInstructions"] {{ display: none !important; }}
     .texto-fixo-branco {{ color: white !important; text-align: center; text-shadow: 2px 2px 10px #000; }}
@@ -75,38 +89,42 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-def normalizar(t):
-    return re.sub(r'[^a-zA-Z0-9]', '', str(t)).lower() if pd.notna(t) else ""
-
 try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
     df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
 except:
     st.error("Erro ao carregar planilha.")
 
-# Título 
 st.title("🏹 Tradutor Ticuna v0.1")
 st.markdown('<h3 class="texto-fixo-branco">Digite para Traduzir:</h3>', unsafe_allow_html=True)
 
-# Campo de Busca
-texto_busca = st.text_input(
-    "", 
-    placeholder="Pesquise uma palavra...", 
-    label_visibility="collapsed", 
-    key=f"input_{st.session_state.contador_limpar}"
-)
+# --- A ESTRUTURA UNIFICADA ---
+# Criamos uma div que segura tudo junto
+st.markdown('<div class="custom-search-bar">', unsafe_allow_html=True)
 
-# Botões
-st.markdown('<div class="btn-overlay">', unsafe_allow_html=True)
-c1, c2 = st.columns([1, 1])
-with c1:
-    if texto_busca != "":
-        st.button("✖", on_click=acao_limpar, key="btn_x_clear")
-with c2:
-    st.button("🔍", key="btn_lupa_search")
+# Usamos colunas internas para organizar o input e os botões LADO A LADO dentro da barra branca
+col_input, col_botoes = st.columns([0.85, 0.15])
+
+with col_input:
+    texto_busca = st.text_input(
+        "", 
+        placeholder="Pesquise uma palavra...", 
+        label_visibility="collapsed", 
+        key=f"input_{st.session_state.contador_limpar}"
+    )
+
+with col_botoes:
+    # Usamos uma sub-coluna para alinhar X e Lupa um ao lado do outro na ponta direita
+    sub_c1, sub_c2 = st.columns(2)
+    with sub_c1:
+        if texto_busca != "":
+            st.button("✖", on_click=acao_limpar, key="btn_x_clear")
+    with sub_c2:
+        st.button("🔍", key="btn_lupa_search")
+
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Resultado
+# --- LÓGICA DE RESULTADO ---
 if texto_busca:
     t_norm = normalizar(texto_busca)
     res = df[df['BUSCA_PT'] == t_norm]
