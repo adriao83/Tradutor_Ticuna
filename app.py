@@ -13,7 +13,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# ESTILO PARA FUNDO E FORÇAR TUDO NO TOPO A FICAR BRANCO
+# ESTILO PARA FUNDO E FORÇAR ABSOLUTAMENTE TUDO NO TOPO A FICAR BRANCO
 st.markdown(f"""
     <style>
     /* Fundo Total */
@@ -29,21 +29,28 @@ st.markdown(f"""
         background: rgba(0,0,0,0) !important;
     }}
 
-    /* --- SOLUÇÃO PARA OS ÍCONES DO TOPO (SHARE, STAR, GITHUB) --- */
-    /* Esta regra força a cor branca e adiciona uma sombra para dar contraste */
-    [data-testid="stHeader"] {{
+    /* --- ATAQUE TOTAL AOS ÍCONES RESTANTES --- */
+    /* Este seletor busca qualquer link, botão ou ícone dentro do cabeçalho */
+    [data-testid="stHeader"] a, 
+    [data-testid="stHeader"] button, 
+    [data-testid="stHeader"] svg,
+    [data-testid="stHeader"] i,
+    .st-emotion-cache-10trblm e1nzilvr1  {{
         color: white !important;
+        fill: white !important;
+        text-decoration: none !important;
     }}
-    
-    [data-testid="stHeader"] svg {{
+
+    /* Força especificamente o ícone do GitHub e ícones de edição */
+    header a svg, header button svg {{
         fill: white !important;
         color: white !important;
-        filter: drop-shadow(0px 0px 5px black) !important;
+        filter: drop-shadow(0px 0px 3px black) !important;
     }}
-    
-    [data-testid="stHeader"] a, [data-testid="stHeader"] button {{
+
+    /* Garante que o texto 'Share' também fique branco */
+    header .st-emotion-cache-10trblm {{
         color: white !important;
-        text-decoration: none !important;
     }}
 
     /* Caixa do Formulário */
@@ -57,7 +64,7 @@ st.markdown(f"""
     /* Textos em Branco com Sombra */
     h1, h3, p, label, .stMarkdown {{
         color: white !important;
-        text-shadow: 2px 2px 8px #000000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000 !important;
+        text-shadow: 2px 2px 8px #000000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, -1px 1px 0 #000 !important;
         text-align: center;
     }}
     </style>
