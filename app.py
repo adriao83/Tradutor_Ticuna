@@ -3,7 +3,6 @@ import pandas as pd
 from gtts import gTTS
 import re
 import google.generativeai as genai
-import os
 
 # Configuração da IA
 genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
@@ -13,7 +12,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS PARA TRAVAR A LUPA DENTRO DA BARRA COM CONTORNO VERMELHO
+# CSS PARA FORÇAR A LUPA DENTRO DA BARRA
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -26,66 +25,60 @@ st.markdown(f"""
 
     .texto-fixo-branco, h1, h3 {{
         color: white !important;
-        text-shadow: 2px 2px 10px #000000, 0px 0px 5px #000000 !important;
+        text-shadow: 2px 2px 10px #000000 !important;
         text-align: center;
         font-weight: bold !important;
     }}
 
     .resultado-traducao {{
         color: white !important;
-        text-shadow: 2px 2px 15px #000000, -2px -2px 15px #000000, 0px 0px 20px #000000 !important;
+        text-shadow: 2px 2px 15px #000000 !important;
         font-size: 34px !important;
         text-align: center;
         padding: 20px;
         font-weight: 900 !important;
     }}
 
-    /* ESTRUTURA DA BARRA DE BUSCA */
-    .search-box {{
-        background-color: rgba(255, 255, 255, 0.95);
-        border: 2px solid red !important; /* CONTORNO VERMELHO PEDIDO */
-        border-radius: 30px;
-        padding: 5px 20px;
+    /* A CAIXA QUE VOCÊ PEDIU COM CONTORNO VERMELHO */
+    .custom-search-bar {{
         display: flex;
         align-items: center;
-        position: relative;
+        background-color: white;
+        border: 2px solid red !important;
+        border-radius: 30px;
+        padding: 5px 15px;
+        width: 100%;
+        max-width: 700px;
+        margin: 0 auto;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }}
 
-    /* AJUSTE DO CAMPO DE TEXTO */
-    .stTextInput input {{
+    /* ESTILO DO INPUT (SEM BORDAS DO STREAMLIT) */
+    .stTextInput div[data-baseweb="input"] {{
+        background-color: transparent !important;
         border: none !important;
-        background: transparent !important;
-        font-size: 18px !important;
-        height: 50px !important;
-        padding-right: 60px !important; /* Espaço para a lupa */
-        box-shadow: none !important;
     }}
     
-    /* POSICIONAMENTO DA LUPA DENTRO DA CAIXA */
-    div.element-container:has(button) {{
-        position: absolute;
-        right: 15px;
-        top: 50%;
-        transform: translateY(-50%);
-        z-index: 999;
-        width: auto !important;
+    .stTextInput input {{
+        background-color: transparent !important;
+        border: none !important;
+        font-size: 20px !important;
+        color: black !important;
     }}
 
-    /* ESTILO DA LUPA AUMENTADA E COM SOMBRA */
+    /* BOTÃO DA LUPA REALMENTE DENTRO E GRANDE */
     .stButton button {{
         background: transparent !important;
         border: none !important;
-        font-size: 40px !important; /* Tamanho aumentado conforme pedido */
+        font-size: 40px !important;
+        color: black !important;
         padding: 0 !important;
-        color: #444 !important;
-        box-shadow: none !important;
-        filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.6)) !important; /* Sombreamento forte para destaque */
+        margin-left: -50px !important; /* Puxa a lupa para dentro da área branca */
+        filter: drop-shadow(2px 4px 5px rgba(0,0,0,0.4)) !important;
+        z-index: 10;
     }}
 
-    .stButton button:hover {{ color: red !important; }}
-
     small {{ display: none !important; }}
-    .stAlert {{ background: transparent !important; border: none !important; }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -97,42 +90,32 @@ try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
     df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
 except:
-    st.markdown('<p class="texto-fixo-branco">Erro ao carregar planilha.</p>', unsafe_allow_html=True)
+    st.write("Erro na planilha.")
 
 st.title("🏹 Tradutor Ticuna v0.1")
-
 st.markdown('<h3 class="texto-fixo-branco">Digite para Traduzir:</h3>', unsafe_allow_html=True)
 
-# --- AREA DE BUSCA UNIFICADA ---
-with st.container():
-    # Esta div "search-box" no Markdown garante que os elementos fiquem presos juntos
-    st.markdown('<div class="search-box">', unsafe_allow_html=True)
-    
-    col_txt, col_btn = st.columns([0.88, 0.12])
-    
-    with col_txt:
-        texto_input = st.text_input("", placeholder="Pesquise no Tradutor Ticuna...", label_visibility="collapsed")
-    
-    with col_btn:
-        submit_botao = st.button("🔍")
-    
+# ESTRUTURA UNIFICADA
+col_main, col_btn = st.columns([0.9, 0.1])
+
+with col_main:
+    # A borda vermelha agora envolve o input e a lupa juntos
+    st.markdown('<div class="custom-search-bar">', unsafe_allow_html=True)
+    texto_input = st.text_input("", placeholder="Pesquise uma palavra...", label_visibility="collapsed")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# LÓGICA DE BUSCA
+with col_btn:
+    # A lupa agora aparece "por cima" do final do input
+    submit_botao = st.button("🔍")
+
+# LÓGICA
 if submit_botao or (texto_input != ""):
     if texto_input:
         t_norm = normalizar(texto_input)
         res = df[df['BUSCA_PT'] == t_norm]
-        
         if not res.empty:
             trad = res['TICUNA'].values[0]
             st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
-            
-            try:
-                tts = gTTS(text=trad, lang='pt-br')
-                tts.save("voz_trad.mp3")
-                st.audio("voz_trad.mp3", autoplay=True)
-            except:
-                pass
-        elif submit_botao:
-            st.markdown(f'<p class="texto-fixo-branco">A palavra "{texto_input}" não foi encontrada.</p>', unsafe_allow_html=True)
+            tts = gTTS(text=trad, lang='pt-br')
+            tts.save("voz_trad.mp3")
+            st.audio("voz_trad.mp3", autoplay=True)
