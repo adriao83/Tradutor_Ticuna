@@ -5,7 +5,7 @@ import re
 import google.generativeai as genai
 import os
 
-# Configuração da IA (Mantida para outras funções, se necessário)
+# Configuração da IA
 genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 model = genai.GenerativeModel('gemini-1.5-flash')
 
@@ -13,7 +13,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS REFINADO: FOCO NO SOMBREAMENTO E MENSAGENS BRANCAS
+# CSS PARA POSICIONAR A LUPA DENTRO DO CAMPO
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -24,7 +24,6 @@ st.markdown(f"""
         background-attachment: fixed !important;
     }}
 
-    /* MENSAGENS DE STATUS E ERRO: SEMPRE BRANCO COM SOMBRA */
     .texto-fixo-branco, h1, h3 {{
         color: white !important;
         text-shadow: 2px 2px 10px #000000, 0px 0px 5px #000000 !important;
@@ -32,7 +31,6 @@ st.markdown(f"""
         font-weight: bold !important;
     }}
 
-    /* RESULTADO DA TRADUÇÃO APENAS COM SOMBREAMENTO PRETO */
     .resultado-traducao {{
         color: white !important;
         text-shadow: 2px 2px 15px #000000, -2px -2px 15px #000000, 0px 0px 20px #000000 !important;
@@ -48,29 +46,36 @@ st.markdown(f"""
         border-radius: 15px;
         position: relative;
     }}
-    
-    [data-testid="stForm"] label p {{ color: #1E1E1E !important; text-shadow: none !important; }}
 
-    /* CAIXA DE TEXTO COM ESPAÇO PARA A LUPA */
+    /* CAIXA DE TEXTO */
     .stTextInput input {{
         padding-right: 50px !important;
         height: 45px !important;
+        border: 1px solid #ccc !important;
     }}
 
-    /* POSICIONAMENTO DA LUPA DENTRO DA BARRA */
-    div[data-testid="stVerticalBlock"] > div:has(#botao_traduzir) {{
+    /* --- O SEGREDO ESTÁ AQUI: ALINHAMENTO DA LUPA --- */
+    /* Seleciona o container do botão dentro do formulário */
+    [data-testid="stFormSubmitButton"] {{
         position: absolute;
-        right: 15px;
-        margin-top: -46px;
+        right: 35px;
+        bottom: 31px; /* Ajuste essa altura conforme o tamanho do seu formulário */
         z-index: 999;
     }}
 
-    button {{
+    /* Estilo do botão para ser apenas a lupa */
+    [data-testid="stFormSubmitButton"] button {{
         background: transparent !important;
         border: none !important;
         padding: 0 !important;
+        font-size: 22px !important;
+        box-shadow: none !important;
     }}
     
+    [data-testid="stFormSubmitButton"] button:hover {{
+        transform: scale(1.1);
+    }}
+
     .stAlert {{ background: transparent !important; border: none !important; }}
     </style>
     """, unsafe_allow_html=True)
@@ -87,15 +92,14 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- SEÇÃO DE DIGITAÇÃO SIMPLIFICADA ---
+# --- SEÇÃO DE DIGITAÇÃO ---
 st.markdown("---")
 with st.form("form_digitar"):
     st.markdown("### Digite para Traduzir:")
     
-    # Input de texto
     texto_input = st.text_input("", placeholder="Ex: Capivara", label_visibility="collapsed")
     
-    # Apenas o botão de busca (Lupa)
+    # Botão de Lupa
     submit_botao = st.form_submit_button("🔍")
 
 # LÓGICA DE BUSCA
@@ -105,10 +109,8 @@ if submit_botao and texto_input:
     
     if not res.empty:
         trad = res['TICUNA'].values[0]
-        # Exibição com sombreamento preto
         st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
         
-        # Gera e toca o áudio da tradução
         tts = gTTS(text=trad, lang='pt-br')
         tts.save("voz_trad.mp3")
         st.audio("voz_trad.mp3", autoplay=True)
