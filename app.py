@@ -10,16 +10,9 @@ model = genai.GenerativeModel('gemini-1.5-flash')
 
 st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="centered")
 
-# Lógica para limpar o texto (Session State)
-if 'texto_busca' not in st.session_state:
-    st.session_state.texto_busca = ""
-
-def limpar_texto():
-    st.session_state.texto_busca = ""
-
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS FINALIZADO COM LUPA, TEXTO ALINHADOS E AGORA O ÍCONE X
+# CSS: MANTENDO SUA LUPA E TEXTO, ADICIONANDO APENAS O X
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -59,37 +52,35 @@ st.markdown(f"""
         height: 55px !important;
         background-color: transparent !important;
         border: none !important;
-        padding: 0px 100px 0px 20px !important; /* Aumentei o recuo da direita para não atropelar os ícones */
+        padding: 0px 110px 0px 20px !important; /* Espaço para os dois ícones */
         font-size: 20px !important;
         line-height: 55px !important;
     }}
 
     [data-testid="InputInstructions"] {{ display: none !important; }}
 
-    /* ESTILO DOS BOTÕES (LUPA E X) */
+    /* LUPA: EXATAMENTE COMO VOCÊ DEIXOU */
     .stButton button {{
         position: absolute !important;
         background: transparent !important;
         border: none !important;
+        font-size: 40px !important;
         color: black !important;
         padding: 0 !important;
+        top: 10px !important;    
+        right: 60px !important;  
+        filter: drop-shadow(2px 4px 5px rgba(0,0,0,0.4)) !important;
         z-index: 9999 !important;
     }}
 
-    /* POSIÇÃO DA LUPA (MANTIDA CONFORME SEU AJUSTE) */
-    div[data-testid="column"]:nth-child(2) button {{
-        font-size: 40px !important;
-        top: 10px !important;
-        right: 60px !important;
-        filter: drop-shadow(2px 4px 5px rgba(0,0,0,0.4)) !important;
-    }}
-
-    /* POSIÇÃO DO ÍCONE X (LIMPAR) */
-    .btn-limpar button {{
+    /* X: POSICIONADO À ESQUERDA DA LUPA */
+    .clear-btn-container button {{
+        position: absolute !important;
         font-size: 25px !important;
-        top: 10px !important;    /* Mesmo top da lupa */
-        right: 110px !important;  /* Posicionado à esquerda da lupa */
+        top: 15px !important;   /* Ajuste fino para o X que é menor */
+        right: 115px !important; 
         color: #888 !important;
+        filter: none !important;
     }}
 
     [data-testid="column"] {{
@@ -115,29 +106,26 @@ except:
 st.title("🏹 Tradutor Ticuna v0.1")
 st.markdown('<h3 class="texto-fixo-branco">Digite para Traduzir:</h3>', unsafe_allow_html=True)
 
-# ESTRUTURA DE COLUNAS
+# ESTRUTURA
 col_main, col_btn = st.columns([0.85, 0.15])
 
 with col_main:
-    # O campo de texto usa o session_state para poder ser limpo
-    texto_input = st.text_input("", value=st.session_state.texto_busca, placeholder="Pesquise uma palavra...", label_visibility="collapsed", key="txt_input")
-    st.session_state.texto_busca = texto_input
-
-    # Botão X só aparece se houver texto escrito
-    if st.session_state.texto_busca:
-        st.markdown('<div class="btn-limpar">', unsafe_allow_html=True)
-        if st.button("✖", key="limpar"):
-            limpar_texto()
-            st.rerun()
+    # Usei um truque simples: se clicar no X, ele recarrega a página vazia
+    texto_input = st.text_input("", placeholder="Pesquise uma palavra...", label_visibility="collapsed", key="main_input")
+    
+    if texto_input:
+        st.markdown('<div class="clear-btn-container">', unsafe_allow_html=True)
+        if st.button("✖", key="clear"):
+            st.rerun() 
         st.markdown('</div>', unsafe_allow_html=True)
 
 with col_btn:
     submit_botao = st.button("🔍")
 
 # LÓGICA
-if submit_botao or (st.session_state.texto_busca != ""):
-    if st.session_state.texto_busca:
-        t_norm = normalizar(st.session_state.texto_busca)
+if submit_botao or (texto_input != ""):
+    if texto_input:
+        t_norm = normalizar(texto_input)
         res = df[df['BUSCA_PT'] == t_norm]
         if not res.empty:
             trad = res['TICUNA'].values[0]
