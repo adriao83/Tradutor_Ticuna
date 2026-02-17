@@ -13,7 +13,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# ESTILO PARA FUNDO E ÍCONES TOTAIS BRANCOS
+# ESTILO PARA FUNDO E FORÇAR ÍCONES BRANCOS
 st.markdown(f"""
     <style>
     /* Fundo Total */
@@ -29,16 +29,16 @@ st.markdown(f"""
         background: rgba(0,0,0,0) !important;
     }}
 
-    /* --- COMANDO MESTRE PARA OS ÍCONES --- */
-    /* O 'brightness(0) invert(1)' transforma QUALQUER ícone escuro em branco puro */
-    header [data-testid="stHeaderActionElements"] button, 
-    header [data-testid="stHeaderActionElements"] a,
-    header [data-testid="stHeaderActionElements"] svg,
-    header [data-testid="stHeaderActionElements"] span,
-    header [data-testid="stHeaderActionElements"] div {{
+    /* --- NOVA TENTATIVA PARA OS ÍCONES DO TOPO --- */
+    /* Vamos aplicar a cor branca em absolutamente tudo que estiver no cabeçalho */
+    header [data-testid="stHeaderActionElements"] * {{
         color: white !important;
         fill: white !important;
-        filter: brightness(0) invert(1) !important;
+    }}
+    
+    /* Botão específico de menu (os 3 pontinhos) e outros */
+    button[kind="header"] {{
+        color: white !important;
     }}
 
     /* Caixa do Formulário */
