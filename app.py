@@ -4,7 +4,7 @@ from gtts import gTTS
 import re
 import google.generativeai as genai
 
-# --- FUNÇÃO DE NORMALIZAÇÃO (Deve vir antes de tudo) ---
+# --- FUNÇÃO DE NORMALIZAÇÃO ---
 def normalizar(t):
     return re.sub(r'[^a-zA-Z0-9]', '', str(t)).lower() if pd.notna(t) else ""
 
@@ -46,7 +46,7 @@ st.markdown(f"""
         border-radius: 25px;
         height: 55px;
         padding: 0 15px;
-        margin-bottom: 20px;
+        margin-top: 20px; /* Adicionado um pouco de margem para o título */
     }}
 
     .custom-search-bar .stTextInput {{
@@ -83,7 +83,6 @@ st.markdown(f"""
     .custom-search-bar button:hover {{ color: #007bff !important; }}
 
     [data-testid="InputInstructions"] {{ display: none !important; }}
-    .texto-fixo-branco {{ color: white !important; text-align: center; text-shadow: 2px 2px 10px #000; }}
     .resultado-traducao {{ color: white !important; text-align: center; font-size: 34px; font-weight: 900; text-shadow: 2px 2px 15px #000; padding: 20px; }}
 </style>
 """, unsafe_allow_html=True)
@@ -97,9 +96,8 @@ except:
     st.error("Erro: Verifique se o arquivo 'Tradutor_Ticuna.xlsx' está na pasta.")
 
 st.title("🏹 Tradutor Ticuna v0.1")
-st.markdown('<h3 class="texto-fixo-branco">Digite para Traduzir:</h3>', unsafe_allow_html=True)
 
-# --- ESTRUTURA DA BARRA ---
+# --- ESTRUTURA DA BARRA (A frase foi excluída daqui) ---
 st.markdown('<div class="custom-search-bar">', unsafe_allow_html=True)
 col_input, col_botoes = st.columns([0.85, 0.15])
 
