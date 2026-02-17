@@ -13,7 +13,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# ESTILO COM FAIXA DE PROTEÇÃO NO TOPO
+# ESTILO REFINADO: GRADIENTE NO TOPO + CAIXA CLARA
 st.markdown(f"""
     <style>
     /* 1. Fundo da página */
@@ -25,31 +25,32 @@ st.markdown(f"""
         background-attachment: fixed !important;
     }}
 
-    /* 2. FAIXA DE PROTEÇÃO NO TOPO (Isso garante que você veja os botões) */
+    /* 2. GRADIENTE NO TOPO (Sombra suave para os ícones aparecerem) */
     [data-testid="stHeader"] {{
-        background-color: rgba(0, 0, 0, 0.5) !important; /* Faixa preta semi-transparente */
-        backdrop-filter: blur(10px); /* Efeito de vidro fosco */
+        background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%) !important;
+        height: 3.5rem;
     }}
 
-    /* 3. Forçar tudo no topo a ser branco para contrastar com a faixa */
-    [data-testid="stHeader"] * {{
+    /* 3. Forçar ícones e textos do topo para BRANCO PURO */
+    header [data-testid="stHeaderActionElements"] * {{
         color: white !important;
         fill: white !important;
     }}
-
-    /* 4. Caixa do Tradutor */
+    
+    /* 4. Caixa do Tradutor (Ajustada para ficar mais nítida) */
     .stForm {{ 
-        background-color: rgba(255, 255, 255, 0.95); 
-        padding: 20px; 
-        border-radius: 15px; 
-        box-shadow: 0px 10px 30px rgba(0,0,0,0.5);
+        background-color: rgba(255, 255, 255, 0.9); 
+        padding: 30px; 
+        border-radius: 20px; 
+        box-shadow: 0px 8px 25px rgba(0,0,0,0.4);
+        border: 1px solid rgba(255,255,255,0.5);
     }}
     
-    /* 5. Textos com sombra forte */
-    h1, h3, p, label, .stMarkdown {{
+    /* 5. Títulos e Labels com Sombra Forte para Leitura */
+    h1, h3, p, label {{
         color: white !important;
-        text-shadow: 2px 2px 4px #000000 !important;
-        text-align: center;
+        text-shadow: 2px 2px 5px rgba(0,0,0,0.9) !important;
+        font-weight: bold !important;
     }}
     </style>
     """, unsafe_allow_html=True)
