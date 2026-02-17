@@ -4,6 +4,7 @@ from gtts import gTTS
 import re
 import google.generativeai as genai
 from streamlit_mic_recorder import mic_recorder
+import base64 # Importe para o ícone
 
 # Configuração da IA
 genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
@@ -13,7 +14,10 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS REFINADO PARA VISIBILIDADE TOTAL
+# Ícone de carregamento base64 (um gif de loading simples e leve)
+LOADING_GIF = "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" # Placeholder, substitua por um GIF real se quiser
+
+# CSS REFINADO PARA VISIBILIDADE TOTAL E CARREGAMENTO
 st.markdown(f"""
     <style>
     /* 1. Remove os ícones do topo */
@@ -29,7 +33,7 @@ st.markdown(f"""
         background-attachment: fixed !important;
     }}
 
-    /* 3. Caixa do formulário (Branca sólida para não confundir) */
+    /* 3. Caixa do formulário (Branca sólida) */
     .stForm {{ 
         background-color: rgba(255, 255, 255, 0.98) !important; 
         padding: 25px; 
@@ -44,10 +48,9 @@ st.markdown(f"""
         text-align: center;
     }}
 
-    /* 5. A SOLUÇÃO: Forçar a cor do Label "Ou digite uma palavra" */
-    /* Usamos uma cor escura fixa que funciona tanto no claro quanto no escuro sobre o fundo branco */
+    /* 5. Forçar a cor do Label "Ou digite uma palavra" */
     [data-testid="stForm"] label p {{
-        color: #1E1E1E !important; /* Um grafite bem escuro, quase preto */
+        color: #1E1E1E !important; /* Grafite bem escuro */
         font-size: 1.1rem !important;
         font-weight: bold !important;
     }}
@@ -60,6 +63,21 @@ st.markdown(f"""
     /* Ajuste de margem */
     .main .block-container {{
         padding-top: 3rem !important;
+    }}
+
+    /* Estilo para o ícone de carregamento */
+    .loading-container {{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 15px;
+        color: white; /* Para o texto "Transcrevendo" */
+        text-shadow: 1px 1px 2px black;
+    }}
+    .loading-gif {{
+        width: 25px;
+        height: 25px;
     }}
     </style>
     """, unsafe_allow_html=True)
@@ -80,9 +98,27 @@ with col2:
         key='gravador'
     )
 
+# Novo código para o carregamento da IA
 if audio_gravado:
     st.audio(audio_gravado['bytes'])
-    st.info("Áudio capturado!")
+    
+    # Exibe o ícone de carregamento e mensagem
+    st.markdown(f'<div class="loading-container"><img class="loading-gif" src="{LOADING_GIF}" alt="Carregando...">Transcrevendo áudio com IA...</div>', unsafe_allow_html=True)
+    
+    # Aqui é onde a mágica acontece: Transcrição e Tradução
+    try:
+        # Placeholder para o Gemini transcrever (ainda sem o código completo para isso)
+        st.info("Aguardando função de transcrição e tradução da IA...") 
+        # Simula um tempo de processamento
+        import time
+        time.sleep(3) 
+
+        # AQUI VIRIA A RESPOSTA DA IA (será adicionada no próximo passo)
+        # response_text = "Em Ticuna: 'Na'ane'ë'."
+        # st.success(f"IA traduz: {response_text}")
+
+    except Exception as e:
+        st.error(f"Erro ao processar voz: {e}")
 
 # --- SEÇÃO DE TEXTO ---
 try:
@@ -90,7 +126,6 @@ try:
     df['BUSCA'] = df['PORTUGUES'].apply(normalizar)
 
     with st.form("tradutor_form"):
-        # O label agora está "blindado" pelo CSS acima
         texto = st.text_input("Ou digite uma palavra:", placeholder="Ex: Olá")
         submit = st.form_submit_button("🔍 TRADUZIR")
         
