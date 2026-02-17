@@ -83,9 +83,9 @@ st.markdown(f"""
         position: fixed !important;
         font-size: 40px !important;
         color: black !important;
-        top: 218px !important; /* Ajuste aqui se ela subir/descer na sua tela */
+        top: 10px !important; /* Ajuste aqui se ela subir/descer na sua tela */
         left: 50% !important;
-        margin-left: 215px !important; /* Move para a direita da barra */
+        margin-left: 60px !important; /* Move para a direita da barra */
         z-index: 9999 !important;
     }}
 
