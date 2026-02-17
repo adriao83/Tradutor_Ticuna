@@ -3,7 +3,6 @@ import pandas as pd
 from gtts import gTTS
 import re
 import google.generativeai as genai
-import os
 
 # Configuração da IA
 genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
@@ -13,7 +12,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS AJUSTADO: REMOVIDA A CAIXA EXTRA E LUPA REPOSICIONADA
+# CSS PARA FORÇAR A LUPA DENTRO DA BARRA
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -26,48 +25,60 @@ st.markdown(f"""
 
     .texto-fixo-branco, h1, h3 {{
         color: white !important;
-        text-shadow: 2px 2px 10px #000000, 0px 0px 5px #000000 !important;
+        text-shadow: 2px 2px 10px #000000 !important;
         text-align: center;
         font-weight: bold !important;
     }}
 
     .resultado-traducao {{
         color: white !important;
-        text-shadow: 2px 2px 15px #000000, -2px -2px 15px #000000, 0px 0px 20px #000000 !important;
+        text-shadow: 2px 2px 15px #000000 !important;
         font-size: 34px !important;
         text-align: center;
         padding: 20px;
         font-weight: 900 !important;
     }}
 
-    /* BARRA DE TEXTO PADRÃO (Aumentei o padding na direita para a lupa) */
+    /* A CAIXA QUE VOCÊ PEDIU COM CONTORNO VERMELHO */
+    .custom-search-bar {{
+        display: flex;
+        align-items: center;
+        background-color: white;
+        border: 2px solid red !important;
+        border-radius: 30px;
+        padding: 5px 15px;
+        width: 100%;
+        max-width: 700px;
+        margin: 0 auto;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }}
+
+    /* ESTILO DO INPUT (SEM BORDAS DO STREAMLIT) */
+    .stTextInput div[data-baseweb="input"] {{
+        background-color: transparent !important;
+        border: none !important;
+    }}
+    
     .stTextInput input {{
-        height: 50px !important;
-        border-radius: 25px !important;
-        padding-right: 55px !important;
-        font-size: 18px !important;
+        background-color: transparent !important;
+        border: none !important;
+        font-size: 20px !important;
+        color: black !important;
     }}
 
-    /* POSICIONAMENTO DA LUPA - ABAIXADA UM POUCO (margin-top ajustado) */
-    div[data-testid="stVerticalBlock"] > div:has(button) {{
-        position: absolute;
-        right: 25px;
-        margin-top: -42px; /* Abaixei de -46px para -42px para alinhar melhor */
-        z-index: 999;
-    }}
-
-    /* ESTILO DA LUPA */
+    /* BOTÃO DA LUPA REALMENTE DENTRO E GRANDE */
     .stButton button {{
         background: transparent !important;
         border: none !important;
-        font-size: 35px !important;
-        box-shadow: none !important;
-        filter: drop-shadow(2px 3px 4px rgba(0,0,0,0.4)) !important;
+        font-size: 40px !important;
+        color: black !important;
         padding: 0 !important;
+        margin-left: -50px !important; /* Puxa a lupa para dentro da área branca */
+        filter: drop-shadow(2px 4px 5px rgba(0,0,0,0.4)) !important;
+        z-index: 10;
     }}
 
     small {{ display: none !important; }}
-    .stAlert {{ background: transparent !important; border: none !important; }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -79,30 +90,32 @@ try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
     df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
 except:
-    st.markdown('<p class="texto-fixo-branco">Erro ao carregar planilha.</p>', unsafe_allow_html=True)
+    st.write("Erro na planilha.")
 
 st.title("🏹 Tradutor Ticuna v0.1")
 st.markdown('<h3 class="texto-fixo-branco">Digite para Traduzir:</h3>', unsafe_allow_html=True)
 
-# Interface limpa sem o container extra
-texto_input = st.text_input("", placeholder="Pesquise uma palavra...", label_visibility="collapsed")
-submit_botao = st.button("🔍")
+# ESTRUTURA UNIFICADA
+col_main, col_btn = st.columns([0.9, 0.1])
 
-# LÓGICA DE BUSCA
+with col_main:
+    # A borda vermelha agora envolve o input e a lupa juntos
+    st.markdown('<div class="custom-search-bar">', unsafe_allow_html=True)
+    texto_input = st.text_input("", placeholder="Pesquise uma palavra...", label_visibility="collapsed")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+with col_btn:
+    # A lupa agora aparece "por cima" do final do input
+    submit_botao = st.button("🔍")
+
+# LÓGICA
 if submit_botao or (texto_input != ""):
     if texto_input:
         t_norm = normalizar(texto_input)
         res = df[df['BUSCA_PT'] == t_norm]
-        
         if not res.empty:
             trad = res['TICUNA'].values[0]
             st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
-            
-            try:
-                tts = gTTS(text=trad, lang='pt-br')
-                tts.save("voz_trad.mp3")
-                st.audio("voz_trad.mp3", autoplay=True)
-            except:
-                pass
-        elif submit_botao:
-            st.markdown(f'<p class="texto-fixo-branco">A palavra "{texto_input}" não foi encontrada.</p>', unsafe_allow_html=True)
+            tts = gTTS(text=trad, lang='pt-br')
+            tts.save("voz_trad.mp3")
+            st.audio("voz_trad.mp3", autoplay=True)
