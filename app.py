@@ -14,7 +14,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 # Link da sua foto de fundo
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# ESTILO DEFINITIVO: FUNDO + TEXTOS BRANCOS + ÍCONES DO TOPO BRANCOS
+# ESTILO PARA FUNDO TOTAL E ÍCONES DO TOPO BRANCOS
 st.markdown(f"""
     <style>
     /* Fundo Total */
@@ -31,11 +31,12 @@ st.markdown(f"""
         background: rgba(0,0,0,0) !important;
     }}
 
-    /* --- AJUSTE DOS ÍCONES QUE VOCÊ MARCOU --- */
-    /* Isso força os botões de 'Share', 'GitHub', etc, a ficarem brancos */
-    header [data-testid="stHeaderActionElements"] button, 
-    header [data-testid="stHeaderActionElements"] a,
-    header svg {{
+    /* --- AJUSTE FORÇADO DOS ÍCONES (SHARE, STAR, GITHUB, MENU) --- */
+    /* Este bloco ataca todas as partes possíveis dos botões superiores */
+    [data-testid="stHeader"] button, 
+    [data-testid="stHeader"] a, 
+    [data-testid="stHeader"] svg,
+    [data-testid="stHeaderActions"] span {{
         color: white !important;
         fill: white !important;
     }}
@@ -50,7 +51,7 @@ st.markdown(f"""
     /* Textos em Branco com Sombra */
     h1, h3, p, label, .stMarkdown {{
         color: white !important;
-        text-shadow: 2px 2px 8px #000000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000 !important;
+        text-shadow: 2px 2px 8px #000000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, -1px 1px 0 #000 !important;
         text-align: center;
     }}
     </style>
