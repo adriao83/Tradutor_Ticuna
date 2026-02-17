@@ -13,7 +13,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS REFINADO PARA O MODELO GOOGLE
+# CSS REFINADO PARA O MODELO GOOGLE + LUPA DESTACADA
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -41,32 +41,39 @@ st.markdown(f"""
     }}
 
     /* CAIXA BRANCA PRINCIPAL */
-    .stForm {{ 
+    [data-testid="stVerticalBlock"] > div:has(.stTextInput) {{
         background-color: rgba(255, 255, 255, 0.95) !important; 
-        padding: 20px; 
-        border-radius: 30px; /* Bordas bem arredondadas estilo Google */
+        padding: 5px 20px; 
+        border-radius: 35px; 
         border: 1px solid #dfe1e5 !important;
+        display: flex;
+        align-items: center;
     }}
-
-    /* REMOVE BORDAS PADRÃO DO STREAMLIT DENTRO DO FORM */
-    [data-testid="stForm"] {{ border: none !important; box-shadow: none !important; }}
 
     /* ESTILO DA BARRA DE TEXTO */
     .stTextInput input {{
         border: none !important;
         background: transparent !important;
         font-size: 18px !important;
-        height: 45px !important;
+        height: 50px !important;
+        box-shadow: none !important;
     }}
     
-    /* ESTILO DO BOTÃO DA LUPA */
+    /* ESTILO DO BOTÃO DA LUPA - AUMENTADO E COM SOMBRA */
     .stButton button {{
         background: transparent !important;
         border: none !important;
-        font-size: 24px !important;
+        font-size: 38px !important; /* Tamanho aumentado */
         padding: 0 !important;
-        margin-top: 5px !important;
+        margin-top: 0px !important;
         box-shadow: none !important;
+        filter: drop-shadow(2px 3px 4px rgba(0,0,0,0.4)) !important; /* Sombreamento */
+        transition: transform 0.2s;
+    }}
+
+    .stButton button:hover {{
+        transform: scale(1.1);
+        background: transparent !important;
     }}
 
     /* Tira o texto "Press Enter to submit" */
@@ -91,20 +98,17 @@ st.title("🏹 Tradutor Ticuna v0.1")
 # --- AREA DE TRADUÇÃO MODELO GOOGLE ---
 st.markdown('<h3 class="texto-fixo-branco">Digite para Traduzir:</h3>', unsafe_allow_html=True)
 
-# Criamos o container branco
+# Container da barra de busca
 with st.container():
-    # Usamos colunas para colocar o texto e a lupa lado a lado na mesma linha
-    col1, col2 = st.columns([0.9, 0.1])
+    col1, col2 = st.columns([0.88, 0.12])
     
     with col1:
-        # Campo de texto sem bordas (as bordas são do container)
         texto_input = st.text_input("", placeholder="Pesquise no Tradutor Ticuna...", label_visibility="collapsed")
     
     with col2:
-        # Botão que funciona como a lupa
         submit_botao = st.button("🔍")
 
-# LÓGICA DE BUSCA (Acionada por Enter ou Clique na Lupa)
+# LÓGICA DE BUSCA
 if submit_botao or (texto_input != ""):
     if texto_input:
         t_norm = normalizar(texto_input)
@@ -114,12 +118,11 @@ if submit_botao or (texto_input != ""):
             trad = res['TICUNA'].values[0]
             st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
             
-            # Gera o áudio
             try:
                 tts = gTTS(text=trad, lang='pt-br')
                 tts.save("voz_trad.mp3")
                 st.audio("voz_trad.mp3", autoplay=True)
             except:
                 pass
-        elif submit_botao: # Só mostra erro se o usuário realmente tentou buscar
+        elif submit_botao:
             st.markdown(f'<p class="texto-fixo-branco">A palavra "{texto_input}" não foi encontrada.</p>', unsafe_allow_html=True)
