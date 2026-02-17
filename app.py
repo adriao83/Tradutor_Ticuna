@@ -13,10 +13,10 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# ESTILO PARA FUNDO E FORÇAR ABSOLUTAMENTE TUDO NO TOPO A FICAR BRANCO
+# ESTILO FINAL: FUNDO TOTAL + ÍCONES DO TOPO BRANCO PURO
 st.markdown(f"""
     <style>
-    /* Fundo Total */
+    /* Fundo que não acaba ao rolar */
     [data-testid="stAppViewContainer"] {{
         background-image: url("{img}");
         background-size: cover !important;
@@ -29,42 +29,34 @@ st.markdown(f"""
         background: rgba(0,0,0,0) !important;
     }}
 
-    /* --- ATAQUE TOTAL AOS ÍCONES RESTANTES --- */
-    /* Este seletor busca qualquer link, botão ou ícone dentro do cabeçalho */
-    [data-testid="stHeader"] a, 
-    [data-testid="stHeader"] button, 
-    [data-testid="stHeader"] svg,
-    [data-testid="stHeader"] i,
-    .st-emotion-cache-10trblm e1nzilvr1  {{
-        color: white !important;
-        fill: white !important;
-        text-decoration: none !important;
-    }}
-
-    /* Força especificamente o ícone do GitHub e ícones de edição */
-    header a svg, header button svg {{
+    /* --- SOLUÇÃO MATADORA PARA OS ÍCONES --- */
+    /* Este código força TUDO na barra superior a ficar branco, não importa o que seja */
+    header [data-testid="stHeaderActionElements"] button svg, 
+    header [data-testid="stHeaderActionElements"] a svg,
+    header [data-testid="stHeaderActionElements"] div,
+    header [data-testid="stHeaderActionElements"] span {{
         fill: white !important;
         color: white !important;
-        filter: drop-shadow(0px 0px 3px black) !important;
+        filter: brightness(0) invert(1) drop-shadow(0px 0px 3px black) !important;
     }}
 
-    /* Garante que o texto 'Share' também fique branco */
-    header .st-emotion-cache-10trblm {{
+    /* Garante que o texto 'Share' também acompanhe */
+    header [data-testid="stHeaderActionElements"] p {{
         color: white !important;
+        font-weight: bold;
     }}
 
-    /* Caixa do Formulário */
+    /* Caixa do Tradutor */
     .stForm {{ 
         background-color: rgba(255, 255, 255, 0.9); 
         padding: 20px; 
         border-radius: 15px; 
-        box-shadow: 0px 4px 15px rgba(0,0,0,0.3);
     }}
     
-    /* Textos em Branco com Sombra */
+    /* Textos Gerais */
     h1, h3, p, label, .stMarkdown {{
         color: white !important;
-        text-shadow: 2px 2px 8px #000000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, -1px 1px 0 #000 !important;
+        text-shadow: 2px 2px 8px #000000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000 !important;
         text-align: center;
     }}
     </style>
@@ -88,7 +80,7 @@ with col2:
 
 if audio_gravado:
     st.audio(audio_gravado['bytes'])
-    st.info("Áudio capturado! Em breve a IA responderá diretamente por voz.")
+    st.info("Áudio capturado com sucesso!")
 
 # --- SEÇÃO DE TEXTO ---
 try:
