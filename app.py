@@ -6,7 +6,7 @@ import google.generativeai as genai
 from streamlit_mic_recorder import mic_recorder
 import os
 
-# Configuração da IA (Para tradução de texto caso não esteja na planilha)
+# Configuração da IA
 genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 model = genai.GenerativeModel('gemini-1.5-flash')
 
@@ -14,7 +14,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS: MENSAGENS EM BRANCO E SOMBREAMENTO PRETO
+# CSS REFINADO: FOCO NO SOMBREAMENTO E MENSAGENS BRANCAS
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -25,19 +25,19 @@ st.markdown(f"""
         background-attachment: fixed !important;
     }}
 
-    /* Estilo para frases de status e erros: BRANCO COM SOMBRA PRETA */
+    /* Estilo para frases de erro e status: SEMPRE BRANCO COM SOMBRA */
     .texto-fixo-branco, .stAlert p, h1, h3 {{
         color: white !important;
-        text-shadow: 2px 2px 10px #000000, 1px 1px 2px #000000 !important;
+        text-shadow: 2px 2px 10px #000000, 0px 0px 5px #000000 !important;
         text-align: center;
         font-weight: bold !important;
         background: transparent !important;
     }}
 
-    /* RESULTADO DA TRADUÇÃO: SOMBREAMENTO PRETO FORTE */
+    /* Estilo para o resultado da tradução (Ticuna: Nacü) com SOMBREAMENTO PRETO */
     .resultado-traducao {{
         color: white !important;
-        text-shadow: 0px 0px 20px #000000, 0px 0px 10px #000000, 4px 4px 5px #000000 !important;
+        text-shadow: 0px 0px 15px #000000, 2px 2px 8px #000000, -2px -2px 8px #000000 !important;
         font-size: 32px !important;
         text-align: center;
         padding: 20px;
@@ -51,6 +51,12 @@ st.markdown(f"""
     }}
     
     [data-testid="stForm"] label p {{ color: #1E1E1E !important; text-shadow: none !important; }}
+    
+    /* Remove o fundo vermelho/verde das mensagens de erro/sucesso do Streamlit */
+    div[data-testid="stNotification"] {{
+        background-color: transparent !important;
+        border: none !important;
+    }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -63,55 +69,52 @@ try:
     df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
     df['BUSCA_TI'] = df['TICUNA'].apply(normalizar)
 except:
-    st.error("Erro ao carregar a planilha no GitHub.")
+    st.markdown('<p class="texto-fixo-branco">Erro ao carregar planilha no GitHub.</p>', unsafe_allow_html=True)
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- SEÇÃO DE VOZ REFORMULADA ---
+# --- SEÇÃO DE VOZ ---
 st.markdown("### 🎤 Fale para Traduzir")
 
 col1, col2, col3 = st.columns([1, 5, 1])
 with col2:
-    # Usando mic_recorder para capturar áudio
     audio_data = mic_recorder(
-        start_prompt="Falar agora 🎤", 
-        stop_prompt="Parar e Traduzir ⏹️", 
-        key='gravador_v3'
+        start_prompt="Clique para falar 🎤", 
+        stop_prompt="Traduzir fala ⏹️", 
+        key='gravador'
     )
 
 if audio_data:
-    status = st.empty()
-    status.markdown('<p class="texto-fixo-branco">Processando sua fala...</p>', unsafe_allow_html=True)
+    status_msg = st.empty()
+    status_msg.markdown('<p class="texto-fixo-branco">Identificando sua voz...</p>', unsafe_allow_html=True)
     
     try:
-        # Envio direto para transcrição (Tentativa com tratamento de erro)
-        audio_blob = {"mime_type": "audio/wav", "data": audio_data['bytes']}
-        response = model.generate_content(["Transcreva apenas a palavra ou frase dita neste áudio:", audio_blob])
+        # Envio otimizado para a IA
+        response = model.generate_content([
+            "Transcreva apenas a palavra ou frase curta dita neste áudio, sem pontuação.", 
+            {"mime_type": "audio/wav", "data": audio_data['bytes']}
+        ])
         
         texto_falado = response.text.strip()
         t_norm = normalizar(texto_falado)
         
-        # BUSCA NA PLANILHA
+        # BUSCA NA PLANILHA (Igual à digitação)
         res = df[df['BUSCA_PT'] == t_norm]
         
         if not res.empty:
             trad = res['TICUNA'].values[0]
-            status.empty()
+            status_msg.empty()
             st.markdown(f'<p class="texto-fixo-branco">Você disse: "{texto_falado}"</p>', unsafe_allow_html=True)
             st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
             
-            # VOZ SINTÉTICA
-            gTTS(text=trad, lang='pt-br').save("voz_output.mp3")
-            st.audio("voz_output.mp3", autoplay=True)
+            # GERA VOZ SINTÉTICA
+            gTTS(text=trad, lang='pt-br').save("voz_fala.mp3")
+            st.audio("voz_fala.mp3", autoplay=True)
         else:
-            status.markdown(f'<p class="texto-fixo-branco">A palavra "{texto_falado}" não está na planilha. Tentando IA...</p>', unsafe_allow_html=True)
-            res_ia = model.generate_content(f"Traduza '{texto_falado}' para a língua Ticuna. Responda apenas a tradução.")
-            st.markdown(f'<div class="resultado-traducao">IA: {res_ia.text}</div>', unsafe_allow_html=True)
-            gTTS(text=res_ia.text, lang='pt-br').save("voz_ia.mp3")
-            st.audio("voz_ia.mp3", autoplay=True)
+            status_msg.markdown(f'<p class="texto-fixo-branco">Palavra "{texto_falado}" não encontrada na planilha.</p>', unsafe_allow_html=True)
 
     except Exception as e:
-        status.markdown('<p class="texto-fixo-branco">Erro ao processar voz. Por favor, use a digitação abaixo enquanto ajustamos o servidor.</p>', unsafe_allow_html=True)
+        status_msg.markdown('<p class="texto-fixo-branco">Erro ao processar voz. Tente digitar ou verifique a chave API.</p>', unsafe_allow_html=True)
 
 # --- SEÇÃO DE DIGITAÇÃO ---
 st.markdown("---")
@@ -127,8 +130,4 @@ with st.form("form_digitar"):
             gTTS(text=trad, lang='pt-br').save("voz_digito.mp3")
             st.audio("voz_digito.mp3", autoplay=True)
         else:
-            st.markdown('<p class="texto-fixo-branco">Buscando na IA...</p>', unsafe_allow_html=True)
-            res_ia_txt = model.generate_content(f"Traduza '{texto_input}' para Ticuna.")
-            st.markdown(f'<div class="resultado-traducao">Ticuna: {res_ia_txt.text}</div>', unsafe_allow_html=True)
-            gTTS(text=res_ia_txt.text, lang='pt-br').save("voz_ia_txt.mp3")
-            st.audio("voz_ia_txt.mp3", autoplay=True)
+            st.markdown('<p class="texto-fixo-branco">Palavra não encontrada na planilha.</p>', unsafe_allow_html=True)
