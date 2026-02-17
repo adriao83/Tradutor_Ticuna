@@ -12,7 +12,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS AJUSTADO PARA CENTRALIZAÇÃO TOTAL VERTICAL
+# CSS AJUSTADO: CENTRALIZAÇÃO TOTAL E REMOÇÃO DE TEXTO AUXILIAR
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -39,16 +39,20 @@ st.markdown(f"""
         font-weight: 900 !important;
     }}
 
-    /* AJUSTE DEFINITIVO DA CENTRALIZAÇÃO VERTICAL */
+    /* CENTRALIZAÇÃO VERTICAL DO TEXTO DIGITADO */
     .stTextInput input {{
         height: 50px !important;
-        padding: 0px 55px 0px 20px !important; /* Cima, Direita, Baixo, Esquerda */
-        line-height: 50px !important; /* Mesma altura do input para centralizar o texto */
-        display: flex !important;
-        align-items: center !important;
+        padding-top: 2px !important; /* Ajuste fino para subir o texto da borda inferior */
+        padding-bottom: 0px !important;
+        padding-left: 20px !important;
         border-radius: 25px !important;
-        font-size: 18px !important;
+        font-size: 20px !important; /* Aumentei um pouco para preencher melhor */
         background-color: white !important;
+    }}
+
+    /* ESCONDER "PRESS ENTER TO APPLY / SUBMIT FORM" */
+    [data-testid="InputInstructions"] {{
+        display: none !important;
     }}
 
     /* LUPA POSICIONADA DENTRO DA BARRA */
@@ -58,7 +62,7 @@ st.markdown(f"""
         font-size: 40px !important;
         color: black !important;
         padding: 0 !important;
-        margin-top: -51px !important; /* Ajuste fino para a lupa acompanhar o centro */
+        margin-top: -51px !important; 
         margin-left: -60px !important; 
         filter: drop-shadow(2px 4px 5px rgba(0,0,0,0.4)) !important;
         z-index: 10;
