@@ -16,10 +16,13 @@ try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
     df['PORT_BUSCA'] = df['PORTUGUES'].apply(normalizar)
 
-    palavra_usuario = st.text_input("Digite em Português:")
+    # Criamos um formulário para o Enter funcionar automaticamente
+    with st.form(key="busca_tradutor", clear_on_submit=False):
+        palavra_usuario = st.text_input("Digite em Português:")
+        submit_button = st.form_submit_button(label="🔍 PESQUISAR TRADUÇÃO")
 
-    # Botão de Pesquisa (Fundamental para o celular)
-    if st.button("🔍 PESQUISAR TRADUÇÃO"):
+    # A lógica de busca acontece quando clica no botão OU aperta Enter
+    if submit_button:
         if palavra_usuario:
             busca = normalizar(palavra_usuario)
             resultado = df[df['PORT_BUSCA'] == busca]
