@@ -60,7 +60,18 @@ st.markdown(f"""
         color: #000000 !important;
     }}
 
-    /* 6. Estilo do Carregamento (Texto Branco que você aprovou) */
+    /* 6. CORREÇÃO DA LETRA VERDE (st.success) */
+    /* Força o texto dentro da caixa de sucesso a ser preto para máxima leitura */
+    [data-testid="stNotification"] {{
+        color: #000000 !important;
+    }}
+    
+    [data-testid="stNotification"] p {{
+        color: #000000 !important;
+        font-weight: bold !important;
+    }}
+
+    /* 7. Estilo do Carregamento */
     .loading-container {{
         display: flex;
         align-items: center;
@@ -100,11 +111,9 @@ with col2:
         key='gravador'
     )
 
-# Lógica de carregamento de áudio sem a tarja azul
 if audio_gravado:
     st.audio(audio_gravado['bytes'])
     
-    # Exibe apenas o texto branco e o ícone de carregamento
     status_placeholder = st.empty()
     status_placeholder.markdown(f'''
         <div class="loading-container">
@@ -114,13 +123,8 @@ if audio_gravado:
     ''', unsafe_allow_html=True)
     
     try:
-        # Simulando o tempo de resposta da IA
         time.sleep(3) 
-        
-        # Remove a mensagem de carregamento após terminar
         status_placeholder.empty()
-        
-        # Resposta da IA (Sucesso)
         st.success("Áudio processado! Tradução em Ticuna disponível abaixo.")
 
     except Exception as e:
@@ -141,6 +145,7 @@ try:
                 resultado = df[df['BUSCA'] == normalizar(texto)]
                 if not resultado.empty:
                     ticuna = resultado['TICUNA'].values[0]
+                    # Aqui a letra agora aparecerá em preto bem nítido
                     st.success(f"### Ticuna: {ticuna}")
                     tts = gTTS(text=ticuna, lang='pt-br')
                     tts.save("audio.mp3")
