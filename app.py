@@ -1,3 +1,4 @@
+from streamlit_mic_recorder import mic_recorder
 import streamlit as st
 import pandas as pd
 from gtts import gTTS
@@ -52,6 +53,19 @@ def normalizar(t):
     return re.sub(r'[^a-zA-Z0-9]', '', str(t)).lower() if pd.notna(t) else ""
 
 st.title("🏹 Tradutor Ticuna v0.1")
+
+# --- NOVO: BOTÃO DE MICROFONE ---
+st.write("Fale em Português:")
+audio_gravado = mic_recorder(
+    start_prompt="Click para Falar 🎤",
+    stop_prompt="Parar Gravação ⏹️",
+    key='gravador'
+)
+
+if audio_gravado:
+    st.audio(audio_gravado['bytes'])
+    st.success("Áudio capturado com sucesso! Agora falta conectar com a IA.")
+# -------------------------------
 
 try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
