@@ -13,10 +13,10 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# ESTILO FINAL: FUNDO TOTAL + ÍCONES DO TOPO BRANCO PURO
+# ESTILO COM FAIXA DE PROTEÇÃO NO TOPO
 st.markdown(f"""
     <style>
-    /* Fundo que não acaba ao rolar */
+    /* 1. Fundo da página */
     [data-testid="stAppViewContainer"] {{
         background-image: url("{img}");
         background-size: cover !important;
@@ -25,38 +25,30 @@ st.markdown(f"""
         background-attachment: fixed !important;
     }}
 
-    [data-testid="stHeader"], .stApp {{
-        background: rgba(0,0,0,0) !important;
+    /* 2. FAIXA DE PROTEÇÃO NO TOPO (Isso garante que você veja os botões) */
+    [data-testid="stHeader"] {{
+        background-color: rgba(0, 0, 0, 0.5) !important; /* Faixa preta semi-transparente */
+        backdrop-filter: blur(10px); /* Efeito de vidro fosco */
     }}
 
-    /* --- SOLUÇÃO MATADORA PARA OS ÍCONES --- */
-    /* Este código força TUDO na barra superior a ficar branco, não importa o que seja */
-    header [data-testid="stHeaderActionElements"] button svg, 
-    header [data-testid="stHeaderActionElements"] a svg,
-    header [data-testid="stHeaderActionElements"] div,
-    header [data-testid="stHeaderActionElements"] span {{
+    /* 3. Forçar tudo no topo a ser branco para contrastar com a faixa */
+    [data-testid="stHeader"] * {{
+        color: white !important;
         fill: white !important;
-        color: white !important;
-        filter: brightness(0) invert(1) drop-shadow(0px 0px 3px black) !important;
     }}
 
-    /* Garante que o texto 'Share' também acompanhe */
-    header [data-testid="stHeaderActionElements"] p {{
-        color: white !important;
-        font-weight: bold;
-    }}
-
-    /* Caixa do Tradutor */
+    /* 4. Caixa do Tradutor */
     .stForm {{ 
-        background-color: rgba(255, 255, 255, 0.9); 
+        background-color: rgba(255, 255, 255, 0.95); 
         padding: 20px; 
         border-radius: 15px; 
+        box-shadow: 0px 10px 30px rgba(0,0,0,0.5);
     }}
     
-    /* Textos Gerais */
+    /* 5. Textos com sombra forte */
     h1, h3, p, label, .stMarkdown {{
         color: white !important;
-        text-shadow: 2px 2px 8px #000000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000 !important;
+        text-shadow: 2px 2px 4px #000000 !important;
         text-align: center;
     }}
     </style>
@@ -80,7 +72,7 @@ with col2:
 
 if audio_gravado:
     st.audio(audio_gravado['bytes'])
-    st.info("Áudio capturado com sucesso!")
+    st.info("Áudio capturado!")
 
 # --- SEÇÃO DE TEXTO ---
 try:
