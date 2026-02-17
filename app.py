@@ -72,7 +72,7 @@ st.markdown(f"""
         padding: 0 !important;
         
         top: 10px !important;    /* Ajuste validado para o centro vertical */
-        right: 40px !important;  /* Ajuste validado para a direita interna */
+        right: 60px !important;  /* Ajuste validado para a direita interna */
         
         filter: drop-shadow(2px 4px 5px rgba(0,0,0,0.4)) !important;
         z-index: 9999 !important;
