@@ -5,23 +5,8 @@ import re
 
 st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹")
 
-# Deixa o botão verde e grande para o celular
-st.markdown("""
-    <style>
-    div.stButton > button:first-child {
-        background-color: #2e7d32;
-        color: white;
-        height: 3em;
-        width: 100%;
-        border-radius: 10px;
-        font-weight: bold;
-    }
-    </style>
-    """, unsafe_content_allowed=True)
-
 def normalizar(texto):
     if pd.isna(texto): return ""
-    # Remove espaços, hífens e deixa tudo minúsculo
     return re.sub(r'[^a-zA-Z0-9]', '', str(texto)).lower()
 
 st.title("🏹 Tradutor Ticuna v0.1")
@@ -33,7 +18,7 @@ try:
 
     palavra_usuario = st.text_input("Digite em Português:")
 
-    # O botão de lupa que você pediu
+    # Botão de Pesquisa (Fundamental para o celular)
     if st.button("🔍 PESQUISAR TRADUÇÃO"):
         if palavra_usuario:
             busca = normalizar(palavra_usuario)
@@ -46,7 +31,6 @@ try:
                 st.success(f"**Português:** {port_original}")
                 st.subheader(f"Ticuna: {ticuna}")
                 
-                # Áudio do Google (Provisório até você gravar os reais)
                 tts = gTTS(text=ticuna, lang='pt-br')
                 tts.save("audio.mp3")
                 st.audio("audio.mp3")
@@ -56,4 +40,4 @@ try:
             st.warning("Por favor, digite uma palavra primeiro.")
 
 except Exception as e:
-    st.error("Erro ao carregar os dados da planilha.")
+    st.error("Erro ao carregar os dados. Verifique a planilha no GitHub.")
