@@ -5,9 +5,8 @@ import re
 
 st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹")
 
-# --- CONFIGURAÇÃO DA IMAGEM DE FUNDO ---
-# Usando o link RAW para evitar o erro de TypeError
-url_da_imagem = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
+# --- LINK DIRETO DA SUA IMAGEM NO GITHUB ---
+url_da_imagem = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/refs/heads/main/fundo.png"
 
 st.markdown(
     f"""
@@ -19,6 +18,7 @@ st.markdown(
         background-position: center;
     }}
     
+    /* Caixa branca para o texto não sumir no fundo */
     .stForm {{
         background-color: rgba(255, 255, 255, 0.9);
         padding: 20px;
@@ -26,11 +26,12 @@ st.markdown(
         border: 2px solid #2e7d32;
     }}
 
+    /* Título com sombra para destacar na foto */
     h1 {{
         color: white;
         text-shadow: 2px 2px 4px #000000;
         text-align: center;
-        background-color: rgba(0, 0, 0, 0.3);
+        background-color: rgba(0, 0, 0, 0.4);
         border-radius: 10px;
         padding: 10px;
     }}
@@ -74,4 +75,4 @@ try:
             st.warning("Por favor, digite uma palavra.")
 
 except Exception as e:
-    st.error("Erro ao carregar a planilha de dados. Verifique se o arquivo Excel está no GitHub.")
+    st.error("Erro ao carregar a planilha de dados.")e o arquivo Excel está no GitHub.")
