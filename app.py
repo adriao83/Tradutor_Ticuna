@@ -12,7 +12,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS PARA POSICIONAR APENAS A LUPA NA BARRA PADRÃO
+# CSS AJUSTADO PARA CENTRALIZAÇÃO VERTICAL DO TEXTO
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -39,28 +39,31 @@ st.markdown(f"""
         font-weight: 900 !important;
     }}
 
-    /* ESTILO DO INPUT PADRÃO */
+    /* AJUSTE DO INPUT: TEXTO CENTRALIZADO VERTICALMENTE */
     .stTextInput input {{
         height: 50px !important;
+        line-height: 50px !important; /* Força o alinhamento vertical pelo centro */
+        padding-top: 0px !important;
+        padding-bottom: 0px !important;
         border-radius: 25px !important;
         font-size: 18px !important;
+        padding-left: 20px !important; /* Recuo à esquerda mantido */
         padding-right: 55px !important;
     }}
 
-    /* BOTÃO DA LUPA - POSICIONADO DENTRO DA BARRA PADRÃO */
+    /* LUPA POSICIONADA DENTRO DA BARRA */
     .stButton button {{
         background: transparent !important;
         border: none !important;
         font-size: 40px !important;
         color: black !important;
         padding: 0 !important;
-        margin-top: -52px !important; /* Ajuste para subir a lupa para dentro da barra */
+        margin-top: -52px !important; 
         margin-left: -60px !important; 
         filter: drop-shadow(2px 4px 5px rgba(0,0,0,0.4)) !important;
         z-index: 10;
     }}
 
-    /* Alinhamento da lupa na coluna */
     [data-testid="column"] {{
         display: flex;
         align-items: center;
@@ -84,7 +87,7 @@ except:
 st.title("🏹 Tradutor Ticuna v0.1")
 st.markdown('<h3 class="texto-fixo-branco">Digite para Traduzir:</h3>', unsafe_allow_html=True)
 
-# ESTRUTURA SEM A CAIXA EXTRA
+# ESTRUTURA DE COLUNAS
 col_main, col_btn = st.columns([0.85, 0.15])
 
 with col_main:
