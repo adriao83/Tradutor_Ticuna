@@ -12,7 +12,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS AJUSTADO: CENTRALIZAÇÃO TOTAL E REMOÇÃO DE TEXTO AUXILIAR
+# CSS AJUSTADO: BAIXANDO O TEXTO PARA O CENTRO E LIMPANDO INSTRUÇÕES
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -39,18 +39,19 @@ st.markdown(f"""
         font-weight: 900 !important;
     }}
 
-    /* CENTRALIZAÇÃO VERTICAL DO TEXTO DIGITADO */
+    /* AJUSTE DO TEXTO DIGITADO: BAIXANDO A MARGEM SUPERIOR */
     .stTextInput input {{
         height: 50px !important;
-        padding-top: 2px !important; /* Ajuste fino para subir o texto da borda inferior */
-        padding-bottom: 0px !important;
+        padding-top: 12px !important; /* Empurra o texto para baixo para centralizar verticalmente */
+        padding-bottom: 10px !important;
         padding-left: 20px !important;
         border-radius: 25px !important;
-        font-size: 20px !important; /* Aumentei um pouco para preencher melhor */
+        font-size: 20px !important;
         background-color: white !important;
+        line-height: normal !important;
     }}
 
-    /* ESCONDER "PRESS ENTER TO APPLY / SUBMIT FORM" */
+    /* ESCONDE AS INSTRUÇÕES "PRESS ENTER" */
     [data-testid="InputInstructions"] {{
         display: none !important;
     }}
