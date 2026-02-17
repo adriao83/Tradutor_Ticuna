@@ -10,17 +10,16 @@ model = genai.GenerativeModel('gemini-1.5-flash')
 
 st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="centered")
 
-# --- CONTROLE DE ESTADO PARA LIMPAR TUDO ---
+# --- CONTROLE DE ESTADO ---
 if 'contador_limpar' not in st.session_state:
     st.session_state.contador_limpar = 0
 
 def acao_limpar():
-    # Aumentar o contador muda a 'key' do input, limpando-o instantaneamente
     st.session_state.contador_limpar += 1
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- CSS TOTALMENTE INTEGRADO ---
+# --- CSS REFEITO PARA PROTEGER O TÍTULO ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -28,6 +27,12 @@ st.markdown(f"""
         background-image: url("{img}");
         background-size: cover !important;
         background-position: center !important;
+    }}
+
+    /* FORÇAR TÍTULO SEMPRE BRANCO */
+    h1, h1 span, [data-testid="stMarkdownContainer"] h1 {{
+        color: white !important;
+        text-shadow: 2px 2px 10px #000 !important;
     }}
 
     /* Barra Branca */
@@ -38,7 +43,7 @@ st.markdown(f"""
         padding-right: 85px !important;
     }}
 
-    /* Container dos botões sobre a barra */
+    /* Container dos botões */
     .btn-overlay {{
         position: relative;
         height: 0px;
@@ -50,17 +55,20 @@ st.markdown(f"""
         gap: 8px;
     }}
 
-    /* Estilo dos ícones */
-    .stButton button {{
+    /* Estilo exclusivo para os botões da barra (não afeta o título) */
+    button[key="btn_x_clear"], button[key="btn_lupa_search"] {{
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
         font-size: 26px !important;
         color: #444 !important;
         padding: 0px !important;
+        min-height: 0px !important;
     }}
     
-    .stButton button:hover {{ color: #007bff !important; }}
+    button[key="btn_x_clear"]:hover, button[key="btn_lupa_search"]:hover {{
+        color: #007bff !important;
+    }}
 
     [data-testid="InputInstructions"] {{ display: none !important; }}
     .texto-fixo-branco {{ color: white !important; text-align: center; text-shadow: 2px 2px 10px #000; }}
@@ -77,11 +85,11 @@ try:
 except:
     st.error("Erro ao carregar planilha.")
 
+# Título 
 st.title("🏹 Tradutor Ticuna v0.1")
 st.markdown('<h3 class="texto-fixo-branco">Digite para Traduzir:</h3>', unsafe_allow_html=True)
 
-# --- CAMPO DE BUSCA COM KEY DINÂMICA ---
-# A key muda toda vez que clicamos no X, resetando o campo
+# Campo de Busca
 texto_busca = st.text_input(
     "", 
     placeholder="Pesquise uma palavra...", 
@@ -89,24 +97,20 @@ texto_busca = st.text_input(
     key=f"input_{st.session_state.contador_limpar}"
 )
 
-# --- BOTÕES ---
+# Botões
 st.markdown('<div class="btn-overlay">', unsafe_allow_html=True)
 c1, c2 = st.columns([1, 1])
-
 with c1:
     if texto_busca != "":
-        # Agora o X chama a função que muda a key
         st.button("✖", on_click=acao_limpar, key="btn_x_clear")
-
 with c2:
-    btn_lupa = st.button("🔍", key="btn_lupa_search")
+    st.button("🔍", key="btn_lupa_search")
 st.markdown('</div>', unsafe_allow_html=True)
 
-# --- RESULTADO E ÁUDIO ---
+# Resultado
 if texto_busca:
     t_norm = normalizar(texto_busca)
     res = df[df['BUSCA_PT'] == t_norm]
-    
     if not res.empty:
         trad = res['TICUNA'].values[0]
         st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
