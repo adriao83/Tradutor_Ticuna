@@ -13,44 +13,54 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# ESTILO REFINADO: GRADIENTE NO TOPO + CAIXA CLARA
+# CSS UNIFICADO (PC, CELULAR, MODO CLARO E ESCURO)
 st.markdown(f"""
     <style>
-    /* 1. Fundo da página */
+    /* 1. Fixar o fundo em qualquer dispositivo */
     [data-testid="stAppViewContainer"] {{
         background-image: url("{img}");
         background-size: cover !important;
         background-position: center !important;
-        background-repeat: no-repeat !important;
         background-attachment: fixed !important;
     }}
 
-    /* 2. GRADIENTE NO TOPO (Sombra suave para os ícones aparecerem) */
+    /* 2. Criar uma barra sólida no topo para os ícones sempre aparecerem */
     [data-testid="stHeader"] {{
-        background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%) !important;
+        background-color: rgba(0, 0, 0, 0.8) !important;
         height: 3.5rem;
     }}
 
-    /* 3. Forçar ícones e textos do topo para BRANCO PURO */
-    header [data-testid="stHeaderActionElements"] * {{
+    /* 3. Forçar ícones e links do topo a serem brancos (sem exceção) */
+    [data-testid="stHeader"] * {{
         color: white !important;
         fill: white !important;
     }}
-    
-    /* 4. Caixa do Tradutor (Ajustada para ficar mais nítida) */
+
+    /* 4. Estilizar a caixa de tradução para ser legível em qualquer modo */
     .stForm {{ 
-        background-color: rgba(255, 255, 255, 0.9); 
-        padding: 30px; 
-        border-radius: 20px; 
-        box-shadow: 0px 8px 25px rgba(0,0,0,0.4);
-        border: 1px solid rgba(255,255,255,0.5);
+        background-color: rgba(255, 255, 255, 0.95) !important; 
+        padding: 20px; 
+        border-radius: 15px; 
+        border: none !important;
     }}
-    
-    /* 5. Títulos e Labels com Sombra Forte para Leitura */
+
+    /* 5. Forçar as cores dos inputs (texto dentro da caixa) */
+    .stForm input {{
+        color: black !important;
+        background-color: white !important;
+    }}
+
+    /* 6. Títulos com sombra para destacar da foto */
     h1, h3, p, label {{
         color: white !important;
-        text-shadow: 2px 2px 5px rgba(0,0,0,0.9) !important;
-        font-weight: bold !important;
+        text-shadow: 2px 2px 4px #000000 !important;
+    }}
+
+    /* Ajuste para Mobile: esconder espaço vazio no topo */
+    @media (max-width: 640px) {{
+        .main .block-container {{
+            padding-top: 2rem !important;
+        }}
     }}
     </style>
     """, unsafe_allow_html=True)
@@ -63,7 +73,7 @@ st.title("🏹 Tradutor Ticuna v0.1")
 # --- SEÇÃO DE VOZ ---
 st.markdown("### 🎤 Converse com a IA ou Traduza")
 
-col1, col2, col3 = st.columns([1, 2, 1])
+col1, col2, col3 = st.columns([1, 5, 1])
 with col2:
     audio_gravado = mic_recorder(
         start_prompt="Falar (Português) 🎤", 
@@ -81,8 +91,10 @@ try:
     df['BUSCA'] = df['PORTUGUES'].apply(normalizar)
 
     with st.form("tradutor_form"):
-        texto = st.text_input("Ou digite uma palavra:")
-        if st.form_submit_button("🔍 TRADUZIR"):
+        texto = st.text_input("Ou digite uma palavra:", placeholder="Ex: Olá")
+        submit = st.form_submit_button("🔍 TRADUZIR")
+        
+        if submit:
             if texto:
                 resultado = df[df['BUSCA'] == normalizar(texto)]
                 if not resultado.empty:
@@ -92,7 +104,7 @@ try:
                     tts.save("audio.mp3")
                     st.audio("audio.mp3")
                 else:
-                    st.warning("Não encontrado na planilha. Consultando IA...")
+                    st.warning("Consultando IA...")
                     response = model.generate_content(f"Como se diz '{texto}' em língua Ticuna? Responda apenas a tradução.")
                     st.info(f"IA sugere: {response.text}")
             else:
