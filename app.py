@@ -70,19 +70,19 @@ st.markdown(f"""
         display: none !important;
     }}
 
-    /* LUPA POSICIONADA DENTRO DA BARRA */
+    /* LUPA: AJUSTE FINAL DE POSIÇÃO */
     .stButton button {{
         background: transparent !important;
         border: none !important;
         font-size: 40px !important;
         color: black !important;
         padding: 0 !important;
-        margin-top: -55px !important; /* Ajustado para a nova altura de 55px */
-        margin-left: -65px !important; 
+        /* AJUSTE ESTES DOIS VALORES ABAIXO PARA MOVER A LUPA */
+        margin-top: -55px !important;  /* Diminua (ex: -50px) para descer | Aumente (ex: -60px) para subir */
+        margin-left: -70px !important; /* Diminua (ex: -60px) para ir para a direita | Aumente (ex: -80px) para a esquerda */
         filter: drop-shadow(2px 4px 5px rgba(0,0,0,0.4)) !important;
-        z-index: 10;
+        z-index: 20 !important;
     }}
-
     [data-testid="column"] {{
         display: flex;
         align-items: center;
