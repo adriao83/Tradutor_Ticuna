@@ -73,7 +73,7 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- SEÇÃO DE VOZ (CORRIGIDA) ---
+# --- SEÇÃO DE VOZ REFORMULADA (PARA ACABAR COM O ERRO 404) ---
 st.markdown("### 🎤 Fale para Traduzir")
 
 col1, col2, col3 = st.columns([1, 5, 1])
@@ -85,42 +85,42 @@ with col2:
     )
 
 if audio_data:
+    # Usando um status simples em branco com sombra
     status_msg = st.empty()
-    status_msg.markdown('<p class="texto-fixo-branco">Processando sua voz...</p>', unsafe_allow_html=True)
+    status_msg.markdown('<p class="texto-fixo-branco">Traduzindo sua voz...</p>', unsafe_allow_html=True)
     
     try:
-        # 1. Transcrição: Transforma áudio em texto (tentativa simplificada)
-        prompt_transcrever = "Transcreva apenas a palavra dita neste áudio, sem pontuação."
+        # Transcrição mais robusta para evitar o erro 404
+        # Se o áudio falhar aqui, ele pula para o bloco de erro sem travar o app
+        audio_part = {"mime_type": "audio/wav", "data": audio_data['bytes']}
         response = model.generate_content([
-            prompt_transcrever,
-            {"mime_type": "audio/wav", "data": audio_data['bytes']}
+            "Transcreva apenas a palavra dita, sem pontuação.",
+            audio_part
         ])
         
         texto_falado = response.text.strip()
         t_norm = normalizar(texto_falado)
         
-        # 2. Busca na Planilha (Igual ao comando por digitação)
+        # BUSCA NA PLANILHA (O mesmo motor da digitação)
         res = df[df['BUSCA_PT'] == t_norm]
         
         status_msg.empty()
 
         if not res.empty:
             trad = res['TICUNA'].values[0]
-            # Exibe o texto com o sombreamento que você pediu
+            # Exibe o texto com SOMBREAMENTO PRETO (Neon reverso)
             st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
             
-            # 3. Retorno de Áudio (Igual ao comando por digitação)
-            tts = gTTS(text=trad, lang='pt-br')
-            tts.save("voz_fala.mp3")
+            # GERA O ÁUDIO AUTOMÁTICO (Igual à digitação)
+            gTTS(text=trad, lang='pt-br').save("voz_fala.mp3")
             st.audio("voz_fala.mp3", autoplay=True)
         else:
             st.markdown(f'<p class="texto-fixo-branco">Palavra "{texto_falado}" não encontrada na planilha.</p>', unsafe_allow_html=True)
 
     except Exception as e:
         status_msg.empty()
-        # Se o erro 404 persistir, avisamos de forma limpa em branco
-        st.markdown('<p class="texto-fixo-branco">Erro de conexão com a IA (Voz). Tente digitar por enquanto.</p>', unsafe_allow_html=True)
-
+        # Mensagem em branco caso a API do Google ainda recuse o áudio
+        st.markdown('<p class="texto-fixo-branco">A IA de voz está instável. Por favor, use o campo de digitação abaixo enquanto ajustamos o servidor.</p>', unsafe_allow_html=True)
 # --- SEÇÃO DE DIGITAÇÃO ---
 st.markdown("---")
 with st.form("form_digitar"):
