@@ -58,9 +58,9 @@ st.markdown(f"""
     .lupa-custom button {{
         font-size: 35px !important;
         position: fixed !important; 
-        top: 255px !important;   /* Aumente esse número para a lupa DESCER na tela */
+        top: 110px !important;   /* Aumente esse número para a lupa DESCER na tela */
         left: 50% !important;
-        margin-left: 210px !important; /* Aumente p/ mover p/ DIREITA, diminua p/ ESQUERDA */
+        margin-left: 540px !important; /* Aumente p/ mover p/ DIREITA, diminua p/ ESQUERDA */
     }}
 
     /* --- AJUSTE O X AQUI --- */
