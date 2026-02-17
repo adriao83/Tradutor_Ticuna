@@ -12,7 +12,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS PARA FORÇAR A LUPA DENTRO DA BARRA
+# CSS PARA POSICIONAR APENAS A LUPA NA BARRA PADRÃO
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -39,43 +39,32 @@ st.markdown(f"""
         font-weight: 900 !important;
     }}
 
-    /* A CAIXA QUE VOCÊ PEDIU COM CONTORNO VERMELHO */
-    .custom-search-bar {{
-        display: flex;
-        align-items: center;
-        background-color: white;
-        border: 2px solid red !important;
-        border-radius: 30px;
-        padding: 5px 15px;
-        width: 100%;
-        max-width: 700px;
-        margin: 0 auto;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }}
-
-    /* ESTILO DO INPUT (SEM BORDAS DO STREAMLIT) */
-    .stTextInput div[data-baseweb="input"] {{
-        background-color: transparent !important;
-        border: none !important;
-    }}
-    
+    /* ESTILO DO INPUT PADRÃO */
     .stTextInput input {{
-        background-color: transparent !important;
-        border: none !important;
-        font-size: 20px !important;
-        color: black !important;
+        height: 50px !important;
+        border-radius: 25px !important;
+        font-size: 18px !important;
+        padding-right: 55px !important;
     }}
 
-    /* BOTÃO DA LUPA REALMENTE DENTRO E GRANDE */
+    /* BOTÃO DA LUPA - POSICIONADO DENTRO DA BARRA PADRÃO */
     .stButton button {{
         background: transparent !important;
         border: none !important;
         font-size: 40px !important;
         color: black !important;
         padding: 0 !important;
-        margin-left: -50px !important; /* Puxa a lupa para dentro da área branca */
+        margin-top: -52px !important; /* Ajuste para subir a lupa para dentro da barra */
+        margin-left: -60px !important; 
         filter: drop-shadow(2px 4px 5px rgba(0,0,0,0.4)) !important;
         z-index: 10;
+    }}
+
+    /* Alinhamento da lupa na coluna */
+    [data-testid="column"] {{
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }}
 
     small {{ display: none !important; }}
@@ -95,17 +84,13 @@ except:
 st.title("🏹 Tradutor Ticuna v0.1")
 st.markdown('<h3 class="texto-fixo-branco">Digite para Traduzir:</h3>', unsafe_allow_html=True)
 
-# ESTRUTURA UNIFICADA
-col_main, col_btn = st.columns([0.9, 0.1])
+# ESTRUTURA SEM A CAIXA EXTRA
+col_main, col_btn = st.columns([0.85, 0.15])
 
 with col_main:
-    # A borda vermelha agora envolve o input e a lupa juntos
-    st.markdown('<div class="custom-search-bar">', unsafe_allow_html=True)
     texto_input = st.text_input("", placeholder="Pesquise uma palavra...", label_visibility="collapsed")
-    st.markdown('</div>', unsafe_allow_html=True)
 
 with col_btn:
-    # A lupa agora aparece "por cima" do final do input
     submit_botao = st.button("🔍")
 
 # LÓGICA
