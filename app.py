@@ -14,7 +14,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS REFINADO: FOCO NO TEXTO BRANCO COM CONTORNO PRETO
+# CSS REFINADO: FOCO NO SOMBREAMENTO PRETO
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -25,21 +25,23 @@ st.markdown(f"""
         background-attachment: fixed !important;
     }}
 
-    /* Estilo para frases de erro e status ficarem sempre em BRANCO com sombra forte */
+    /* Estilo para as mensagens de status e frases de erro em BRANCO */
     .texto-fixo-branco, .stAlert p, h1, h3 {{
         color: white !important;
-        text-shadow: 2px 2px 4px #000000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000 !important;
+        text-shadow: 2px 2px 10px #000000 !important;
         text-align: center;
         font-weight: bold !important;
+        background: transparent !important;
     }}
 
-    /* Estilo específico para o resultado da tradução (Ex: Ticuna: Nacü) */
+    /* Estilo para o resultado da tradução com SOMBREAMENTO PRETO (Glow/Shadow) */
     .resultado-traducao {{
         color: white !important;
-        text-shadow: 2px 2px 4px #000000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000 !important;
-        font-size: 24px !important;
+        text-shadow: 0px 0px 15px #000000, 0px 0px 10px #000000, 2px 2px 5px #000000 !important;
+        font-size: 30px !important;
         text-align: center;
-        padding: 10px;
+        padding: 20px;
+        font-weight: 800 !important;
     }}
 
     .stForm {{ 
@@ -48,7 +50,6 @@ st.markdown(f"""
         border-radius: 15px; 
     }}
     
-    /* Texto dentro da caixa de digitação continua preto para leitura */
     [data-testid="stForm"] label p {{ color: #1E1E1E !important; text-shadow: none !important; }}
     </style>
     """, unsafe_allow_html=True)
@@ -56,7 +57,7 @@ st.markdown(f"""
 def normalizar(t):
     return re.sub(r'[^a-zA-Z0-9]', '', str(t)).lower() if pd.notna(t) else ""
 
-# 1. CARREGAR PLANILHA (O cérebro do tradutor)
+# 1. CARREGAR PLANILHA
 try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
     df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
@@ -66,12 +67,11 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- SEÇÃO DE VOZ CORRIGIDA ---
+# --- SEÇÃO DE VOZ ---
 st.markdown("### 🎤 Fale para Traduzir")
 
 col1, col2, col3 = st.columns([1, 5, 1])
 with col2:
-    # Usando mic_recorder para capturar a fala
     audio_data = mic_recorder(
         start_prompt="Clique para falar 🎤", 
         stop_prompt="Traduzir fala ⏹️", 
@@ -83,30 +83,29 @@ if audio_data:
     status.markdown('<p class="texto-fixo-branco">Identificando sua voz...</p>', unsafe_allow_html=True)
     
     try:
-        # 2. TRANSREVE O ÁUDIO USANDO O MODELO FLASH (Melhorado para evitar 404)
-        audio_content = {"mime_type": "audio/wav", "data": audio_data['bytes']}
+        # Envio do áudio para transcrição
+        prompt = "Transcreva apenas a palavra falada, sem pontuação."
         response = model.generate_content([
-            "Transcreva apenas a palavra falada, sem pontuação.", 
-            audio_content
+            prompt, 
+            {"mime_type": "audio/wav", "data": audio_data['bytes']}
         ])
         
         texto_falado = response.text.strip()
         t_norm = normalizar(texto_falado)
         
-        # 3. BUSCA NA PLANILHA (Igual ao modo de digitação)
+        # BUSCA NA PLANILHA
         res = df[df['BUSCA_PT'] == t_norm]
         
         if not res.empty:
             trad = res['TICUNA'].values[0]
             status.empty()
-            st.markdown(f'<p class="texto-fixo-branco">Você disse: "{texto_falado}"</p>', unsafe_allow_html=True)
             st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
             
-            # 4. GERA ÁUDIO SINTÉTICO (Igual ao modo de digitação)
+            # GERA ÁUDIO SINTÉTICO
             gTTS(text=trad, lang='pt-br').save("voz_fala.mp3")
             st.audio("voz_fala.mp3", autoplay=True)
         else:
-            status.markdown(f'<p class="texto-fixo-branco">Palavra "{texto_falado}" não encontrada na planilha.</p>', unsafe_allow_html=True)
+            status.markdown(f'<p class="texto-fixo-branco">A palavra "{texto_falado}" não está na planilha.</p>', unsafe_allow_html=True)
 
     except Exception as e:
         status.markdown('<p class="texto-fixo-branco">Erro ao processar voz. Tente digitar ou verifique a chave API.</p>', unsafe_allow_html=True)
@@ -121,7 +120,7 @@ with st.form("form_digitar"):
         
         if not res.empty:
             trad = res['TICUNA'].values[0]
-            # Resultado com contorno preto para ler bem no verde
+            # Resultado com SOMBREAMENTO PRETO para destaque total
             st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
             gTTS(text=trad, lang='pt-br').save("voz_digito.mp3")
             st.audio("voz_digito.mp3", autoplay=True)
