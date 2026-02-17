@@ -13,7 +13,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS PARA POSICIONAR A LUPA DENTRO DO CAMPO
+# CSS PARA COLOCAR A LUPA DENTRO DA CAIXA (ESTILO GOOGLE)
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -46,34 +46,30 @@ st.markdown(f"""
         border-radius: 15px;
         position: relative;
     }}
-
+    
     /* CAIXA DE TEXTO */
     .stTextInput input {{
-        padding-right: 50px !important;
+        padding-right: 45px !important; /* Espaço interno para a lupa não cobrir o texto */
         height: 45px !important;
-        border: 1px solid #ccc !important;
+        border-radius: 25px !important; /* Bordas arredondadas estilo Google */
     }}
 
-    /* --- O SEGREDO ESTÁ AQUI: ALINHAMENTO DA LUPA --- */
-    /* Seleciona o container do botão dentro do formulário */
-    [data-testid="stFormSubmitButton"] {{
+    /* POSICIONAMENTO DA LUPA DENTRO DA CAIXA */
+    /* Esse seletor encontra o botão de submit do formulário e o move para cima */
+    div[data-testid="stFormSubmitButton"] {{
         position: absolute;
-        right: 35px;
-        bottom: 31px; /* Ajuste essa altura conforme o tamanho do seu formulário */
-        z-index: 999;
+        right: 40px; /* Distância da borda direita */
+        margin-top: -46px; /* Puxa o botão para dentro da barra de texto */
+        z-index: 1000;
     }}
 
-    /* Estilo do botão para ser apenas a lupa */
-    [data-testid="stFormSubmitButton"] button {{
+    /* ESTILO DO BOTÃO (APENAS O ÍCONE) */
+    div[data-testid="stFormSubmitButton"] button {{
         background: transparent !important;
         border: none !important;
-        padding: 0 !important;
-        font-size: 22px !important;
         box-shadow: none !important;
-    }}
-    
-    [data-testid="stFormSubmitButton"] button:hover {{
-        transform: scale(1.1);
+        padding: 0 !important;
+        font-size: 20px !important;
     }}
 
     .stAlert {{ background: transparent !important; border: none !important; }}
@@ -92,14 +88,15 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- SEÇÃO DE DIGITAÇÃO ---
+# --- SEÇÃO DE ENTRADA ---
 st.markdown("---")
 with st.form("form_digitar"):
     st.markdown("### Digite para Traduzir:")
     
+    # Campo de texto (o ID interno ajuda o CSS a localizar)
     texto_input = st.text_input("", placeholder="Ex: Capivara", label_visibility="collapsed")
     
-    # Botão de Lupa
+    # Botão de Lupa (posicionado via CSS dentro do input acima)
     submit_botao = st.form_submit_button("🔍")
 
 # LÓGICA DE BUSCA
@@ -111,6 +108,7 @@ if submit_botao and texto_input:
         trad = res['TICUNA'].values[0]
         st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
         
+        # Áudio
         tts = gTTS(text=trad, lang='pt-br')
         tts.save("voz_trad.mp3")
         st.audio("voz_trad.mp3", autoplay=True)
