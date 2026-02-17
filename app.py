@@ -16,7 +16,7 @@ if 'texto' not in st.session_state:
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS TOTALMENTE REFEITO PARA OBEDECER O SEU DESENHO
+# CSS REFEITO DO ZERO PARA FORÇAR OS ÍCONES PARA DENTRO DA BARRA
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -43,64 +43,55 @@ st.markdown(f"""
         font-weight: 900 !important;
     }}
 
-    /* CAMADA DA CAIXA DE TEXTO */
+    /* BARRA DE BUSCA */
     [data-testid="stWidgetLabel"] {{ display: none !important; }}
     
     .stTextInput > div {{
         background-color: white !important;
         border-radius: 25px !important;
         height: 55px !important;
-        width: 100% !important;
+        z-index: 1;
     }}
 
     .stTextInput input {{
         height: 55px !important;
         background-color: transparent !important;
         border: none !important;
-        padding: 0px 110px 0px 20px !important;
+        padding: 0px 100px 0px 20px !important;
         font-size: 20px !important;
     }}
 
-    [data-testid="InputInstructions"] {{ display: none !important; }}
-
-    /* REMOVE A CAIXA CINZA/BRANCA QUE O STREAMLIT CRIA EM VOLTA DOS BOTÕES */
-    .stButton {{
-        position: relative !important;
-        height: 0px !important;
-    }}
-
+    /* ESTILO DOS BOTÕES */
     .stButton button {{
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
+        position: fixed !important; /* Fixa na tela para não fugir */
+        z-index: 99999 !important; /* Sempre na frente de tudo */
         padding: 0 !important;
-        position: absolute !important;
-        z-index: 9999 !important;
         min-height: 0px !important;
         width: auto !important;
     }}
 
-    .stButton button:hover {{
-        background: transparent !important;
+    /* POSIÇÃO DA LUPA - AJUSTADA PELO TOPO DA TELA */
+    .lupa-fixa button {{
+        font-size: 40px !important;
         color: #1E90FF !important;
+        top: 218px !important; /* Se a barra subir ou descer, ajuste este número */
+        left: 50% !important;
+        margin-left: 215px !important; /* Empurra para a direita da barra */
     }}
 
-    /* POSIÇÃO DA LUPA - PUXANDO PARA DENTRO DA BARRA */
-    .posicao-lupa button {{
-        font-size: 35px !important;
+    /* POSIÇÃO DO X - AJUSTADA PELO TOPO DA TELA */
+    .x-fixo button {{
+        font-size: 30px !important;
         color: #1E90FF !important;
-        top: -46px !important; /* Ajuste aqui para subir/descer */
-        right: 25px !important; /* Ajuste aqui para esquerda/direita */
+        top: 225px !important; /* Ajuste para centralizar o X verticalmente */
+        left: 50% !important;
+        margin-left: 175px !important; /* Fica logo à esquerda da lupa */
     }}
 
-    /* POSIÇÃO DO X - PUXANDO PARA DENTRO DA BARRA */
-    .posicao-x button {{
-        font-size: 28px !important;
-        color: #1E90FF !important;
-        top: -42px !important; /* Ajuste aqui para subir/descer */
-        right: 75px !important; /* Sempre maior que o da lupa para ficar à esquerda */
-    }}
-
+    [data-testid="InputInstructions"] {{ display: none !important; }}
     small {{ display: none !important; }}
     </style>
     """, unsafe_allow_html=True)
@@ -118,18 +109,18 @@ except:
 st.title("🏹 Tradutor Ticuna v0.1")
 st.markdown('<h3 class="texto-fixo-branco">Digite para Traduzir:</h3>', unsafe_allow_html=True)
 
-# CAMPO DE TEXTO (OCUPANDO A LARGURA TODA)
-texto_input = st.text_input("", value=st.session_state.texto, placeholder="Pesquise uma palavra...", label_visibility="collapsed", key="input_principal")
+# INPUT
+texto_input = st.text_input("", value=st.session_state.texto, placeholder="Pesquise uma palavra...", label_visibility="collapsed", key="main_input")
 st.session_state.texto = texto_input
 
-# BOTÕES SEM COLUNAS (PARA NÃO BLOQUEAR O CSS)
-st.markdown('<div class="posicao-lupa">', unsafe_allow_html=True)
-submit_botao = st.button("🔍", key="btn_pesquisar")
+# BOTÕES FIXOS NA TELA (PARA NÃO SAÍREM DA BARRA)
+st.markdown('<div class="lupa-fixa">', unsafe_allow_html=True)
+submit_botao = st.button("🔍", key="search")
 st.markdown('</div>', unsafe_allow_html=True)
 
 if st.session_state.texto:
-    st.markdown('<div class="posicao-x">', unsafe_allow_html=True)
-    if st.button("✖", key="btn_limpar_caixa"):
+    st.markdown('<div class="x-fixo">', unsafe_allow_html=True)
+    if st.button("✖", key="clear"):
         st.session_state.texto = ""
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
