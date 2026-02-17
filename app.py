@@ -12,7 +12,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS PARA LIMPAR CAMADAS SOBREPOSTAS E CENTRALIZAR O TEXTO
+# CSS PARA LIMPAR CAMADAS E POSICIONAR A LUPA DE FORMA ABSOLUTA
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -40,29 +40,21 @@ st.markdown(f"""
     }}
 
     /* LIMPANDO AS CAMADAS DA CAIXA DE TEXTO */
-    [data-testid="stWidgetLabel"] {{ display: none !important; }} /* Remove o label invisível */
+    [data-testid="stWidgetLabel"] {{ display: none !important; }}
     
-    .stTextInput {{
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }}
-
     .stTextInput > div {{
         background-color: white !important;
         border-radius: 25px !important;
-        height: 55px !important; /* Altura da caixa */
+        height: 55px !important;
     }}
 
     .stTextInput input {{
-        height: 55px !important; /* Mesma altura da div pai */
+        height: 55px !important;
         background-color: transparent !important;
         border: none !important;
-        padding: 0px 60px 0px 20px !important; /* Sem padding no topo/baixo para não empurrar */
+        padding: 0px 60px 0px 20px !important;
         font-size: 20px !important;
-        display: flex !important;
-        align-items: center !important; /* Centraliza o texto verticalmente */
-        line-height: 55px !important; /* Alinha a linha do texto ao centro */
+        line-height: 55px !important;
     }}
 
     /* ESCONDE AS INSTRUÇÕES "PRESS ENTER" */
@@ -70,19 +62,24 @@ st.markdown(f"""
         display: none !important;
     }}
 
-    /* LUPA: AJUSTE FINAL DE POSIÇÃO */
+    /* LUPA: POSICIONAMENTO ABSOLUTO PARA MOVER LIVREMENTE */
     .stButton button {{
+        position: absolute !important;
         background: transparent !important;
         border: none !important;
         font-size: 40px !important;
         color: black !important;
         padding: 0 !important;
-        /* AJUSTE ESTES DOIS VALORES ABAIXO PARA MOVER A LUPA */
-        margin-top: -55px !important;  /* Diminua (ex: -50px) para descer | Aumente (ex: -60px) para subir */
-        margin-left: -70px !important; /* Diminua (ex: -60px) para ir para a direita | Aumente (ex: -80px) para a esquerda */
+        
+        /* AJUSTE ESTES VALORES PARA MOVER A LUPA */
+        top: -48px !important;   /* Diminua (ex: -55) para SUBIR | Aumente (ex: -40) para DESCER */
+        right: 40px !important;  /* Aumente (ex: 60) para ESQUERDA | Diminua (ex: 20) para DIREITA */
+        
         filter: drop-shadow(2px 4px 5px rgba(0,0,0,0.4)) !important;
-        z-index: 20 !important;
+        z-index: 9999 !important;
     }}
+
+    /* Remove bloqueios de coluna para o botão */
     [data-testid="column"] {{
         display: flex;
         align-items: center;
@@ -92,6 +89,7 @@ st.markdown(f"""
     small {{ display: none !important; }}
     </style>
     """, unsafe_allow_html=True)
+
 def normalizar(t):
     return re.sub(r'[^a-zA-Z0-9]', '', str(t)).lower() if pd.notna(t) else ""
 
