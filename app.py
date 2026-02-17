@@ -47,7 +47,7 @@ st.markdown(f"""
     .btn-overlay {{
         position: relative;
         height: 0px;
-        top: -60px; 
+        top: -80px; 
         float: right;
         right: 15px;
         z-index: 999;
