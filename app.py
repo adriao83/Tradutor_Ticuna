@@ -1,32 +1,43 @@
+
 import streamlit as st
 import pandas as pd
 from gtts import gTTS
+import re
 
 st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹")
 
-st.title("🏹 Tradutor Ticuna v0.1")
-st.write("Protótipo para o Edital Centelha - Preservação da Língua Magüta")
+# Função para normalizar o texto (remove hífens, espaços e deixa minúsculo)
+def normalizar(texto):
+    if pd.isna(texto): return ""
+    return re.sub(r'[^a-zA-Z0-9]', '', str(texto)).lower()
 
-# Carregando a planilha que você subiu
+st.title("🏹 Tradutor Ticuna v0.1")
+st.write("Protótipo - Preservação da Língua Magüta")
+
 try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
     
-    palavra = st.text_input("Digite em Português para traduzir:")
+    # Criamos colunas invisíveis para busca facilitada
+    df['PORT_BUSCA'] = df['PORTUGUES'].apply(normalizar)
 
-    if palavra:
-        # Busca exata na coluna PORTUGUES
-        resultado = df[df['PORTUGUES'].str.fullmatch(palavra, case=False, na=False)]
+    palavra_usuario = st.text_input("Digite em Português:")
+
+    if palavra_usuario:
+        busca = normalizar(palavra_usuario)
+        resultado = df[df['PORT_BUSCA'] == busca]
         
         if not resultado.empty:
             ticuna = resultado['TICUNA'].values[0]
-            st.success(f"### Tradução: {ticuna}")
+            port_original = resultado['PORTUGUES'].values[0]
             
-            # Gerar áudio automático
+            st.success(f"**Português:** {port_original}  \n**Ticuna:** {ticuna}")
+            
+            # Áudio (Provisório até você gravar os reais)
             tts = gTTS(text=ticuna, lang='pt-br')
             tts.save("audio.mp3")
             st.audio("audio.mp3")
         else:
-            st.warning("Palavra ainda não encontrada no nosso dicionário.")
-            
+            st.error(f"A palavra '{palavra_usuario}' não foi encontrada. Verifique a grafia ou tente outra.")
+
 except Exception as e:
-    st.error("Erro ao carregar a planilha. Verifique se o nome está correto no GitHub.")
+    st.error("Erro ao carregar os dados. Verifique o arquivo Excel no GitHub.")
