@@ -76,7 +76,7 @@ st.markdown(f"""
         color: black !important;
         top: 218px !important;
         /* AJUSTE AQUI: Aumente para ir para esquerda, diminua para ir para direita */
-        right: calc(50% - 10px) !important; 
+        right: calc(50%  10px) !important; 
         z-index: 9999 !important;
     }}
 
@@ -87,7 +87,7 @@ st.markdown(f"""
         color: #888 !important;
         top: 228px !important;
         /* AJUSTE AQUI: Deve ser maior que o da lupa para ficar à esquerda dela */
-        right: calc(50% - 20px) !important; 
+        right: calc(50%  12px) !important; 
         z-index: 10000 !important;
     }}
 
