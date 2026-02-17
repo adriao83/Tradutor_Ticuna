@@ -35,7 +35,7 @@ st.markdown(f"""
     /* LUPA - AJUSTE AQUI */
     button[key="lupa_btn"] {{
         position: fixed !important;
-        top: 255px !important;  
+        top: 200px !important;  
         left: 50% !important;
         margin-left: 210px !important; 
         font-size: 40px !important;
