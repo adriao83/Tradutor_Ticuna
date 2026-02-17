@@ -13,7 +13,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS PARA REMOVER O CABEÇALHO E DINAMIZAR CORES
+# CSS REFINADO PARA VISIBILIDADE TOTAL
 st.markdown(f"""
     <style>
     /* 1. Remove os ícones do topo */
@@ -21,7 +21,7 @@ st.markdown(f"""
         display: none !important;
     }}
 
-    /* 2. Fixar o fundo da página */
+    /* 2. Fundo da página */
     [data-testid="stAppViewContainer"] {{
         background-image: url("{img}");
         background-size: cover !important;
@@ -29,26 +29,32 @@ st.markdown(f"""
         background-attachment: fixed !important;
     }}
 
-    /* 3. Estilizar a caixa de tradução */
+    /* 3. Caixa do formulário (Branca sólida para não confundir) */
     .stForm {{ 
-        background-color: rgba(255, 255, 255, 0.95) !important; 
-        padding: 20px; 
+        background-color: rgba(255, 255, 255, 0.98) !important; 
+        padding: 25px; 
         border-radius: 15px; 
+        box-shadow: 0px 4px 20px rgba(0,0,0,0.3);
     }}
 
-    /* 4. Títulos Principais (Sempre brancos para destacar no fundo) */
+    /* 4. Títulos fora da caixa (Sempre Brancos com Sombra) */
     h1, h3, .stMarkdown p {{
         color: white !important;
         text-shadow: 2px 2px 4px #000000 !important;
         text-align: center;
     }}
 
-    /* 5. DINAMISMO: Faz o texto do campo de entrada seguir o tema do sistema */
-    /* Removendo a cor fixa branca do label para ele respeitar o modo claro/escuro */
-    label {{
-        text-align: center;
-        display: block;
-        font-weight: bold;
+    /* 5. A SOLUÇÃO: Forçar a cor do Label "Ou digite uma palavra" */
+    /* Usamos uma cor escura fixa que funciona tanto no claro quanto no escuro sobre o fundo branco */
+    [data-testid="stForm"] label p {{
+        color: #1E1E1E !important; /* Um grafite bem escuro, quase preto */
+        font-size: 1.1rem !important;
+        font-weight: bold !important;
+    }}
+
+    /* 6. Garantir que o texto que o usuário digita também apareça */
+    input {{
+        color: #000000 !important;
     }}
 
     /* Ajuste de margem */
@@ -84,7 +90,7 @@ try:
     df['BUSCA'] = df['PORTUGUES'].apply(normalizar)
 
     with st.form("tradutor_form"):
-        # O label abaixo agora seguirá a cor automática do Streamlit
+        # O label agora está "blindado" pelo CSS acima
         texto = st.text_input("Ou digite uma palavra:", placeholder="Ex: Olá")
         submit = st.form_submit_button("🔍 TRADUZIR")
         
