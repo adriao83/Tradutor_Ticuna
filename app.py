@@ -13,10 +13,15 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS UNIFICADO (PC, CELULAR, MODO CLARO E ESCURO)
+# CSS PARA REMOVER O CABEÇALHO E FIXAR O VISUAL
 st.markdown(f"""
     <style>
-    /* 1. Fixar o fundo em qualquer dispositivo */
+    /* 1. REMOVE COMPLETAMENTE A BARRA DO TOPO (Ícones, Edit, GitHub) */
+    [data-testid="stHeader"] {{
+        display: none !important;
+    }}
+
+    /* 2. Fixar o fundo da página */
     [data-testid="stAppViewContainer"] {{
         background-image: url("{img}");
         background-size: cover !important;
@@ -24,43 +29,29 @@ st.markdown(f"""
         background-attachment: fixed !important;
     }}
 
-    /* 2. Criar uma barra sólida no topo para os ícones sempre aparecerem */
-    [data-testid="stHeader"] {{
-        background-color: rgba(0, 0, 0, 0.8) !important;
-        height: 3.5rem;
-    }}
-
-    /* 3. Forçar ícones e links do topo a serem brancos (sem exceção) */
-    [data-testid="stHeader"] * {{
-        color: white !important;
-        fill: white !important;
-    }}
-
-    /* 4. Estilizar a caixa de tradução para ser legível em qualquer modo */
+    /* 3. Estilizar a caixa de tradução */
     .stForm {{ 
         background-color: rgba(255, 255, 255, 0.95) !important; 
         padding: 20px; 
         border-radius: 15px; 
-        border: none !important;
     }}
 
-    /* 5. Forçar as cores dos inputs (texto dentro da caixa) */
+    /* 4. Forçar cores dos inputs */
     .stForm input {{
         color: black !important;
         background-color: white !important;
     }}
 
-    /* 6. Títulos com sombra para destacar da foto */
+    /* 5. Títulos com sombra */
     h1, h3, p, label {{
         color: white !important;
         text-shadow: 2px 2px 4px #000000 !important;
+        text-align: center;
     }}
 
-    /* Ajuste para Mobile: esconder espaço vazio no topo */
-    @media (max-width: 640px) {{
-        .main .block-container {{
-            padding-top: 2rem !important;
-        }}
+    /* Ajuste de margem para compensar a falta do header */
+    .main .block-container {{
+        padding-top: 3rem !important;
     }}
     </style>
     """, unsafe_allow_html=True)
