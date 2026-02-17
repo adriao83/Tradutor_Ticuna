@@ -11,15 +11,23 @@ model = genai.GenerativeModel('gemini-1.5-flash')
 
 st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹")
 
-# Estilo Visual Ajustado
+# Link da sua foto de fundo
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
+
+# Estilo Visual com ajuste de fundo completo
 st.markdown(f"""
     <style>
     [data-testid="stAppViewContainer"] {{ 
         background-image: url("{img}"); 
-        background-size: cover; 
-        background-position: center; 
-        background-attachment: fixed; 
+        background-size: cover !important; 
+        background-position: center center !important; 
+        background-repeat: no-repeat !important; 
+        background-attachment: fixed !important;
+        width: 100vw;
+        height: 100vh;
+    }}
+    .stApp {{
+        background-attachment: fixed;
     }}
     .stForm {{ 
         background-color: rgba(255, 255, 255, 0.9); 
@@ -56,7 +64,6 @@ if audio_gravado:
     st.audio(audio_gravado['bytes'])
     try:
         st.info("Processando sua voz com a IA...")
-        # Aqui no futuro conectaremos o áudio direto ao Gemini
     except Exception as e:
         st.error("Erro ao processar voz.")
 
