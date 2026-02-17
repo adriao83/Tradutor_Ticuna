@@ -54,20 +54,20 @@ st.markdown(f"""
         width: auto !important;
     }}
 
-    /* --- AJUSTE A LUPA AQUI --- */
-    .lupa-custom button {{
-        font-size: 45px !important;
-        top: 800px !important;   /* Diminua p/ descer, aumente p/ subir */
-        right: -200px !important;  /* Aumente p/ ir p/ esquerda */
-    }}
+/* --- AJUSTE A LUPA AQUI --- */
+    .lupa-custom button {
+        font-size: 35px !important;
+        top: -68px !important;   /* USE NEGATIVO PARA SUBIR. Ex: -50px sobe mais */
+        right: 25px !important;  /* Aumente este número para ela ir para a ESQUERDA */
+    }
 
     /* --- AJUSTE O X AQUI --- */
-    .x-custom button {{
+    .x-custom button {
         font-size: 25px !important;
-        top: -42px !important;   /* Diminua p/ descer, aumente p/ subir */
-        right: 65px !important;  /* Aumente p/ ir p/ esquerda */
+        top: -43px !important;   /* USE NEGATIVO. Ajuste para alinhar com a lupa */
+        right: 70px !important;  /* Sempre maior que o da lupa para ficar ao lado */
         color: #888 !important;
-    }}
+    }
 
     [data-testid="InputInstructions"] {{ display: none !important; }}
     .texto-fixo-branco, h1, h3 {{ color: white !important; text-align: center; text-shadow: 2px 2px 10px #000; }}
