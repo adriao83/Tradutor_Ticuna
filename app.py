@@ -16,13 +16,15 @@ st.markdown(
         background-image: url("{img}");
         background-size: cover;
         background-position: center;
+        background-repeat: no-repeat;
         background-attachment: fixed;
+        min-height: 100vh;
     }}
     .stForm {{
         background-color: rgba(255, 255, 255, 0.9);
         padding: 20px;
         border-radius: 15px;
-        border: 2px solid #2e7d32;
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
     }}
     h1 {{
         color: white;
