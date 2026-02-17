@@ -15,7 +15,7 @@ if 'texto' not in st.session_state:
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS PARA LIBERDADE TOTAL (Mude os valores abaixo para mover os ícones)
+# CSS CORRIGIDO COM CHAVES DUPLAS
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -54,20 +54,19 @@ st.markdown(f"""
         width: auto !important;
     }}
 
-/* --- AJUSTE A LUPA AQUI --- */
-    .lupa-custom button {
+    /* --- SEUS AJUSTES AQUI (COM CHAVES DUPLAS) --- */
+    .lupa-custom button {{
         font-size: 35px !important;
-        top: -68px !important;   /* USE NEGATIVO PARA SUBIR. Ex: -50px sobe mais */
-        right: 25px !important;  /* Aumente este número para ela ir para a ESQUERDA */
-    }
+        top: -68px !important;   
+        right: 25px !important;  
+    }}
 
-    /* --- AJUSTE O X AQUI --- */
-    .x-custom button {
+    .x-custom button {{
         font-size: 25px !important;
-        top: -43px !important;   /* USE NEGATIVO. Ajuste para alinhar com a lupa */
-        right: 70px !important;  /* Sempre maior que o da lupa para ficar ao lado */
+        top: -43px !important;   
+        right: 70px !important;  
         color: #888 !important;
-    }
+    }}
 
     [data-testid="InputInstructions"] {{ display: none !important; }}
     .texto-fixo-branco, h1, h3 {{ color: white !important; text-align: center; text-shadow: 2px 2px 10px #000; }}
@@ -87,12 +86,10 @@ except:
 st.title("🏹 Tradutor Ticuna v0.1")
 st.markdown('<h3 class="texto-fixo-branco">Digite para Traduzir:</h3>', unsafe_allow_html=True)
 
-# BARRA DE BUSCA COM O TEXTO CORRETO
-placeholder_text = "Digite uma palavra ou frase..." # Altere aqui o texto interno
+placeholder_text = "Digite uma palavra ou frase..." 
 texto_input = st.text_input("", value=st.session_state.texto, placeholder=placeholder_text, label_visibility="collapsed")
 st.session_state.texto = texto_input
 
-# ÍCONES POSICIONADOS CONFORME O CSS ACIMA
 st.markdown('<div class="lupa-custom">', unsafe_allow_html=True)
 submit_botao = st.button("🔍", key="lupa_btn")
 st.markdown('</div>', unsafe_allow_html=True)
