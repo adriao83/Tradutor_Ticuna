@@ -54,20 +54,24 @@ st.markdown(f"""
         width: auto !important;
     }}
 
-    /* --- SEUS AJUSTES AQUI (COM CHAVES DUPLAS) --- */
+   /* --- AJUSTE A LUPA AQUI --- */
     .lupa-custom button {{
         font-size: 35px !important;
-        top: -88px !important;   
-        right: 25px !important;  
+        position: fixed !important; 
+        top: 255px !important;   /* Aumente esse número para a lupa DESCER na tela */
+        left: 50% !important;
+        margin-left: 210px !important; /* Aumente p/ mover p/ DIREITA, diminua p/ ESQUERDA */
     }}
 
+    /* --- AJUSTE O X AQUI --- */
     .x-custom button {{
         font-size: 25px !important;
-        top: -43px !important;   
-        right: 70px !important;  
+        position: fixed !important;
+        top: 265px !important;   /* Ajuste para alinhar na mesma altura da lupa */
+        left: 50% !important;
+        margin-left: 170px !important; /* Menor que o da lupa para ficar à esquerda dela */
         color: #888 !important;
     }}
-
     [data-testid="InputInstructions"] {{ display: none !important; }}
     .texto-fixo-branco, h1, h3 {{ color: white !important; text-align: center; text-shadow: 2px 2px 10px #000; }}
     .resultado-traducao {{ color: white !important; text-align: center; font-size: 34px; font-weight: 900; text-shadow: 2px 2px 15px #000; }}
