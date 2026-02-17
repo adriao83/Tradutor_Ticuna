@@ -57,7 +57,7 @@ st.markdown(f"""
     /* --- SEUS AJUSTES AQUI (COM CHAVES DUPLAS) --- */
     .lupa-custom button {{
         font-size: 35px !important;
-        top: -68px !important;   
+        top: -88px !important;   
         right: 25px !important;  
     }}
 
