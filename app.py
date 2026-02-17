@@ -10,13 +10,13 @@ model = genai.GenerativeModel('gemini-1.5-flash')
 
 st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="centered")
 
-# Lógica de limpeza (Session State)
+# Lógica de limpeza
 if 'texto' not in st.session_state:
     st.session_state.texto = ""
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS BLINDADO PARA MANTER OS ÍCONES DENTRO DA BARRA
+# CSS CORRIGIDO: POSICIONAMENTO PELA DIREITA (RIGHT) PARA NÃO TRAVAR NA ESQUERDA
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -43,7 +43,6 @@ st.markdown(f"""
         font-weight: 900 !important;
     }}
 
-    /* BARRA DE TEXTO BRANCA */
     [data-testid="stWidgetLabel"] {{ display: none !important; }}
     
     .stTextInput > div {{
@@ -56,52 +55,40 @@ st.markdown(f"""
         height: 55px !important;
         background-color: transparent !important;
         border: none !important;
-        padding: 0px 140px 0px 20px !important; /* Espaço interno para os ícones */
+        padding: 0px 140px 0px 20px !important;
         font-size: 20px !important;
         line-height: 55px !important;
     }}
 
     [data-testid="InputInstructions"] {{ display: none !important; }}
 
-    /* ESTILO DOS BOTÕES PARA NÃO CRIAREM CAIXAS QUADRADAS */
     .stButton button {{
         background: transparent !important;
         border: none !important;
         padding: 0 !important;
         box-shadow: none !important;
-        min-height: 0px !important;
-        width: auto !important;
     }}
 
-    .stButton button:hover {{
-        background: transparent !important;
-        color: inherit !important;
-    }}
-
-    /* POSIÇÃO DA LUPA (Onde você já tinha validado) */
+    /* LUPA: POSICIONADA PELA DIREITA DA TELA */
     .lupa-fixa button {{
         position: fixed !important;
         font-size: 40px !important;
         color: black !important;
-        top: 10px !important; /* Ajuste aqui se ela subir/descer na sua tela */
-        left: 50% !important;
-        margin-left: 60px !important; /* Move para a direita da barra */
+        top: 218px !important;
+        /* AJUSTE AQUI: Aumente para ir para esquerda, diminua para ir para direita */
+        right: calc(50% - 335px) !important; 
         z-index: 9999 !important;
     }}
 
-    /* POSIÇÃO DO X (LIMPAR) */
+    /* X: POSICIONADO PELA DIREITA DA TELA */
     .x-fixo button {{
         position: fixed !important;
         font-size: 25px !important;
         color: #888 !important;
-        top: 228px !important; /* Alinhado ao centro do texto */
-        left: 50% !important;
-        margin-left: 170px !important; /* Fica logo à esquerda da lupa */
+        top: 228px !important;
+        /* AJUSTE AQUI: Deve ser maior que o da lupa para ficar à esquerda dela */
+        right: calc(50% - 280px) !important; 
         z-index: 10000 !important;
-    }}
-
-    [data-testid="column"] {{
-        background: transparent !important;
     }}
 
     small {{ display: none !important; }}
@@ -125,7 +112,7 @@ st.markdown('<h3 class="texto-fixo-branco">Digite para Traduzir:</h3>', unsafe_a
 texto_input = st.text_input("", value=st.session_state.texto, placeholder="Pesquise uma palavra...", label_visibility="collapsed", key="input_main")
 st.session_state.texto = texto_input
 
-# ÍCONES FIXOS
+# ÍCONES
 st.markdown('<div class="lupa-fixa">', unsafe_allow_html=True)
 submit_botao = st.button("🔍", key="search")
 st.markdown('</div>', unsafe_allow_html=True)
@@ -137,7 +124,7 @@ if st.session_state.texto:
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-# LÓGICA DE TRADUÇÃO
+# LÓGICA
 if submit_botao or (st.session_state.texto != ""):
     if st.session_state.texto:
         t_norm = normalizar(st.session_state.texto)
