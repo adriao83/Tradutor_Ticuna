@@ -17,7 +17,12 @@ st.markdown(f"""
     <style>
     [data-testid="stAppViewContainer"] {{ background-image: url("{img}"); background-size: cover; background-position: center; background-attachment: fixed; }}
     .stForm {{ background-color: rgba(255, 255, 255, 0.9); padding: 20px; border-radius: 15px; }}
-    h1 {{ color: white !important; text-shadow: 3px 3px 8px #000; text-align: center; font-weight: bold; }}
+    /* TÍTULO E SUBTÍTULO EM BRANCO COM SOMBRA */
+    h1, h3, p {
+        color: white !important;
+        text-shadow: 2px 2px 8px #000000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000 !important;
+        text-align: center;
+    }
     </style>
     """, unsafe_allow_html=True)
 
