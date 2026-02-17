@@ -10,13 +10,18 @@ model = genai.GenerativeModel('gemini-1.5-flash')
 
 st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="centered")
 
-# Inicializa o estado do texto
-if 'texto' not in st.session_state:
-    st.session_state.texto = ""
+# --- LÓGICA DE ESTADO (Para o botão X funcionar) ---
+if 'texto_busca' not in st.session_state:
+    st.session_state.texto_busca = ""
+
+def limpar_texto():
+    st.session_state.texto_busca = ""
+    # O rerun é essencial para limpar a caixa visualmente
+    st.rerun()
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS TOTALMENTE REFEITO E TESTADO
+# --- CSS ÚNICO E ORGANIZADO ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -26,50 +31,50 @@ st.markdown(f"""
         background-position: center !important;
     }}
 
-    /* Estilo da Barra de Busca */
+    /* Barra Branca */
     .stTextInput > div {{
         background-color: white !important;
         border-radius: 25px !important;
         height: 55px !important;
-        border: none !important;
-        padding-right: 90px !important; /* Abre espaço para os botões não cobrirem o texto */
+        padding-right: 80px !important;
     }}
 
-    /* Container dos Botões para ficarem DENTRO da barra */
-    .button-container {{
+    /* Container para posicionar os botões sobre a barra */
+    .btn-overlay {{
         position: relative;
         height: 0px;
-        top: -48px; /* Puxa os botões para dentro da barra branca */
+        top: -46px; /* Ajuste aqui se os ícones subirem ou descerem demais */
         float: right;
-        right: 20px;
-        display: flex;
-        gap: 10px;
+        right: 15px;
         z-index: 999;
+        display: flex;
+        gap: 5px;
     }}
 
-    /* Estilo dos Botões Invisíveis (apenas o ícone aparece) */
+    /* Estilo dos botões (Lupa e X) */
     .stButton button {{
         background: transparent !important;
         border: none !important;
-        color: #1E90FF !important;
-        font-size: 25px !important;
-        padding: 0 !important;
         box-shadow: none !important;
-        height: auto !important;
-        width: auto !important;
+        font-size: 24px !important;
+        color: #555 !important;
+        padding: 0px !important;
+        cursor: pointer !important;
     }}
+    
+    .stButton button:hover {{ color: #1E90FF !important; }}
 
-    /* Ajustes Gerais */
+    /* Outros ajustes */
     [data-testid="InputInstructions"] {{ display: none !important; }}
     .texto-fixo-branco, h1, h3 {{ color: white !important; text-align: center; text-shadow: 2px 2px 10px #000; }}
-    .resultado-traducao {{ color: white !important; text-align: center; font-size: 34px; font-weight: 900; text-shadow: 2px 2px 15px #000; padding: 20px; }}
+    .resultado-traducao {{ color: white !important; text-align: center; font-size: 34px; font-weight: 900; text-shadow: 2px 2px 15px #000; padding: 15px; }}
 </style>
 """, unsafe_allow_html=True)
 
+# --- FUNÇÃO DE TRADUÇÃO ---
 def normalizar(t):
     return re.sub(r'[^a-zA-Z0-9]', '', str(t)).lower() if pd.notna(t) else ""
 
-# Carrega Planilha
 try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
     df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
@@ -79,35 +84,35 @@ except:
 st.title("🏹 Tradutor Ticuna v0.1")
 st.markdown('<h3 class="texto-fixo-branco">Digite para Traduzir:</h3>', unsafe_allow_html=True)
 
-# LÓGICA DA BARRA E BOTÕES
-placeholder_text = "Digite uma palavra ou frase..."
+# --- CAMPO DE BUSCA ---
+# Usamos o session_state diretamente no value para o X funcionar
+texto_input = st.text_input(
+    "", 
+    value=st.session_state.texto_busca, 
+    placeholder="Pesquise uma palavra...", 
+    label_visibility="collapsed", 
+    key="input_principal"
+)
 
-# Input de texto
-texto_input = st.text_input("", value=st.session_state.texto, placeholder=placeholder_text, label_visibility="collapsed", key="input_text")
+# Atualiza o estado conforme o usuário digita
+st.session_state.texto_busca = texto_input
 
-# Criamos um "container" visual para os botões subirem para a barra
-st.markdown('<div class="button-container">', unsafe_allow_html=True)
-col_x, col_lupa = st.columns([1, 1])
+# --- SOBREPOSIÇÃO DOS BOTÕES ---
+st.markdown('<div class="btn-overlay">', unsafe_allow_html=True)
+col1, col2 = st.columns([1, 1])
 
-with col_x:
-    if st.session_state.texto != "":
-        if st.button("✖", key="btn_limpar"):
-            st.session_state.texto = ""
-            st.rerun()
+with col1:
+    if st.session_state.texto_busca != "":
+        # Botão X chama a função de limpar
+        st.button("✖", on_click=limpar_texto, key="btn_x")
 
-with col_lupa:
-    # A lupa sempre visível ou só quando tem texto
-    btn_buscar = st.button("🔍", key="btn_buscar")
+with col2:
+    btn_lupa = st.button("🔍", key="btn_lupa")
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Atualiza o estado
-if texto_input != st.session_state.texto:
-    st.session_state.texto = texto_input
-    st.rerun()
-
-# LÓGICA DE TRADUÇÃO
-if st.session_state.texto:
-    t_norm = normalizar(st.session_state.texto)
+# --- RESULTADO ---
+if st.session_state.texto_busca:
+    t_norm = normalizar(st.session_state.texto_busca)
     res = df[df['BUSCA_PT'] == t_norm]
     
     if not res.empty:
