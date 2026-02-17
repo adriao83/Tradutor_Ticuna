@@ -5,10 +5,10 @@ import re
 
 st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹")
 
-# Link da sua foto
+# Link da sua foto de fundo
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# O ERRO ESTAVA AQUI: O comando correto é unsafe_allow_html=True
+# O segredo está no nome: unsafe_allow_html=True
 st.markdown(
     f"""
     <style>
@@ -16,15 +16,18 @@ st.markdown(
         background-image: url("{img}");
         background-size: cover;
         background-position: center;
+        background-attachment: fixed;
     }}
     .stForm {{
-        background: rgba(255, 255, 255, 0.9);
+        background-color: rgba(255, 255, 255, 0.9);
         padding: 20px;
-        border-radius: 10px;
+        border-radius: 15px;
+        border: 2px solid #2e7d32;
     }}
     h1 {{
         color: white;
-        text-shadow: 2px 2px #000;
+        text-shadow: 2px 2px 5px #000;
+        text-align: center;
     }}
     </style>
     """,
@@ -40,19 +43,23 @@ try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
     df['BUSCA'] = df['PORTUGUES'].apply(normalizar)
 
-    with st.form("meu_form"):
+    with st.form("tradutor_form"):
         texto = st.text_input("Digite em Português:")
-        if st.form_submit_button("PESQUISAR"):
+        if st.form_submit_button("🔍 TRADUZIR"):
             if texto:
-                res = df[df['BUSCA'] == normalizar(texto)]
-                if not res.empty:
-                    tic = res['TICUNA'].values[0]
-                    st.success(f"### Ticuna: {tic}")
-                    gTTS(tic, lang='pt-br').save("a.mp3")
-                    st.audio("a.mp3")
+                resultado = df[df['BUSCA'] == normalizar(texto)]
+                if not resultado.empty:
+                    ticuna = resultado['TICUNA'].values[0]
+                    st.success(f"### Ticuna: {ticuna}")
+                    
+                    # Gera e toca o áudio
+                    tts = gTTS(text=ticuna, lang='pt-br')
+                    tts.save("audio.mp3")
+                    st.audio("audio.mp3")
                 else:
                     st.error("Palavra não encontrada.")
             else:
-                st.warning("Digite uma palavra.")
+                st.warning("Por favor, digite uma palavra.")
+
 except Exception as e:
-    st.error("Erro ao carregar a planilha.")
+    st.error("Erro ao carregar os dados. Verifique a planilha no GitHub.")
