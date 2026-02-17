@@ -11,18 +11,27 @@ model = genai.GenerativeModel('gemini-1.5-flash')
 
 st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹")
 
-# Estilo Visual (Mantendo o que você já aprovou)
+# Estilo Visual Ajustado
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 st.markdown(f"""
     <style>
-    [data-testid="stAppViewContainer"] {{ background-image: url("{img}"); background-size: cover; background-position: center; background-attachment: fixed; }}
-    .stForm {{ background-color: rgba(255, 255, 255, 0.9); padding: 20px; border-radius: 15px; }}
-    /* TÍTULO E SUBTÍTULO EM BRANCO COM SOMBRA */
-    h1, h3, p {
+    [data-testid="stAppViewContainer"] {{ 
+        background-image: url("{img}"); 
+        background-size: cover; 
+        background-position: center; 
+        background-attachment: fixed; 
+    }}
+    .stForm {{ 
+        background-color: rgba(255, 255, 255, 0.9); 
+        padding: 20px; 
+        border-radius: 15px; 
+    }}
+    /* TÍTULO, SUBTÍTULO E TEXTOS EM BRANCO COM SOMBRA */
+    h1, h3, p, .stMarkdown {{
         color: white !important;
         text-shadow: 2px 2px 8px #000000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000 !important;
         text-align: center;
-    }
+    }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -32,17 +41,22 @@ def normalizar(t):
 st.title("🏹 Tradutor Ticuna v0.1")
 
 # --- INTERAÇÃO POR VOZ ---
-st.write("### 🎤 Converse com a IA ou Traduza")
-audio_gravado = mic_recorder(start_prompt="Falar (Português) 🎤", stop_prompt="Parar Gravação ⏹️", key='gravador')
+st.markdown("### 🎤 Converse com a IA ou Traduza")
+
+# Centralizando o botão de microfone
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    audio_gravado = mic_recorder(
+        start_prompt="Falar (Português) 🎤", 
+        stop_prompt="Parar Gravação ⏹️", 
+        key='gravador'
+    )
 
 if audio_gravado:
     st.audio(audio_gravado['bytes'])
-    # Aqui a mágica acontece: mandamos o áudio para o Gemini transcrever e responder
     try:
-        # 1. Transformar áudio em texto (Simulado via Gemini para este protótipo)
-        prompt_especial = "Você é um assistente especialista na cultura Ticuna. Responda de forma curta e amigável."
-        # Para um tradutor real, aqui usaríamos o áudio. Por enquanto, vamos habilitar a conversa:
-        st.info("Processando sua voz...")
+        st.info("Processando sua voz com a IA...")
+        # Aqui no futuro conectaremos o áudio direto ao Gemini
     except Exception as e:
         st.error("Erro ao processar voz.")
 
@@ -64,8 +78,9 @@ try:
                     st.audio("audio.mp3")
                 else:
                     st.warning("Palavra não encontrada na planilha. Consultando IA...")
-                    # Se não tem na planilha, o Gemini responde!
                     response = model.generate_content(f"Como se diz '{texto}' em língua Ticuna? Responda apenas a tradução.")
                     st.info(f"IA sugere: {response.text}")
+            else:
+                st.warning("Por favor, digite uma palavra.")
 except Exception as e:
-    st.error("Erro ao carregar banco de dados.")
+    st.error("Erro ao carregar banco de dados. Verifique o arquivo Excel.")
