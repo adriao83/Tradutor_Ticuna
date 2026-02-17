@@ -13,7 +13,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# ESTILO PARA FUNDO E FORÇAR ÍCONES BRANCOS
+# ESTILO PARA FUNDO E FORÇAR TUDO NO TOPO A FICAR BRANCO
 st.markdown(f"""
     <style>
     /* Fundo Total */
@@ -29,16 +29,21 @@ st.markdown(f"""
         background: rgba(0,0,0,0) !important;
     }}
 
-    /* --- NOVA TENTATIVA PARA OS ÍCONES DO TOPO --- */
-    /* Vamos aplicar a cor branca em absolutamente tudo que estiver no cabeçalho */
-    header [data-testid="stHeaderActionElements"] * {{
+    /* --- SOLUÇÃO PARA OS ÍCONES DO TOPO (SHARE, STAR, GITHUB) --- */
+    /* Esta regra força a cor branca e adiciona uma sombra para dar contraste */
+    [data-testid="stHeader"] {{
         color: white !important;
-        fill: white !important;
     }}
     
-    /* Botão específico de menu (os 3 pontinhos) e outros */
-    button[kind="header"] {{
+    [data-testid="stHeader"] svg {{
+        fill: white !important;
         color: white !important;
+        filter: drop-shadow(0px 0px 5px black) !important;
+    }}
+    
+    [data-testid="stHeader"] a, [data-testid="stHeader"] button {{
+        color: white !important;
+        text-decoration: none !important;
     }}
 
     /* Caixa do Formulário */
@@ -46,6 +51,7 @@ st.markdown(f"""
         background-color: rgba(255, 255, 255, 0.9); 
         padding: 20px; 
         border-radius: 15px; 
+        box-shadow: 0px 4px 15px rgba(0,0,0,0.3);
     }}
     
     /* Textos em Branco com Sombra */
