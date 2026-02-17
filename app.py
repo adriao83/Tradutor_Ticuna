@@ -15,7 +15,7 @@ if 'texto' not in st.session_state:
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS CORRIGIDO E LIMPO
+# CSS UNIFICADO (SEM ERROS DE FECHAMENTO)
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -35,41 +35,37 @@ st.markdown(f"""
     /* LUPA - AJUSTE AQUI */
     button[key="lupa_btn"] {{
         position: fixed !important;
-        top: 05px !important;  
+        top: 255px !important;    /* <--- MUDE AQUI PARA SUBIR/DESCER */
         left: 50% !important;
-        margin-left: 210px !important; 
+        margin-left: 210px !important; /* <--- MUDE AQUI PARA LADOS */
         font-size: 40px !important;
         background: transparent !important;
         border: none !important;
         z-index: 999999 !important;
-        cursor: pointer !important;
     }}
 
     /* O X - AJUSTE AQUI */
     button[key="x_btn"] {{
         position: fixed !important;
-        top: 260px !important;  
+        top: 260px !important;    /* <--- MUDE AQUI PARA SUBIR/DESCER */
         left: 50% !important;
-        margin-left: 170px !important; 
+        margin-left: 170px !important; /* <--- MUDE AQUI PARA LADOS */
         font-size: 30px !important;
         color: #888 !important;
         background: transparent !important;
         border: none !important;
         z-index: 999999 !important;
-        cursor: pointer !important;
     }}
 
-    /* LIMPEZA GERAL */
+    /* OUTROS ESTILOS */
     [data-testid="InputInstructions"] {{ display: none !important; }}
     .texto-fixo-branco, h1, h3 {{ color: white !important; text-align: center; text-shadow: 2px 2px 10px #000; }}
     .resultado-traducao {{ color: white !important; text-align: center; font-size: 34px; font-weight: 900; text-shadow: 2px 2px 15px #000; }}
     
-    /* Remove sombras e bordas chatas de botões do Streamlit */
     button {{
         border: none !important;
         outline: none !important;
         box-shadow: none !important;
-        background-color: transparent !important;
     }}
 </style>
 """, unsafe_allow_html=True)
@@ -86,11 +82,12 @@ except:
 st.title("🏹 Tradutor Ticuna v0.1")
 st.markdown('<h3 class="texto-fixo-branco">Digite para Traduzir:</h3>', unsafe_allow_html=True)
 
+# BARRA DE BUSCA
 placeholder_text = "Digite uma palavra ou frase..." 
 texto_input = st.text_input("", value=st.session_state.texto, placeholder=placeholder_text, label_visibility="collapsed", key="input_principal")
 st.session_state.texto = texto_input
 
-# BOTÕES
+# BOTÕES (SEM DIVS PARA NÃO ATRAPALHAR)
 submit_botao = st.button("🔍", key="lupa_btn")
 
 if st.session_state.texto:
