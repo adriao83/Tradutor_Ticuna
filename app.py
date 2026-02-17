@@ -19,7 +19,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- CSS REFEITO PARA PROTEGER O TÍTULO ---
+# --- CSS CORRIGIDO (CHAVES DUPLAS) ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -43,27 +43,27 @@ st.markdown(f"""
         padding-right: 85px !important;
     }}
 
-  /* Container que sustenta os botões */
-    .btn-overlay {
+    /* Container que sustenta os botões */
+    .btn-overlay {{
         position: relative;
         display: flex;
-        justify-content: flex-end; /* Alinha os botões na direita */
-        gap: 15px;                 /* Espaço entre o X e a Lupa */
-        margin-top: -53px;         /* ESTE VALOR FAZ ELES SUBIREM. Tente -55px ou -60px se precisar subir mais */
-        margin-right: 20px;        /* Afasta da ponta direita da barra branca */
+        justify-content: flex-end; 
+        gap: 15px;                 
+        margin-top: -53px;         /* AJUSTE AQUI PARA SUBIR MAIS: ex -60px */
+        margin-right: 20px;        
         z-index: 9999;
-    }
+    }}
 
     /* Estilo individual para os botões ficarem limpos */
-    button[key="btn_x_clear"], button[key="btn_lupa_search"] {
+    button[key="btn_x_clear"], button[key="btn_lupa_search"] {{
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
-        font-size: 28px !important; /* Tamanho dos ícones */
+        font-size: 28px !important; 
         padding: 0 !important;
         cursor: pointer !important;
         line-height: 1 !important;
-    }
+    }}
     
     button[key="btn_x_clear"]:hover, button[key="btn_lupa_search"]:hover {{
         color: #007bff !important;
