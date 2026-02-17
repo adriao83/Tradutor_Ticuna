@@ -3,10 +3,9 @@ import pandas as pd
 from gtts import gTTS
 import re
 import google.generativeai as genai
-from streamlit_mic_recorder import mic_recorder
 import os
 
-# Configuração da IA
+# Configuração da IA (Mantida para outras funções, se necessário)
 genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 model = genai.GenerativeModel('gemini-1.5-flash')
 
@@ -14,7 +13,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS PARA LIMPAR O FUNDO PRETO E POSICIONAR LADO A LADO
+# CSS REFINADO: FOCO NO SOMBREAMENTO E MENSAGENS BRANCAS
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -25,6 +24,7 @@ st.markdown(f"""
         background-attachment: fixed !important;
     }}
 
+    /* MENSAGENS DE STATUS E ERRO: SEMPRE BRANCO COM SOMBRA */
     .texto-fixo-branco, h1, h3 {{
         color: white !important;
         text-shadow: 2px 2px 10px #000000, 0px 0px 5px #000000 !important;
@@ -32,6 +32,7 @@ st.markdown(f"""
         font-weight: bold !important;
     }}
 
+    /* RESULTADO DA TRADUÇÃO APENAS COM SOMBREAMENTO PRETO */
     .resultado-traducao {{
         color: white !important;
         text-shadow: 2px 2px 15px #000000, -2px -2px 15px #000000, 0px 0px 20px #000000 !important;
@@ -47,40 +48,28 @@ st.markdown(f"""
         border-radius: 15px;
         position: relative;
     }}
+    
+    [data-testid="stForm"] label p {{ color: #1E1E1E !important; text-shadow: none !important; }}
 
-    /* CAIXA DE TEXTO */
+    /* CAIXA DE TEXTO COM ESPAÇO PARA A LUPA */
     .stTextInput input {{
-        padding-right: 90px !important; /* Espaço para os dois ícones */
+        padding-right: 50px !important;
         height: 45px !important;
     }}
 
-    /* REMOVE O FUNDO PRETO GIGANTE DO MICROFONE */
-    div[data-testid="stVerticalBlock"] > div:has(#mic_unificado) {{
-        position: absolute;
-        right: 50px; /* Posição do microfone */
-        margin-top: -46px; /* Sobe para dentro da barra */
-        z-index: 999;
-        background: transparent !important;
-    }}
-
-    /* REMOVE O FUNDO DO BOTÃO DA LUPA */
+    /* POSICIONAMENTO DA LUPA DENTRO DA BARRA */
     div[data-testid="stVerticalBlock"] > div:has(#botao_traduzir) {{
         position: absolute;
-        right: 15px; /* Posição da lupa */
-        margin-top: -46px; /* Sobe para dentro da barra */
+        right: 15px;
+        margin-top: -46px;
         z-index: 999;
     }}
 
-    /* ESTILO PARA OS BOTÕES FICAREM TRANSPARENTES E SEM BORDAS */
     button {{
         background: transparent !important;
         border: none !important;
         padding: 0 !important;
-        color: inherit;
     }}
-    
-    /* Remove a borda preta que o Streamlit coloca no componente de áudio */
-    iframe {{ border: none !important; }}
     
     .stAlert {{ background: transparent !important; border: none !important; }}
     </style>
@@ -94,47 +83,34 @@ try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
     df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
 except:
-    st.markdown('<p class="texto-fixo-branco">Erro ao carregar planilha.</p>', unsafe_allow_html=True)
+    st.markdown('<p class="texto-fixo-branco">Erro ao carregar planilha no GitHub.</p>', unsafe_allow_html=True)
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- FORMULÁRIO COM ÍCONES LADO A LADO ---
+# --- SEÇÃO DE DIGITAÇÃO SIMPLIFICADA ---
+st.markdown("---")
 with st.form("form_digitar"):
-    st.markdown("### Digite ou Fale:")
+    st.markdown("### Digite para Traduzir:")
     
-    # Input principal
+    # Input de texto
     texto_input = st.text_input("", placeholder="Ex: Capivara", label_visibility="collapsed")
     
-    # Microfone (O CSS vai tirar o fundo preto e colocar na direita)
-    audio_data = mic_recorder(
-        start_prompt="🎤", 
-        stop_prompt="⏹️", 
-        key='mic_unificado'
-    )
-    
-    # Lupa (O CSS vai colocar ao lado do microfone)
+    # Apenas o botão de busca (Lupa)
     submit_botao = st.form_submit_button("🔍")
 
-# LÓGICA DE TRADUÇÃO
-palavra_final = ""
-if audio_data:
-    try:
-        audio_part = {"mime_type": "audio/wav", "data": audio_data['bytes']}
-        response = model.generate_content(["Transcreva apenas a palavra.", audio_part])
-        palavra_final = response.text.strip().replace(".", "").replace("!", "")
-    except:
-        st.markdown('<p class="texto-fixo-branco">Erro ao processar voz.</p>', unsafe_allow_html=True)
-
-if submit_botao:
-    palavra_final = texto_input
-
-if palavra_final:
-    t_norm = normalizar(palavra_final)
+# LÓGICA DE BUSCA
+if submit_botao and texto_input:
+    t_norm = normalizar(texto_input)
     res = df[df['BUSCA_PT'] == t_norm]
+    
     if not res.empty:
         trad = res['TICUNA'].values[0]
+        # Exibição com sombreamento preto
         st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
-        gTTS(text=trad, lang='pt-br').save("voz.mp3")
-        st.audio("voz.mp3", autoplay=True)
+        
+        # Gera e toca o áudio da tradução
+        tts = gTTS(text=trad, lang='pt-br')
+        tts.save("voz_trad.mp3")
+        st.audio("voz_trad.mp3", autoplay=True)
     else:
-        st.markdown(f'<p class="texto-fixo-branco">Não encontramos "{palavra_final}".</p>', unsafe_allow_html=True)
+        st.markdown(f'<p class="texto-fixo-branco">A palavra "{texto_input}" não foi encontrada.</p>', unsafe_allow_html=True)
