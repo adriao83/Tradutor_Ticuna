@@ -73,7 +73,7 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- SEÇÃO DE VOZ ---
+# --- SEÇÃO DE VOZ (CORRIGIDA) ---
 st.markdown("### 🎤 Fale para Traduzir")
 
 col1, col2, col3 = st.columns([1, 5, 1])
@@ -86,46 +86,40 @@ with col2:
 
 if audio_data:
     status_msg = st.empty()
-    status_msg.markdown('<p class="texto-fixo-branco">Identificando sua voz...</p>', unsafe_allow_html=True)
+    status_msg.markdown('<p class="texto-fixo-branco">Processando sua voz...</p>', unsafe_allow_html=True)
     
     try:
-        # TENTATIVA DE TRANSCRIÇÃO OTIMIZADA
-        # Criamos o objeto de áudio para o Gemini
-        audio_part = {
-            "mime_type": "audio/wav",
-            "data": audio_data['bytes']
-        }
-        
-        # Chamada direta sem frescuras para evitar o erro 400/404
+        # 1. Transcrição: Transforma áudio em texto (tentativa simplificada)
+        prompt_transcrever = "Transcreva apenas a palavra dita neste áudio, sem pontuação."
         response = model.generate_content([
-            "Transcreva apenas a palavra ou frase dita neste áudio. Não responda nada além do texto transcrito.",
-            audio_part
+            prompt_transcrever,
+            {"mime_type": "audio/wav", "data": audio_data['bytes']}
         ])
         
-        texto_falado = response.text.strip().replace(".", "").replace("!", "")
+        texto_falado = response.text.strip()
         t_norm = normalizar(texto_falado)
         
-        # BUSCA NA PLANILHA
+        # 2. Busca na Planilha (Igual ao comando por digitação)
         res = df[df['BUSCA_PT'] == t_norm]
         
         status_msg.empty()
 
         if not res.empty:
             trad = res['TICUNA'].values[0]
-            st.markdown(f'<p class="texto-fixo-branco">Você disse: "{texto_falado}"</p>', unsafe_allow_html=True)
+            # Exibe o texto com o sombreamento que você pediu
             st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
             
-            # GERA VOZ SINTÉTICA (A que você gosta)
+            # 3. Retorno de Áudio (Igual ao comando por digitação)
             tts = gTTS(text=trad, lang='pt-br')
             tts.save("voz_fala.mp3")
             st.audio("voz_fala.mp3", autoplay=True)
         else:
-            st.markdown(f'<p class="texto-fixo-branco">A palavra "{texto_falado}" não está na planilha.</p>', unsafe_allow_html=True)
+            st.markdown(f'<p class="texto-fixo-branco">Palavra "{texto_falado}" não encontrada na planilha.</p>', unsafe_allow_html=True)
 
     except Exception as e:
         status_msg.empty()
-        # Se a IA falhar, mostramos a mensagem em BRANCO
-        st.markdown('<p class="texto-fixo-branco">Erro ao processar voz. Tente falar novamente ou digite.</p>', unsafe_allow_html=True)
+        # Se o erro 404 persistir, avisamos de forma limpa em branco
+        st.markdown('<p class="texto-fixo-branco">Erro de conexão com a IA (Voz). Tente digitar por enquanto.</p>', unsafe_allow_html=True)
 
 # --- SEÇÃO DE DIGITAÇÃO ---
 st.markdown("---")
