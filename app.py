@@ -23,7 +23,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- CSS AJUSTADO (REMOVIDO CILINDRO EXTRA) ---
+# --- CSS TOTALMENTE LIMPO (SEM CILINDROS EXTRAS) ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -35,28 +35,29 @@ st.markdown(f"""
 
     h1, h1 span {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; }}
 
-    /* BARRA DE BUSCA OFICIAL DO STREAMLIT */
+    /* ESTILO DO CAMPO DE TEXTO OFICIAL */
     .stTextInput > div {{
         background-color: white !important;
         border-radius: 25px !important;
         height: 55px !important;
-        padding-right: 90px !important;
+        padding-right: 95px !important; /* Espaço para X e Lupa */
         border: none !important;
-        margin-top: 20px;
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.3) !important;
     }}
 
     .stTextInput input {{
         color: #333 !important;
         font-size: 18px !important;
+        background: transparent !important;
     }}
 
-    /* POSICIONAMENTO DOS BOTÕES DENTRO DA BARRA */
+    /* POSICIONAMENTO DOS BOTÕES (X e LUPA) */
     .btn-container-interno {{
         position: relative;
         display: flex;
         justify-content: flex-end;
-        gap: 10px;
-        margin-top: -48px; 
+        gap: 12px;
+        margin-top: -46px; /* Ajusta para encaixar dentro da barra */
         margin-right: 20px;
         z-index: 99;
     }}
@@ -69,6 +70,8 @@ st.markdown(f"""
         padding: 0 !important;
         cursor: pointer !important;
         color: #555 !important;
+        min-height: 0px !important;
+        line-height: 1 !important;
     }}
 
     [data-testid="InputInstructions"] {{ display: none !important; }}
@@ -86,7 +89,7 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- CAMPO DE BUSCA (SEM MOLDURA EXTRA) ---
+# --- CAMPO DE BUSCA ÚNICO ---
 texto_busca = st.text_input(
     "", 
     placeholder="Pesquise uma palavra...", 
@@ -94,7 +97,7 @@ texto_busca = st.text_input(
     key=f"input_{st.session_state.contador_limpar}"
 )
 
-# BOTÕES INTERNOS
+# BOTÕES SOBREPOSTOS NA BARRA
 st.markdown('<div class="btn-container-interno">', unsafe_allow_html=True)
 col_b1, col_b2 = st.columns([1, 1])
 with col_b1:
