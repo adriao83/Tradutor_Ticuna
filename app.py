@@ -13,7 +13,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS REFINADO PARA O MODELO GOOGLE
+# CSS PARA TRAVAR A LUPA DENTRO DA BARRA COM CONTORNO VERMELHO
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -40,39 +40,49 @@ st.markdown(f"""
         font-weight: 900 !important;
     }}
 
-    /* CAIXA BRANCA PRINCIPAL */
-    .stForm {{ 
-        background-color: rgba(255, 255, 255, 0.95) !important; 
-        padding: 20px; 
-        border-radius: 30px; 
-        border: 1px solid #dfe1e5 !important;
+    /* ESTRUTURA DA BARRA DE BUSCA */
+    .search-box {{
+        background-color: rgba(255, 255, 255, 0.95);
+        border: 2px solid red !important; /* CONTORNO VERMELHO PEDIDO */
+        border-radius: 30px;
+        padding: 5px 20px;
+        display: flex;
+        align-items: center;
+        position: relative;
     }}
 
-    /* ESTILO DA BARRA DE TEXTO */
+    /* AJUSTE DO CAMPO DE TEXTO */
     .stTextInput input {{
         border: none !important;
         background: transparent !important;
         font-size: 18px !important;
         height: 50px !important;
+        padding-right: 60px !important; /* Espaço para a lupa */
+        box-shadow: none !important;
     }}
     
-    /* ESTILO DO BOTÃO DA LUPA AUMENTADO E COM SOMBRA */
+    /* POSICIONAMENTO DA LUPA DENTRO DA CAIXA */
+    div.element-container:has(button) {{
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 999;
+        width: auto !important;
+    }}
+
+    /* ESTILO DA LUPA AUMENTADA E COM SOMBRA */
     .stButton button {{
         background: transparent !important;
         border: none !important;
-        font-size: 35px !important; /* Tamanho aumentado */
+        font-size: 40px !important; /* Tamanho aumentado conforme pedido */
         padding: 0 !important;
-        margin-top: 0px !important;
+        color: #444 !important;
         box-shadow: none !important;
-        filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.4)) !important; /* Sombreamento para destaque */
+        filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.6)) !important; /* Sombreamento forte para destaque */
     }}
 
-    /* Centralização da lupa na coluna */
-    [data-testid="column"] {{
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }}
+    .stButton button:hover {{ color: red !important; }}
 
     small {{ display: none !important; }}
     .stAlert {{ background: transparent !important; border: none !important; }}
@@ -91,17 +101,22 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- AREA DE TRADUÇÃO MODELO GOOGLE ---
 st.markdown('<h3 class="texto-fixo-branco">Digite para Traduzir:</h3>', unsafe_allow_html=True)
 
+# --- AREA DE BUSCA UNIFICADA ---
 with st.container():
-    col1, col2 = st.columns([0.85, 0.15])
+    # Esta div "search-box" no Markdown garante que os elementos fiquem presos juntos
+    st.markdown('<div class="search-box">', unsafe_allow_html=True)
     
-    with col1:
+    col_txt, col_btn = st.columns([0.88, 0.12])
+    
+    with col_txt:
         texto_input = st.text_input("", placeholder="Pesquise no Tradutor Ticuna...", label_visibility="collapsed")
     
-    with col2:
+    with col_btn:
         submit_botao = st.button("🔍")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # LÓGICA DE BUSCA
 if submit_botao or (texto_input != ""):
