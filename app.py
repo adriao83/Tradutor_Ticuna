@@ -71,7 +71,7 @@ st.markdown(f"""
         font-size: 40px !important;
         color: black !important;
         padding: 0 !important;
-        top: 10px !important;    
+        top: 20px !important;    
         right: 60px !important;  
         filter: drop-shadow(2px 4px 5px rgba(0,0,0,0.4)) !important;
         z-index: 9999 !important;
@@ -84,8 +84,8 @@ st.markdown(f"""
         border: none !important;
         font-size: 25px !important;
         color: #888 !important;
-        top: 18px !important;   /* Ajustado para alinhar com o centro do texto */
-        right: 120px !important; /* À esquerda da lupa */
+        top: 30px !important;   /* Ajustado para alinhar com o centro do texto */
+        right: 70px !important; /* À esquerda da lupa */
         z-index: 10000 !important;
         padding: 0 !important;
     }}
