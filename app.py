@@ -10,9 +10,13 @@ model = genai.GenerativeModel('gemini-1.5-flash')
 
 st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="centered")
 
+# Lógica de limpeza (Session State)
+if 'texto' not in st.session_state:
+    st.session_state.texto = ""
+
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS FINALIZADO - FOCO NO X POR CIMA DE TUDO
+# CSS CORRIGIDO: LUPA MANTIDA E X POSICIONADO AO LADO
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -52,15 +56,15 @@ st.markdown(f"""
         height: 55px !important;
         background-color: transparent !important;
         border: none !important;
-        padding: 0px 130px 0px 20px !important; /* Espaço aumentado para X e Lupa */
+        padding: 0px 120px 0px 20px !important;
         font-size: 20px !important;
         line-height: 55px !important;
     }}
 
     [data-testid="InputInstructions"] {{ display: none !important; }}
 
-    /* LUPA: EXATAMENTE COMO VOCÊ DEIXOU (MANTIDA) */
-    .stButton button {{
+    /* LUPA (MANTIDA EM 10px / 60px) */
+    div[data-testid="column"]:nth-of-type(2) button:not(.clear-btn) {{
         position: absolute !important;
         background: transparent !important;
         border: none !important;
@@ -73,22 +77,17 @@ st.markdown(f"""
         z-index: 9999 !important;
     }}
 
-    /* ÍCONE X: FORÇANDO FICAR POR CIMA */
-    .clear-btn-wrapper {{
-        position: relative;
-        z-index: 10000 !important;
-    }}
-
-    .clear-btn-wrapper button {{
+    /* ICONE X (LIMPAR) */
+    .stButton button.clear-btn {{
         position: absolute !important;
-        font-size: 22px !important;
-        top: -45px !important;   /* Ajuste esse valor se o X sumir */
-        right: 120px !important; /* À esquerda da lupa */
-        color: #999 !important;
         background: transparent !important;
         border: none !important;
-        cursor: pointer !important;
-        z-index: 10001 !important;
+        font-size: 25px !important;
+        color: #888 !important;
+        top: 18px !important;   /* Ajustado para alinhar com o centro do texto */
+        right: 120px !important; /* À esquerda da lupa */
+        z-index: 10000 !important;
+        padding: 0 !important;
     }}
 
     [data-testid="column"] {{
@@ -118,31 +117,24 @@ st.markdown('<h3 class="texto-fixo-branco">Digite para Traduzir:</h3>', unsafe_a
 col_main, col_btn = st.columns([0.85, 0.15])
 
 with col_main:
-    # Usei session_state para o X funcionar de verdade
-    if 'campo_texto' not in st.session_state:
-        st.session_state.campo_texto = ""
-
-    texto_input = st.text_input("", value=st.session_state.campo_texto, placeholder="Pesquise uma palavra...", label_visibility="collapsed", key="main_input")
-    
-    # Se digitar, atualiza o estado
-    st.session_state.campo_texto = texto_input
-
-    # Botão X só aparece se tiver texto
-    if st.session_state.campo_texto:
-        st.markdown('<div class="clear-btn-wrapper">', unsafe_allow_html=True)
-        if st.button("✖", key="clear_action"):
-            st.session_state.campo_texto = ""
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
+    # Vinculamos o input ao session_state para que o X possa limpá-lo
+    texto_input = st.text_input("", value=st.session_state.texto, placeholder="Pesquise uma palavra...", label_visibility="collapsed", key="txt_principal")
+    st.session_state.texto = texto_input
 
 with col_btn:
+    # Botão de Lupa
     submit_botao = st.button("🔍")
+    
+    # Botão X (Criado na mesma coluna para evitar que suma)
+    if st.session_state.texto != "":
+        if st.button("✖", key="clear_bt"):
+            st.session_state.texto = ""
+            st.rerun()
 
-# LÓGICA
-texto_final = st.session_state.campo_texto
-if submit_botao or (texto_final != ""):
-    if texto_final:
-        t_norm = normalizar(texto_final)
+# Lógica de Tradução
+if submit_botao or (st.session_state.texto != ""):
+    if st.session_state.texto:
+        t_norm = normalizar(st.session_state.texto)
         res = df[df['BUSCA_PT'] == t_norm]
         if not res.empty:
             trad = res['TICUNA'].values[0]
