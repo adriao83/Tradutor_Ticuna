@@ -72,7 +72,7 @@ st.markdown(f"""
         padding: 0 !important;
         
         /* AJUSTE ESTES VALORES PARA MOVER A LUPA */
-        top: -40px !important;   /* Diminua (ex: -55) para SUBIR | Aumente (ex: -40) para DESCER */
+        top: -30px !important;   /* Diminua (ex: -55) para SUBIR | Aumente (ex: -40) para DESCER */
         right: 60px !important;  /* Aumente (ex: 60) para ESQUERDA | Diminua (ex: 20) para DIREITA */
         
         filter: drop-shadow(2px 4px 5px rgba(0,0,0,0.4)) !important;
