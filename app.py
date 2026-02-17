@@ -23,7 +23,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- CSS PARA FUNDIR OS BOTÕES NA BARRA ---
+# --- CSS AJUSTADO ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -35,18 +35,20 @@ st.markdown(f"""
 
     h1, h1 span {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; }}
 
+    /* Removemos o fundo branco genérico que criava o cilindro extra */
     [data-testid="stVerticalBlockBorderWrapper"] > div:has(.custom-search-bar) {{
         background: transparent !important;
     }}
 
+    /* Estilo exclusivo da barra onde está a lupa */
     .custom-search-bar {{
         display: flex;
         align-items: center;
-        background-color: white;
+        background-color: white; /* Mantém o branco apenas aqui */
         border-radius: 25px;
         height: 55px;
         padding: 0 15px;
-        margin-top: 20px; /* Adicionado um pouco de margem para o título */
+        margin-top: 20px;
     }}
 
     .custom-search-bar .stTextInput {{
@@ -80,8 +82,6 @@ st.markdown(f"""
         align-items: center;
     }}
 
-    .custom-search-bar button:hover {{ color: #007bff !important; }}
-
     [data-testid="InputInstructions"] {{ display: none !important; }}
     .resultado-traducao {{ color: white !important; text-align: center; font-size: 34px; font-weight: 900; text-shadow: 2px 2px 15px #000; padding: 20px; }}
 </style>
@@ -97,7 +97,7 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- ESTRUTURA DA BARRA (A frase foi excluída daqui) ---
+# --- ESTRUTURA DA BARRA ---
 st.markdown('<div class="custom-search-bar">', unsafe_allow_html=True)
 col_input, col_botoes = st.columns([0.85, 0.15])
 
