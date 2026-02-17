@@ -14,15 +14,31 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS PARA REMOVER TUDO: HEADER, ÍCONES E O "RUNNING" DE CARREGAMENTO
+# CSS PARA CARREGAMENTO BRANCO NO TOPO E SEM ÍCONES DE EDIÇÃO
 st.markdown(f"""
     <style>
-    /* 1. Remove o Header e o ícone de 'Running' (Carregando) do topo */
-    [data-testid="stHeader"], [data-testid="stStatusWidget"] {{
+    /* 1. Remove os ícones de edição/github, mas mantém o espaço do status */
+    [data-testid="stHeader"] {{
+        background-color: rgba(0,0,0,0) !important;
+    }}
+    
+    /* Esconde os botões de interação do topo, mas deixa o carregamento aparecer */
+    [data-testid="stHeaderActionElements"] {{
         display: none !important;
     }}
 
-    /* 2. Fixar o fundo da página */
+    /* 2. FORÇAR A COR BRANCA NA LINHA DE CARREGAMENTO (PROGRESS BAR) */
+    /* Isso faz com que a animação lá no topo fique branca */
+    div[data-testid="stStatusWidget"] div {{
+        color: white !important;
+    }}
+    
+    /* Estiliza a barra de progresso do Streamlit para ser branca */
+    .stProgress > div > div > div > div {{
+        background-color: white !important;
+    }}
+
+    /* 3. Fundo da página */
     [data-testid="stAppViewContainer"] {{
         background-image: url("{img}");
         background-size: cover !important;
@@ -30,36 +46,32 @@ st.markdown(f"""
         background-attachment: fixed !important;
     }}
 
-    /* 3. Estilizar a caixa de tradução */
+    /* 4. Caixa do formulário */
     .stForm {{ 
         background-color: rgba(255, 255, 255, 0.98) !important; 
         padding: 25px; 
         border-radius: 15px; 
-        box-shadow: 0px 4px 20px rgba(0,0,0,0.3);
     }}
 
-    /* 4. Títulos fora da caixa */
+    /* 5. Títulos e Labels */
     h1, h3, .stMarkdown p {{
         color: white !important;
         text-shadow: 2px 2px 4px #000000 !important;
         text-align: center;
     }}
 
-    /* 5. Cor do Label dentro da caixa branca */
     [data-testid="stForm"] label p {{
         color: #1E1E1E !important;
-        font-size: 1.1rem !important;
         font-weight: bold !important;
     }}
 
-    /* 6. Cor do texto digitado */
     input {{
         color: #000000 !important;
     }}
 
-    /* Ajuste de margem para compensar a falta do topo */
+    /* Ajuste de margem */
     .main .block-container {{
-        padding-top: 2rem !important;
+        padding-top: 1rem !important;
     }}
     </style>
     """, unsafe_allow_html=True)
@@ -82,10 +94,10 @@ with col2:
 
 if audio_gravado:
     st.audio(audio_gravado['bytes'])
-    # Agora usamos um carregamento personalizado dentro da página, não no topo
-    with st.spinner("IA Processando sua voz..."):
-        time.sleep(2) # Simulação
-        st.info("Áudio capturado! Pronto para a próxima etapa.")
+    # O carregamento aparecerá lá no topo agora
+    with st.spinner(" "): 
+        time.sleep(2)
+        st.info("Áudio capturado!")
 
 # --- SEÇÃO DE TEXTO ---
 try:
@@ -98,8 +110,8 @@ try:
         
         if submit:
             if texto:
-                # Efeito de carregamento para a busca de texto
-                with st.spinner("Buscando tradução..."):
+                # O spinner vazio ativa a animação branca do topo
+                with st.spinner(" "):
                     resultado = df[df['BUSCA'] == normalizar(texto)]
                     if not resultado.empty:
                         ticuna = resultado['TICUNA'].values[0]
