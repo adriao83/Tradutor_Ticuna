@@ -17,61 +17,59 @@ img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png
 
 # CSS CORRIGIDO COM CHAVES DUPLAS
 st.markdown(f"""
-    <style>
+<style>
     [data-testid="stHeader"] {{ display: none !important; }}
     [data-testid="stAppViewContainer"] {{
         background-image: url("{img}");
         background-size: cover !important;
         background-position: center !important;
-        background-attachment: fixed !important;
     }}
 
-    /* CAIXA DE TEXTO BRANCA */
-    [data-testid="stWidgetLabel"] {{ display: none !important; }}
+    /* BARRA BRANCA */
     .stTextInput > div {{
         background-color: white !important;
         border-radius: 25px !important;
         height: 55px !important;
-        position: relative !important;
-    }}
-    .stTextInput input {{
-        height: 55px !important;
-        background-color: transparent !important;
-        border: none !important;
-        padding: 0px 100px 0px 20px !important;
-        font-size: 20px !important;
     }}
 
-    /* BOTÕES LIVRES */
-    .stButton button {{
+    /* ESTILO BRUTO PARA OS BOTÕES - SEM CAIXA, SEM BORDA, SEM FUNDO */
+    div[data-testid="stVerticalBlock"] > div:has(button) {{
         background: transparent !important;
         border: none !important;
-        box-shadow: none !important;
-        position: absolute !important;
-        z-index: 9999 !important;
-        padding: 0 !important;
-        min-height: 0px !important;
-        width: auto !important;
     }}
 
-   /* --- AJUSTE A LUPA AQUI --- */
-    .lupa-custom button {{
-        font-size: 35px !important;
-        position: fixed !important; 
-        top: -20px !important;   /* Aumente esse número para a lupa DESCER na tela */
-        left: 50% !important;
-        margin-left: 280px !important; /* Aumente p/ mover p/ DIREITA, diminua p/ ESQUERDA */
-    }}
-
-    /* --- AJUSTE O X AQUI --- */
-    .x-custom button {{
-        font-size: 25px !important;
+    /* A LUPA - AJUSTE AQUI */
+    button[key="lupa_btn"], [data-testid="baseButton-secondary"]:has(div:contains("🔍")) {{
         position: fixed !important;
-        top: 265px !important;   /* Ajuste para alinhar na mesma altura da lupa */
+        top: 255px !important;    /* <--- MUDE ESSE PARA SUBIR/DESCER */
         left: 50% !important;
-        margin-left: 170px !important; /* Menor que o da lupa para ficar à esquerda dela */
-        color: #888 !important;
+        margin-left: 210px !important; /* <--- MUDE ESSE PARA DIREITA/ESQUERDA */
+        font-size: 40px !important;
+        background: transparent !important;
+        border: none !important;
+        z-index: 999999 !important;
     }}
+
+    /* O X - AJUSTE AQUI */
+    button[key="x_btn"], [data-testid="baseButton-secondary"]:has(div:contains("✖")) {{
+        position: fixed !important;
+        top: 260px !important;    /* <--- MUDE ESSE PARA SUBIR/DESCER */
+        left: 50% !important;
+        margin-left: 170px !important; /* <--- MUDE ESSE PARA DIREITA/ESQUERDA */
+        font-size: 30px !important;
+        color: #888 !important;
+        background: transparent !important;
+        border: none !important;
+        z-index: 999999 !important;
+    }}
+
+    /* LIMPEZA GERAL DE BORDAS DO STREAMLIT */
+    button {{
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+    }}
+    </style>
     [data-testid="InputInstructions"] {{ display: none !important; }}
     .texto-fixo-branco, h1, h3 {{ color: white !important; text-align: center; text-shadow: 2px 2px 10px #000; }}
     .resultado-traducao {{ color: white !important; text-align: center; font-size: 34px; font-weight: 900; text-shadow: 2px 2px 15px #000; }}
