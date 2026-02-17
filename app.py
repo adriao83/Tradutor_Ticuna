@@ -13,7 +13,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS PARA COLOCAR A LUPA DENTRO DA CAIXA (ESTILO GOOGLE)
+# CSS PARA ENCAIXAR A LUPA DENTRO DA BARRA DE TEXTO (ESTILO GOOGLE)
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -45,32 +45,38 @@ st.markdown(f"""
         padding: 25px; 
         border-radius: 15px;
         position: relative;
-    }}
-    
-    /* CAIXA DE TEXTO */
-    .stTextInput input {{
-        padding-right: 45px !important; /* Espaço interno para a lupa não cobrir o texto */
-        height: 45px !important;
-        border-radius: 25px !important; /* Bordas arredondadas estilo Google */
+        display: flex;
+        flex-direction: column;
     }}
 
-    /* POSICIONAMENTO DA LUPA DENTRO DA CAIXA */
-    /* Esse seletor encontra o botão de submit do formulário e o move para cima */
+    /* CAIXA DE TEXTO */
+    .stTextInput input {{
+        padding-right: 45px !important; /* Abre espaço para a lupa */
+        height: 45px !important;
+        border: 1px solid red !important; /* Borda vermelha conforme sua imagem */
+        border-radius: 25px !important;
+    }}
+
+    /* --- ALINHAMENTO DA LUPA ESTILO GOOGLE --- */
     div[data-testid="stFormSubmitButton"] {{
         position: absolute;
-        right: 40px; /* Distância da borda direita */
-        margin-top: -46px; /* Puxa o botão para dentro da barra de texto */
+        right: 40px; /* Ajusta para ficar dentro da borda direita */
+        margin-top: -46px; /* Sobe o botão para dentro da linha do input */
         z-index: 1000;
     }}
 
-    /* ESTILO DO BOTÃO (APENAS O ÍCONE) */
+    /* Estilo do botão para ser invisível e sobrar só o ícone */
     div[data-testid="stFormSubmitButton"] button {{
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
-        padding: 0 !important;
+        color: #4285F4 !important; /* Azul estilo Google */
         font-size: 20px !important;
+        padding: 0 !important;
     }}
+    
+    /* Remove textos automáticos do Streamlit que podem atrapalhar */
+    [data-testid="stFormSubmitButton"] p {{ display: none !important; }}
 
     .stAlert {{ background: transparent !important; border: none !important; }}
     </style>
@@ -88,15 +94,14 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- SEÇÃO DE ENTRADA ---
+# --- ÁREA DE BUSCA ---
 st.markdown("---")
 with st.form("form_digitar"):
     st.markdown("### Digite para Traduzir:")
     
-    # Campo de texto (o ID interno ajuda o CSS a localizar)
     texto_input = st.text_input("", placeholder="Ex: Capivara", label_visibility="collapsed")
     
-    # Botão de Lupa (posicionado via CSS dentro do input acima)
+    # O botão da lupa que o CSS vai "puxar" para dentro da barra acima
     submit_botao = st.form_submit_button("🔍")
 
 # LÓGICA DE BUSCA
@@ -108,7 +113,6 @@ if submit_botao and texto_input:
         trad = res['TICUNA'].values[0]
         st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
         
-        # Áudio
         tts = gTTS(text=trad, lang='pt-br')
         tts.save("voz_trad.mp3")
         st.audio("voz_trad.mp3", autoplay=True)
