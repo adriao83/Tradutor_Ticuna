@@ -71,8 +71,8 @@ st.markdown(f"""
         font-size: 40px !important;
         color: black !important;
         padding: 0 !important;
-        top: 20px !important;    
-        right: 60px !important;  
+        top: 0px !important;    
+        right: 10px !important;  
         filter: drop-shadow(2px 4px 5px rgba(0,0,0,0.4)) !important;
         z-index: 9999 !important;
     }}
