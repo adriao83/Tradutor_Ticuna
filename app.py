@@ -57,7 +57,7 @@ st.markdown(f"""
     /* --- AJUSTE A LUPA AQUI --- */
     .lupa-custom button {{
         font-size: 35px !important;
-        top: 10px !important;   /* Diminua p/ descer, aumente p/ subir */
+        top: -100px !important;   /* Diminua p/ descer, aumente p/ subir */
         right: 20px !important;  /* Aumente p/ ir p/ esquerda */
     }}
 
