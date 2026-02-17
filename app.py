@@ -15,7 +15,7 @@ if 'texto' not in st.session_state:
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS PARA LIBERDADE TOTAL DE POSICIONAMENTO
+# CSS PARA LIBERDADE TOTAL (Mude os valores abaixo para mover os ícones)
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -26,13 +26,13 @@ st.markdown(f"""
         background-attachment: fixed !important;
     }}
 
-    /* CAIXA DE TEXTO */
+    /* CAIXA DE TEXTO BRANCA */
     [data-testid="stWidgetLabel"] {{ display: none !important; }}
     .stTextInput > div {{
         background-color: white !important;
         border-radius: 25px !important;
         height: 55px !important;
-        position: relative !important; /* Isso permite que os botões 'boiem' dentro dela */
+        position: relative !important;
     }}
     .stTextInput input {{
         height: 55px !important;
@@ -42,7 +42,7 @@ st.markdown(f"""
         font-size: 20px !important;
     }}
 
-    /* ESTILO BASE DOS BOTÕES (TRANSPARENTES) */
+    /* BOTÕES LIVRES */
     .stButton button {{
         background: transparent !important;
         border: none !important;
@@ -54,18 +54,18 @@ st.markdown(f"""
         width: auto !important;
     }}
 
-    /* AJUSTE AQUI A POSIÇÃO DA LUPA */
+    /* --- AJUSTE A LUPA AQUI --- */
     .lupa-custom button {{
         font-size: 35px !important;
-        top: -48px !important;   /* Mude esse valor para subir ou descer */
-        right: 20px !important;  /* Mude esse valor para esquerda ou direita */
+        top: -48px !important;   /* Diminua p/ descer, aumente p/ subir */
+        right: 20px !important;  /* Aumente p/ ir p/ esquerda */
     }}
 
-    /* AJUSTE AQUI A POSIÇÃO DO X */
+    /* --- AJUSTE O X AQUI --- */
     .x-custom button {{
         font-size: 25px !important;
-        top: -42px !important;   /* Mude esse valor para subir ou descer */
-        right: 65px !important;  /* Mude esse valor para esquerda ou direita */
+        top: -42px !important;   /* Diminua p/ descer, aumente p/ subir */
+        right: 65px !important;  /* Aumente p/ ir p/ esquerda */
         color: #888 !important;
     }}
 
@@ -87,25 +87,24 @@ except:
 st.title("🏹 Tradutor Ticuna v0.1")
 st.markdown('<h3 class="texto-fixo-branco">Digite para Traduzir:</h3>', unsafe_allow_html=True)
 
-# O segredo: Tudo em um container só sem colunas
-placeholder = st.container()
-with placeholder:
-    texto_input = st.text_input("", value=st.session_state.texto, placeholder="Pesquise uma palavra...", label_visibility="collapsed")
-    st.session_state.texto = texto_input
+# BARRA DE BUSCA COM O TEXTO CORRETO
+placeholder_text = "Digite uma palavra ou frase..." # Altere aqui o texto interno
+texto_input = st.text_input("", value=st.session_state.texto, placeholder=placeholder_text, label_visibility="collapsed")
+st.session_state.texto = texto_input
 
-    # Botão Lupa
-    st.markdown('<div class="lupa-custom">', unsafe_allow_html=True)
-    submit_botao = st.button("🔍", key="lupa_btn")
+# ÍCONES POSICIONADOS CONFORME O CSS ACIMA
+st.markdown('<div class="lupa-custom">', unsafe_allow_html=True)
+submit_botao = st.button("🔍", key="lupa_btn")
+st.markdown('</div>', unsafe_allow_html=True)
+
+if st.session_state.texto:
+    st.markdown('<div class="x-custom">', unsafe_allow_html=True)
+    if st.button("✖", key="x_btn"):
+        st.session_state.texto = ""
+        st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Botão X
-    if st.session_state.texto:
-        st.markdown('<div class="x-custom">', unsafe_allow_html=True)
-        if st.button("✖", key="x_btn"):
-            st.session_state.texto = ""
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
-
+# LÓGICA DE TRADUÇÃO
 if submit_botao or (st.session_state.texto != ""):
     if st.session_state.texto:
         t_norm = normalizar(st.session_state.texto)
