@@ -14,7 +14,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS REFINADO: FOCO NO SOMBREAMENTO E MENSAGENS BRANCAS
+# CSS REFINADO: FOCO NO SOMBREAMENTO E POSICIONAMENTO DO MIC
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -25,7 +25,6 @@ st.markdown(f"""
         background-attachment: fixed !important;
     }}
 
-    /* MENSAGENS DE STATUS E ERRO: SEMPRE BRANCO COM SOMBRA */
     .texto-fixo-branco, h1, h3 {{
         color: white !important;
         text-shadow: 2px 2px 10px #000000, 0px 0px 5px #000000 !important;
@@ -33,7 +32,6 @@ st.markdown(f"""
         font-weight: bold !important;
     }}
 
-    /* RESULTADO DA TRADUÇÃO APENAS COM SOMBREAMENTO PRETO */
     .resultado-traducao {{
         color: white !important;
         text-shadow: 2px 2px 15px #000000, -2px -2px 15px #000000, 0px 0px 20px #000000 !important;
@@ -51,15 +49,33 @@ st.markdown(f"""
     
     [data-testid="stForm"] label p {{ color: #1E1E1E !important; text-shadow: none !important; }}
     
-    /* Força o sumiço das caixas coloridas do Streamlit */
     .stAlert {{ background: transparent !important; border: none !important; }}
 
-    /* Alinhamento do microfone centralizado na altura da caixa */
-    div[data-testid="column"] {{
+    /* CONTAINER DO INPUT PARA COLOCAR O MIC DENTRO */
+    .input-container {{
+        position: relative;
         display: flex;
-        align-items: flex-end; /* Alinha na base da caixa de texto */
+        align-items: center;
+    }}
+
+    /* ESTILO DO MICROFONE PARA SE DESTACAR NO MODO ESCURO E CLARO */
+    .mic-wrapper {{
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 10;
+        background: rgba(0,0,0,0.1);
+        border-radius: 50%;
+        padding: 5px;
+        display: flex;
+        align-items: center;
         justify-content: center;
-        padding-bottom: 5px; /* Ajuste fino para centralizar com o input */
+    }}
+    
+    /* Garante que o input dê espaço para o ícone no final */
+    .stTextInput input {{
+        padding-right: 45px !important;
     }}
     </style>
     """, unsafe_allow_html=True)
@@ -76,25 +92,29 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- SEÇÃO UNIFICADA (DIGITAÇÃO + VOZ NO CANTO) ---
+# --- ÁREA DE TRADUÇÃO ---
 st.markdown("---")
 with st.form("form_digitar"):
-    col_txt, col_mic = st.columns([0.85, 0.15])
+    # Criamos o container visual onde o mic ficará sobreposto
+    st.markdown('<div class="input-container">', unsafe_allow_html=True)
     
-    with col_txt:
+    col_input, col_mic_floating = st.columns([0.99, 0.01]) # Coluna quase invisível apenas para estrutura
+    
+    with col_input:
         texto_input = st.text_input("Digite uma palavra:", placeholder="Ex: Capivara")
     
-    with col_mic:
-        # Removido st.write daqui para não empurrar o botão para cima
-        audio_data = mic_recorder(
-            start_prompt="🎤", 
-            stop_prompt="⏹️", 
-            key='gravador'
-        )
+    # O Microfone é injetado via CSS position absolute para ficar "dentro" da caixa
+    st.markdown('<div class="mic-wrapper">', unsafe_allow_html=True)
+    audio_data = mic_recorder(
+        start_prompt="🎤", 
+        stop_prompt="⏹️", 
+        key='gravador'
+    )
+    st.markdown('</div></div>', unsafe_allow_html=True)
     
     submit_botao = st.form_submit_button("🔍 TRADUZIR")
 
-# LÓGICA DE PROCESSAMENTO (Voz ou Digitação)
+# LÓGICA DE PROCESSAMENTO
 palavra_final = ""
 
 if audio_data:
@@ -115,7 +135,7 @@ if audio_data:
 if submit_botao:
     palavra_final = texto_input
 
-# BUSCA E EXIBIÇÃO FINAL
+# RESULTADOS
 if palavra_final:
     t_norm = normalizar(palavra_final)
     res = df[df['BUSCA_PT'] == t_norm]
