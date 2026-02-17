@@ -2,3 +2,4 @@ streamlit
 pandas
 openpyxl
 gTTS
+streamlit-mic-recorder
