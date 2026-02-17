@@ -5,16 +5,15 @@ import re
 import google.generativeai as genai
 from streamlit_mic_recorder import mic_recorder
 
-# Configuração da IA (Pega a chave que você salvou no Segredo)
+# Configuração da IA
 genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="centered")
 
-# Link da sua foto de fundo
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# ESTILO PARA FUNDO TOTAL E ÍCONES DO TOPO BRANCOS
+# ESTILO PARA FUNDO E ÍCONES TOTAIS BRANCOS
 st.markdown(f"""
     <style>
     /* Fundo Total */
@@ -26,19 +25,20 @@ st.markdown(f"""
         background-attachment: fixed !important;
     }}
 
-    /* Torna o cabeçalho transparente */
     [data-testid="stHeader"], .stApp {{
         background: rgba(0,0,0,0) !important;
     }}
 
-    /* --- AJUSTE FORÇADO DOS ÍCONES (SHARE, STAR, GITHUB, MENU) --- */
-    /* Este bloco ataca todas as partes possíveis dos botões superiores */
-    [data-testid="stHeader"] button, 
-    [data-testid="stHeader"] a, 
-    [data-testid="stHeader"] svg,
-    [data-testid="stHeaderActions"] span {{
+    /* --- COMANDO MESTRE PARA OS ÍCONES --- */
+    /* O 'brightness(0) invert(1)' transforma QUALQUER ícone escuro em branco puro */
+    header [data-testid="stHeaderActionElements"] button, 
+    header [data-testid="stHeaderActionElements"] a,
+    header [data-testid="stHeaderActionElements"] svg,
+    header [data-testid="stHeaderActionElements"] span,
+    header [data-testid="stHeaderActionElements"] div {{
         color: white !important;
         fill: white !important;
+        filter: brightness(0) invert(1) !important;
     }}
 
     /* Caixa do Formulário */
@@ -51,7 +51,7 @@ st.markdown(f"""
     /* Textos em Branco com Sombra */
     h1, h3, p, label, .stMarkdown {{
         color: white !important;
-        text-shadow: 2px 2px 8px #000000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, -1px 1px 0 #000 !important;
+        text-shadow: 2px 2px 8px #000000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000 !important;
         text-align: center;
     }}
     </style>
@@ -77,7 +77,7 @@ if audio_gravado:
     st.audio(audio_gravado['bytes'])
     st.info("Áudio capturado! Em breve a IA responderá diretamente por voz.")
 
-# --- SEÇÃO DE TEXTO (PLANILHA + IA) ---
+# --- SEÇÃO DE TEXTO ---
 try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
     df['BUSCA'] = df['PORTUGUES'].apply(normalizar)
