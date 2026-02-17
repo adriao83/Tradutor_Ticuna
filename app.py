@@ -4,7 +4,7 @@ from gtts import gTTS
 import re
 import google.generativeai as genai
 
-# Configuração da IA
+# IA
 genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 model = genai.GenerativeModel('gemini-1.5-flash')
 
@@ -16,7 +16,7 @@ if 'texto' not in st.session_state:
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS CORRIGIDO: POSICIONAMENTO PELA DIREITA (RIGHT) PARA NÃO TRAVAR NA ESQUERDA
+# CSS PARA COLOCAR ÍCONES DENTRO DA BARRA IGUAL AO DESENHO
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -43,52 +43,50 @@ st.markdown(f"""
         font-weight: 900 !important;
     }}
 
+    /* BARRA DE BUSCA */
     [data-testid="stWidgetLabel"] {{ display: none !important; }}
     
     .stTextInput > div {{
         background-color: white !important;
         border-radius: 25px !important;
         height: 55px !important;
+        position: relative !important;
     }}
 
     .stTextInput input {{
         height: 55px !important;
         background-color: transparent !important;
         border: none !important;
-        padding: 0px 140px 0px 20px !important;
+        padding: 0px 100px 0px 20px !important;
         font-size: 20px !important;
-        line-height: 55px !important;
     }}
 
     [data-testid="InputInstructions"] {{ display: none !important; }}
 
+    /* ESTILO DOS BOTÕES (LUPA E X) */
     .stButton button {{
         background: transparent !important;
         border: none !important;
         padding: 0 !important;
         box-shadow: none !important;
+        position: absolute !important;
+        z-index: 100 !important;
     }}
 
-    /* LUPA: POSICIONADA PELA DIREITA DA TELA */
-    .lupa-fixa button {{
-        position: fixed !important;
-        font-size: 40px !important;
-        color: black !important;
-        top: 218px !important;
-        /* AJUSTE AQUI: Aumente para ir para esquerda, diminua para ir para direita */
-        right: calc(50%  10px) !important; 
-        z-index: 9999 !important;
+    /* POSIÇÃO DA LUPA (IGUAL AO DESENHO) */
+    .btn-lupa button {{
+        font-size: 35px !important;
+        color: #1E90FF !important; /* Cor azulada igual ao seu desenho */
+        top: -48px !important; 
+        right: 25px !important;
     }}
 
-    /* X: POSICIONADO PELA DIREITA DA TELA */
-    .x-fixo button {{
-        position: fixed !important;
-        font-size: 25px !important;
-        color: #888 !important;
-        top: 228px !important;
-        /* AJUSTE AQUI: Deve ser maior que o da lupa para ficar à esquerda dela */
-        right: calc(50%  12px) !important; 
-        z-index: 10000 !important;
+    /* POSIÇÃO DO X (IGUAL AO DESENHO) */
+    .btn-x button {{
+        font-size: 30px !important;
+        color: #1E90FF !important;
+        top: -45px !important;
+        right: 70px !important;
     }}
 
     small {{ display: none !important; }}
@@ -108,18 +106,18 @@ except:
 st.title("🏹 Tradutor Ticuna v0.1")
 st.markdown('<h3 class="texto-fixo-branco">Digite para Traduzir:</h3>', unsafe_allow_html=True)
 
-# CAMPO DE BUSCA
-texto_input = st.text_input("", value=st.session_state.texto, placeholder="Pesquise uma palavra...", label_visibility="collapsed", key="input_main")
+# CAMPO DE TEXTO E BOTÕES JUNTOS
+texto_input = st.text_input("", value=st.session_state.texto, placeholder="Pesquise uma palavra...", label_visibility="collapsed")
 st.session_state.texto = texto_input
 
-# ÍCONES
-st.markdown('<div class="lupa-fixa">', unsafe_allow_html=True)
-submit_botao = st.button("🔍", key="search")
+# Colocando os botões logo abaixo do input para o CSS "puxar" eles para dentro
+st.markdown('<div class="btn-lupa">', unsafe_allow_html=True)
+submit_botao = st.button("🔍", key="btn_lupa")
 st.markdown('</div>', unsafe_allow_html=True)
 
 if st.session_state.texto:
-    st.markdown('<div class="x-fixo">', unsafe_allow_html=True)
-    if st.button("✖", key="clear"):
+    st.markdown('<div class="btn-x">', unsafe_allow_html=True)
+    if st.button("✖", key="btn_limpar"):
         st.session_state.texto = ""
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
