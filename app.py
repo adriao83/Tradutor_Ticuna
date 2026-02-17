@@ -12,7 +12,7 @@ img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png
 st.markdown(
     f"""
     <style>
-    /* Força o fundo em todas as camadas principais */
+    /* Fundo da tela toda */
     [data-testid="stAppViewContainer"], .stApp {{
         background-image: url("{img}");
         background-size: cover !important;
@@ -23,28 +23,31 @@ st.markdown(
         height: 100vh;
     }}
 
-    /* Remove fundos extras que podem estar tapando a imagem */
+    /* Remove fundos extras */
     [data-testid="stHeader"], [data-testid="stToolbar"] {{
         background: rgba(0,0,0,0) !important;
     }}
 
+    /* CAIXA DO FORMULÁRIO */
     .stForm {{
         background-color: rgba(255, 255, 255, 0.9);
         padding: 20px;
         border-radius: 15px;
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+        box-shadow: 0px 4px 15px rgba(0,0,0,0.5);
     }}
 
+    /* TÍTULO EM BRANCO COM SOMBRA FORTE */
     h1 {{
-        color: white;
-        text-shadow: 2px 2px 5px #000;
+        color: white !important;
+        text-shadow: 3px 3px 8px #000000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000 !important;
         text-align: center;
+        font-weight: bold;
+        padding-bottom: 20px;
     }}
     </style>
     """,
     unsafe_allow_html=True
 )
-
 def normalizar(t):
     return re.sub(r'[^a-zA-Z0-9]', '', str(t)).lower() if pd.notna(t) else ""
 
