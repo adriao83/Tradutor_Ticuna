@@ -54,11 +54,12 @@ st.markdown(f"""
     /* Força o sumiço das caixas coloridas do Streamlit */
     .stAlert {{ background: transparent !important; border: none !important; }}
 
-    /* Alinhamento do microfone no canto do campo */
+    /* Alinhamento do microfone centralizado na altura da caixa */
     div[data-testid="column"] {{
         display: flex;
-        align-items: center;
+        align-items: flex-end; /* Alinha na base da caixa de texto */
         justify-content: center;
+        padding-bottom: 5px; /* Ajuste fino para centralizar com o input */
     }}
     </style>
     """, unsafe_allow_html=True)
@@ -84,7 +85,7 @@ with st.form("form_digitar"):
         texto_input = st.text_input("Digite uma palavra:", placeholder="Ex: Capivara")
     
     with col_mic:
-        st.write("") # Espaçador para alinhar com o campo de texto
+        # Removido st.write daqui para não empurrar o botão para cima
         audio_data = mic_recorder(
             start_prompt="🎤", 
             stop_prompt="⏹️", 
