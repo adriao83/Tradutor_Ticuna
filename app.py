@@ -25,20 +25,19 @@ st.markdown(f"""
         background-attachment: fixed !important;
     }}
 
-    /* Estilo para frases de erro e status: SEMPRE BRANCO COM SOMBRA */
-    .texto-fixo-branco, .stAlert p, h1, h3 {{
+    /* MENSAGENS DE STATUS E ERRO: SEMPRE BRANCO COM SOMBRA */
+    .texto-fixo-branco, h1, h3 {{
         color: white !important;
         text-shadow: 2px 2px 10px #000000, 0px 0px 5px #000000 !important;
         text-align: center;
         font-weight: bold !important;
-        background: transparent !important;
     }}
 
-    /* Estilo para o resultado da tradução (Ticuna: Nacü) com SOMBREAMENTO PRETO */
+    /* RESULTADO DA TRADUÇÃO COM SOMBREAMENTO PRETO FORTE */
     .resultado-traducao {{
         color: white !important;
-        text-shadow: 0px 0px 15px #000000, 2px 2px 8px #000000, -2px -2px 8px #000000 !important;
-        font-size: 32px !important;
+        text-shadow: 4px 4px 12px #000000, -2px -2px 10px #000000, 2px -2px 10px #000000, -2px 2px 10px #000000 !important;
+        font-size: 34px !important;
         text-align: center;
         padding: 20px;
         font-weight: 900 !important;
@@ -52,10 +51,11 @@ st.markdown(f"""
     
     [data-testid="stForm"] label p {{ color: #1E1E1E !important; text-shadow: none !important; }}
     
-    /* Remove o fundo vermelho/verde das mensagens de erro/sucesso do Streamlit */
-    div[data-testid="stNotification"] {{
+    /* Remove fundos coloridos de alertas padrão do Streamlit */
+    .stAlert {{
         background-color: transparent !important;
         border: none !important;
+        padding: 0px !important;
     }}
     </style>
     """, unsafe_allow_html=True)
@@ -67,7 +67,6 @@ def normalizar(t):
 try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
     df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
-    df['BUSCA_TI'] = df['TICUNA'].apply(normalizar)
 except:
     st.markdown('<p class="texto-fixo-branco">Erro ao carregar planilha no GitHub.</p>', unsafe_allow_html=True)
 
@@ -78,6 +77,7 @@ st.markdown("### 🎤 Fale para Traduzir")
 
 col1, col2, col3 = st.columns([1, 5, 1])
 with col2:
+    # Captura o áudio
     audio_data = mic_recorder(
         start_prompt="Clique para falar 🎤", 
         stop_prompt="Traduzir fala ⏹️", 
@@ -89,32 +89,35 @@ if audio_data:
     status_msg.markdown('<p class="texto-fixo-branco">Identificando sua voz...</p>', unsafe_allow_html=True)
     
     try:
-        # Envio otimizado para a IA
+        # CONVERSÃO DE VOZ PARA TEXTO USANDO O GEMINI (FORMATO OTIMIZADO)
+        blob = {"mime_type": "audio/wav", "data": audio_data['bytes']}
         response = model.generate_content([
-            "Transcreva apenas a palavra ou frase curta dita neste áudio, sem pontuação.", 
-            {"mime_type": "audio/wav", "data": audio_data['bytes']}
+            "Aja como um transcritor. Transcreva apenas a palavra dita neste áudio, sem pontuação ou comentários.",
+            blob
         ])
         
         texto_falado = response.text.strip()
         t_norm = normalizar(texto_falado)
         
-        # BUSCA NA PLANILHA (Igual à digitação)
+        # BUSCA NA PLANILHA
         res = df[df['BUSCA_PT'] == t_norm]
         
+        status_msg.empty() # Limpa o "Identificando..."
+
         if not res.empty:
             trad = res['TICUNA'].values[0]
-            status_msg.empty()
             st.markdown(f'<p class="texto-fixo-branco">Você disse: "{texto_falado}"</p>', unsafe_allow_html=True)
             st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
             
-            # GERA VOZ SINTÉTICA
+            # GERA VOZ SINTÉTICA (TTS)
             gTTS(text=trad, lang='pt-br').save("voz_fala.mp3")
             st.audio("voz_fala.mp3", autoplay=True)
         else:
-            status_msg.markdown(f'<p class="texto-fixo-branco">Palavra "{texto_falado}" não encontrada na planilha.</p>', unsafe_allow_html=True)
+            st.markdown(f'<p class="texto-fixo-branco">A palavra "{texto_falado}" não está na planilha.</p>', unsafe_allow_html=True)
 
     except Exception as e:
-        status_msg.markdown('<p class="texto-fixo-branco">Erro ao processar voz. Tente digitar ou verifique a chave API.</p>', unsafe_allow_html=True)
+        status_msg.empty()
+        st.markdown('<p class="texto-fixo-branco">Erro ao processar voz. Tente falar novamente ou digite.</p>', unsafe_allow_html=True)
 
 # --- SEÇÃO DE DIGITAÇÃO ---
 st.markdown("---")
