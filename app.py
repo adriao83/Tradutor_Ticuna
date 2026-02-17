@@ -5,38 +5,34 @@ import re
 
 st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹")
 
-# --- CONFIGURAÇÃO DA IMAGEM DE FUNDO ---
-url_da_imagem = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/refs/heads/main/fundo.png"
+# Link limpo da sua imagem
+img_url = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-st.markdown(
-    f"""
-    <style>
-    .stApp {{
-        background-image: url("{url_da_imagem}");
-        background-attachment: fixed;
-        background-size: cover;
-        background-position: center;
-    }}
-    
-    .stForm {{
-        background-color: rgba(255, 255, 255, 0.9);
-        padding: 20px;
-        border-radius: 15px;
-        border: 2px solid #2e7d32;
-    }}
-
-    h1 {{
-        color: white;
-        text-shadow: 2px 2px 4px #000000;
-        text-align: center;
-        background-color: rgba(0, 0, 0, 0.4);
-        padding: 10px;
-        border-radius: 10px;
-    }}
-    </style>
-    """,
-    unsafe_content_allowed=True
-)
+# Estilo CSS sem espaços invisíveis
+st.markdown(f"""
+<style>
+.stApp {{
+    background-image: url("{img_url}");
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center;
+}}
+.stForm {{
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 15px;
+    border: 2px solid #2e7d32;
+}}
+h1 {{
+    color: white;
+    text-shadow: 2px 2px 4px #000000;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.4);
+    padding: 10px;
+    border-radius: 10px;
+}}
+</style>
+""", unsafe_content_allowed=True)
 
 def normalizar(texto):
     if pd.isna(texto): return ""
@@ -56,21 +52,17 @@ try:
         if palavra_usuario:
             busca = normalizar(palavra_usuario)
             resultado = df[df['PORT_BUSCA'] == busca]
-            
             if not resultado.empty:
                 ticuna = resultado['TICUNA'].values[0]
-                port_original = resultado['PORTUGUES'].values[0]
-                
-                st.info(f"**Português:** {port_original}")
+                port_orig = resultado['PORTUGUES'].values[0]
+                st.info(f"**Português:** {port_orig}")
                 st.success(f"### **Ticuna:** {ticuna}")
-                
                 tts = gTTS(text=ticuna, lang='pt-br')
                 tts.save("audio.mp3")
                 st.audio("audio.mp3")
             else:
-                st.error("Palavra não encontrada no dicionário.")
+                st.error("Palavra não encontrada.")
         else:
-            st.warning("Por favor, digite uma palavra.")
-
+            st.warning("Digite uma palavra.")
 except Exception as e:
-    st.error("Erro ao carregar a planilha de dados no GitHub.")
+    st.error("Erro ao carregar os dados.")
