@@ -14,7 +14,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS AVANÇADO PARA COLOCAR OS ÍCONES DENTRO DA BARRA
+# CSS PARA LIMPAR O FUNDO PRETO E POSICIONAR LADO A LADO
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -41,7 +41,6 @@ st.markdown(f"""
         font-weight: 900 !important;
     }}
 
-    /* Estilização do Formulário */
     .stForm {{ 
         background-color: rgba(255, 255, 255, 0.95) !important; 
         padding: 25px; 
@@ -49,37 +48,40 @@ st.markdown(f"""
         position: relative;
     }}
 
-    /* ESTILO DA CAIXA DE TEXTO */
+    /* CAIXA DE TEXTO */
     .stTextInput input {{
-        padding-right: 100px !important; /* Espaço para os dois ícones */
+        padding-right: 90px !important; /* Espaço para os dois ícones */
         height: 45px !important;
-        border-radius: 10px !important;
     }}
 
-    /* POSICIONAMENTO DO MICROFONE DENTRO DA CAIXA */
+    /* REMOVE O FUNDO PRETO GIGANTE DO MICROFONE */
     div[data-testid="stVerticalBlock"] > div:has(#mic_unificado) {{
         position: absolute;
-        right: 75px; 
-        margin-top: -48px; 
+        right: 50px; /* Posição do microfone */
+        margin-top: -46px; /* Sobe para dentro da barra */
         z-index: 999;
+        background: transparent !important;
     }}
 
-    /* POSICIONAMENTO DA LUPA (BOTÃO TRADUZIR) DENTRO DA CAIXA */
+    /* REMOVE O FUNDO DO BOTÃO DA LUPA */
     div[data-testid="stVerticalBlock"] > div:has(#botao_traduzir) {{
         position: absolute;
-        right: 35px;
-        margin-top: -48px;
+        right: 15px; /* Posição da lupa */
+        margin-top: -46px; /* Sobe para dentro da barra */
         z-index: 999;
     }}
 
-    /* Remove estilos padrão dos botões para parecerem apenas ícones */
+    /* ESTILO PARA OS BOTÕES FICAREM TRANSPARENTES E SEM BORDAS */
     button {{
         background: transparent !important;
         border: none !important;
-        box-shadow: none !important;
         padding: 0 !important;
+        color: inherit;
     }}
-
+    
+    /* Remove a borda preta que o Streamlit coloca no componente de áudio */
+    iframe {{ border: none !important; }}
+    
     .stAlert {{ background: transparent !important; border: none !important; }}
     </style>
     """, unsafe_allow_html=True)
@@ -96,42 +98,39 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- ÁREA DE ENTRADA UNIFICADA ---
+# --- FORMULÁRIO COM ÍCONES LADO A LADO ---
 with st.form("form_digitar"):
     st.markdown("### Digite ou Fale:")
     
-    # Campo de texto
+    # Input principal
     texto_input = st.text_input("", placeholder="Ex: Capivara", label_visibility="collapsed")
     
-    # Microfone (Será movido pelo CSS para dentro da barra)
+    # Microfone (O CSS vai tirar o fundo preto e colocar na direita)
     audio_data = mic_recorder(
         start_prompt="🎤", 
         stop_prompt="⏹️", 
         key='mic_unificado'
     )
     
-    # Lupa/Traduzir (Será movida pelo CSS para dentro da barra)
-    submit_botao = st.form_submit_button("🔍", help="Traduzir")
+    # Lupa (O CSS vai colocar ao lado do microfone)
+    submit_botao = st.form_submit_button("🔍")
 
-# LÓGICA DE PROCESSAMENTO
+# LÓGICA DE TRADUÇÃO
 palavra_final = ""
-
 if audio_data:
     try:
         audio_part = {"mime_type": "audio/wav", "data": audio_data['bytes']}
         response = model.generate_content(["Transcreva apenas a palavra.", audio_part])
         palavra_final = response.text.strip().replace(".", "").replace("!", "")
     except:
-        st.markdown('<p class="texto-fixo-branco">Erro no processamento de voz.</p>', unsafe_allow_html=True)
+        st.markdown('<p class="texto-fixo-branco">Erro ao processar voz.</p>', unsafe_allow_html=True)
 
 if submit_botao:
     palavra_final = texto_input
 
-# BUSCA E EXIBIÇÃO
 if palavra_final:
     t_norm = normalizar(palavra_final)
     res = df[df['BUSCA_PT'] == t_norm]
-    
     if not res.empty:
         trad = res['TICUNA'].values[0]
         st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
