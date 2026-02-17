@@ -12,7 +12,11 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS PARA LIMPAR CAMADAS E POSICIONAR A LUPA DE FORMA ABSOLUTA
+# Inicializa o estado do texto para permitir a limpeza pelo X
+if 'texto_busca' not in st.session_state:
+    st.session_state.texto_busca = ""
+
+# CSS PARA POSICIONAR LUPA E O BOTÃO X
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -52,7 +56,7 @@ st.markdown(f"""
         height: 55px !important;
         background-color: transparent !important;
         border: none !important;
-        padding: 0px 60px 0px 20px !important;
+        padding: 0px 110px 0px 20px !important; /* Aumentado o recuo para não bater no X e na Lupa */
         font-size: 20px !important;
         line-height: 55px !important;
     }}
@@ -62,24 +66,32 @@ st.markdown(f"""
         display: none !important;
     }}
 
-    /* LUPA: POSICIONAMENTO ABSOLUTO PARA MOVER LIVREMENTE */
+    /* ESTILO GERAL DOS BOTÕES (LUPA E X) */
     .stButton button {{
         position: absolute !important;
         background: transparent !important;
         border: none !important;
-        font-size: 40px !important;
         color: black !important;
         padding: 0 !important;
-        
-        /* AJUSTE ESTES VALORES PARA MOVER A LUPA */
-        top: 10px !important;   /* Diminua (ex: -55) para SUBIR | Aumente (ex: -40) para DESCER */
-        right: 60px !important;  /* Aumente (ex: 60) para ESQUERDA | Diminua (ex: 20) para DIREITA */
-        
         filter: drop-shadow(2px 4px 5px rgba(0,0,0,0.4)) !important;
         z-index: 9999 !important;
     }}
 
-    /* Remove bloqueios de coluna para o botão */
+    /* POSIÇÃO ESPECÍFICA DA LUPA */
+    div[data-testid="column"]:nth-child(2) button {{
+        font-size: 40px !important;
+        top: 10px !important;
+        right: 60px !important;
+    }}
+
+    /* POSIÇÃO ESPECÍFICA DO BOTÃO X */
+    div.element-container:has(#botao_limpar) + div button {{
+        font-size: 30px !important;
+        top: 15px !important;
+        right: 110px !important; /* Posicionado à esquerda da lupa */
+        color: #555 !important;
+    }}
+
     [data-testid="column"] {{
         display: flex;
         align-items: center;
@@ -107,19 +119,31 @@ st.markdown('<h3 class="texto-fixo-branco">Digite para Traduzir:</h3>', unsafe_a
 col_main, col_btn = st.columns([0.85, 0.15])
 
 with col_main:
-    texto_input = st.text_input("", placeholder="Pesquise uma palavra...", label_visibility="collapsed")
+    # O campo de texto usa o session_state para poder ser limpo
+    texto_input = st.text_input("", value=st.session_state.texto_busca, placeholder="Pesquise uma palavra...", label_visibility="collapsed", key="input_principal")
+    st.session_state.texto_busca = texto_input
+
+    # Botão X de limpar (aparece apenas se houver texto)
+    if st.session_state.texto_busca != "":
+        st.markdown('<div id="botao_limpar"></div>', unsafe_allow_html=True)
+        if st.button("✕", key="btn_clear"):
+            st.session_state.texto_busca = ""
+            st.rerun()
 
 with col_btn:
     submit_botao = st.button("🔍")
 
 # LÓGICA
-if submit_botao or (texto_input != ""):
-    if texto_input:
-        t_norm = normalizar(texto_input)
+if submit_botao or (st.session_state.texto_busca != ""):
+    if st.session_state.texto_busca:
+        t_norm = normalizar(st.session_state.texto_busca)
         res = df[df['BUSCA_PT'] == t_norm]
         if not res.empty:
             trad = res['TICUNA'].values[0]
             st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
-            tts = gTTS(text=trad, lang='pt-br')
-            tts.save("voz_trad.mp3")
-            st.audio("voz_trad.mp3", autoplay=True)
+            try:
+                tts = gTTS(text=trad, lang='pt-br')
+                tts.save("voz_trad.mp3")
+                st.audio("voz_trad.mp3", autoplay=True)
+            except:
+                pass
