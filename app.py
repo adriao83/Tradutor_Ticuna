@@ -13,7 +13,7 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS PARA ENCAIXAR A LUPA DENTRO DA BARRA (MODELO GOOGLE)
+# CSS REFINADO PARA O MODELO GOOGLE
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -40,51 +40,38 @@ st.markdown(f"""
         font-weight: 900 !important;
     }}
 
+    /* CAIXA BRANCA PRINCIPAL */
     .stForm {{ 
         background-color: rgba(255, 255, 255, 0.95) !important; 
-        padding: 25px; 
-        border-radius: 15px;
-        position: relative;
+        padding: 20px; 
+        border-radius: 30px; /* Bordas bem arredondadas estilo Google */
+        border: 1px solid #dfe1e5 !important;
     }}
 
-    /* BARRA DE TEXTO ESTILO GOOGLE */
+    /* REMOVE BORDAS PADRÃO DO STREAMLIT DENTRO DO FORM */
+    [data-testid="stForm"] {{ border: none !important; box-shadow: none !important; }}
+
+    /* ESTILO DA BARRA DE TEXTO */
     .stTextInput input {{
-        padding-right: 50px !important; /* Espaço para a lupa */
-        height: 50px !important;
-        border-radius: 25px !important;
-        border: 1px solid #dfe1e5 !important;
-        font-size: 16px !important;
+        border: none !important;
+        background: transparent !important;
+        font-size: 18px !important;
+        height: 45px !important;
     }}
     
-    .stTextInput input:focus {{
-        box-shadow: 0 1px 6px rgba(32,33,36,0.28) !important;
-        border-color: rgba(223,225,229,0) !important;
-    }}
-
-    /* POSICIONAMENTO DA LUPA - FIXO DENTRO DO INPUT */
-    div[data-testid="stFormSubmitButton"] {{
-        position: absolute;
-        right: 40px;
-        /* A mágica para centralizar verticalmente independente da tela */
-        top: 68px; 
-        z-index: 1000;
-    }}
-
     /* ESTILO DO BOTÃO DA LUPA */
-    div[data-testid="stFormSubmitButton"] button {{
+    .stButton button {{
         background: transparent !important;
         border: none !important;
-        box-shadow: none !important;
-        color: #4285F4 !important; /* Azul Google */
         font-size: 24px !important;
         padding: 0 !important;
-        width: auto !important;
+        margin-top: 5px !important;
+        box-shadow: none !important;
     }}
 
-    /* Limpeza de elementos extras do Streamlit que fazem a lupa sumir */
-    [data-testid="stFormSubmitButton"] p {{ display: none !important; }}
-    .stForm [data-testid="stVerticalBlock"] > div {{ border: none !important; }}
-
+    /* Tira o texto "Press Enter to submit" */
+    small {{ display: none !important; }}
+    
     .stAlert {{ background: transparent !important; border: none !important; }}
     </style>
     """, unsafe_allow_html=True)
@@ -101,27 +88,38 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- ÁREA DE BUSCA ---
-st.markdown("---")
-with st.form("form_digitar"):
-    st.markdown("### Digite para Traduzir:")
-    
-    texto_input = st.text_input("", placeholder="Pesquise uma palavra...", label_visibility="collapsed")
-    
-    # A lupa que será movida para dentro
-    submit_botao = st.form_submit_button("🔍")
+# --- AREA DE TRADUÇÃO MODELO GOOGLE ---
+st.markdown('<h3 class="texto-fixo-branco">Digite para Traduzir:</h3>', unsafe_allow_html=True)
 
-# LÓGICA DE BUSCA
-if submit_botao and texto_input:
-    t_norm = normalizar(texto_input)
-    res = df[df['BUSCA_PT'] == t_norm]
+# Criamos o container branco
+with st.container():
+    # Usamos colunas para colocar o texto e a lupa lado a lado na mesma linha
+    col1, col2 = st.columns([0.9, 0.1])
     
-    if not res.empty:
-        trad = res['TICUNA'].values[0]
-        st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
+    with col1:
+        # Campo de texto sem bordas (as bordas são do container)
+        texto_input = st.text_input("", placeholder="Pesquise no Tradutor Ticuna...", label_visibility="collapsed")
+    
+    with col2:
+        # Botão que funciona como a lupa
+        submit_botao = st.button("🔍")
+
+# LÓGICA DE BUSCA (Acionada por Enter ou Clique na Lupa)
+if submit_botao or (texto_input != ""):
+    if texto_input:
+        t_norm = normalizar(texto_input)
+        res = df[df['BUSCA_PT'] == t_norm]
         
-        tts = gTTS(text=trad, lang='pt-br')
-        tts.save("voz_trad.mp3")
-        st.audio("voz_trad.mp3", autoplay=True)
-    else:
-        st.markdown(f'<p class="texto-fixo-branco">A palavra "{texto_input}" não foi encontrada.</p>', unsafe_allow_html=True)
+        if not res.empty:
+            trad = res['TICUNA'].values[0]
+            st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
+            
+            # Gera o áudio
+            try:
+                tts = gTTS(text=trad, lang='pt-br')
+                tts.save("voz_trad.mp3")
+                st.audio("voz_trad.mp3", autoplay=True)
+            except:
+                pass
+        elif submit_botao: # Só mostra erro se o usuário realmente tentou buscar
+            st.markdown(f'<p class="texto-fixo-branco">A palavra "{texto_input}" não foi encontrada.</p>', unsafe_allow_html=True)
