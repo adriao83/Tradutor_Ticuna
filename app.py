@@ -15,7 +15,7 @@ if 'texto' not in st.session_state:
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS CORRIGIDO COM CHAVES DUPLAS
+# CSS CORRIGIDO E LIMPO
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -32,49 +32,47 @@ st.markdown(f"""
         height: 55px !important;
     }}
 
-    /* ESTILO BRUTO PARA OS BOTÕES - SEM CAIXA, SEM BORDA, SEM FUNDO */
-    div[data-testid="stVerticalBlock"] > div:has(button) {{
-        background: transparent !important;
-        border: none !important;
-    }}
-
-    /* A LUPA - AJUSTE AQUI */
-    button[key="lupa_btn"], [data-testid="baseButton-secondary"]:has(div:contains("🔍")) {{
+    /* LUPA - AJUSTE AQUI */
+    button[key="lupa_btn"] {{
         position: fixed !important;
-        top: 255px !important;    /* <--- MUDE ESSE PARA SUBIR/DESCER */
+        top: 255px !important;  
         left: 50% !important;
-        margin-left: 210px !important; /* <--- MUDE ESSE PARA DIREITA/ESQUERDA */
+        margin-left: 210px !important; 
         font-size: 40px !important;
         background: transparent !important;
         border: none !important;
         z-index: 999999 !important;
+        cursor: pointer !important;
     }}
 
     /* O X - AJUSTE AQUI */
-    button[key="x_btn"], [data-testid="baseButton-secondary"]:has(div:contains("✖")) {{
+    button[key="x_btn"] {{
         position: fixed !important;
-        top: 260px !important;    /* <--- MUDE ESSE PARA SUBIR/DESCER */
+        top: 260px !important;  
         left: 50% !important;
-        margin-left: 170px !important; /* <--- MUDE ESSE PARA DIREITA/ESQUERDA */
+        margin-left: 170px !important; 
         font-size: 30px !important;
         color: #888 !important;
         background: transparent !important;
         border: none !important;
         z-index: 999999 !important;
+        cursor: pointer !important;
     }}
 
-    /* LIMPEZA GERAL DE BORDAS DO STREAMLIT */
+    /* LIMPEZA GERAL */
+    [data-testid="InputInstructions"] {{ display: none !important; }}
+    .texto-fixo-branco, h1, h3 {{ color: white !important; text-align: center; text-shadow: 2px 2px 10px #000; }}
+    .resultado-traducao {{ color: white !important; text-align: center; font-size: 34px; font-weight: 900; text-shadow: 2px 2px 15px #000; }}
+    
+    /* Remove sombras e bordas chatas de botões do Streamlit */
     button {{
         border: none !important;
         outline: none !important;
         box-shadow: none !important;
+        background-color: transparent !important;
     }}
-    </style>
-    [data-testid="InputInstructions"] {{ display: none !important; }}
-    .texto-fixo-branco, h1, h3 {{ color: white !important; text-align: center; text-shadow: 2px 2px 10px #000; }}
-    .resultado-traducao {{ color: white !important; text-align: center; font-size: 34px; font-weight: 900; text-shadow: 2px 2px 15px #000; }}
-    </style>
-    """, unsafe_allow_html=True)
+</style>
+""", unsafe_allow_html=True)
 
 def normalizar(t):
     return re.sub(r'[^a-zA-Z0-9]', '', str(t)).lower() if pd.notna(t) else ""
@@ -89,19 +87,16 @@ st.title("🏹 Tradutor Ticuna v0.1")
 st.markdown('<h3 class="texto-fixo-branco">Digite para Traduzir:</h3>', unsafe_allow_html=True)
 
 placeholder_text = "Digite uma palavra ou frase..." 
-texto_input = st.text_input("", value=st.session_state.texto, placeholder=placeholder_text, label_visibility="collapsed")
+texto_input = st.text_input("", value=st.session_state.texto, placeholder=placeholder_text, label_visibility="collapsed", key="input_principal")
 st.session_state.texto = texto_input
 
-st.markdown('<div class="lupa-custom">', unsafe_allow_html=True)
+# BOTÕES
 submit_botao = st.button("🔍", key="lupa_btn")
-st.markdown('</div>', unsafe_allow_html=True)
 
 if st.session_state.texto:
-    st.markdown('<div class="x-custom">', unsafe_allow_html=True)
     if st.button("✖", key="x_btn"):
         st.session_state.texto = ""
         st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # LÓGICA DE TRADUÇÃO
 if submit_botao or (st.session_state.texto != ""):
@@ -111,6 +106,9 @@ if submit_botao or (st.session_state.texto != ""):
         if not res.empty:
             trad = res['TICUNA'].values[0]
             st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
-            tts = gTTS(text=trad, lang='pt-br')
-            tts.save("voz_trad.mp3")
-            st.audio("voz_trad.mp3", autoplay=True)
+            try:
+                tts = gTTS(text=trad, lang='pt-br')
+                tts.save("voz_trad.mp3")
+                st.audio("voz_trad.mp3", autoplay=True)
+            except:
+                pass
