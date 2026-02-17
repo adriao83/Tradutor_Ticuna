@@ -43,28 +43,27 @@ st.markdown(f"""
         padding-right: 85px !important;
     }}
 
-    /* Container dos botões */
-    .btn-overlay {{
+  /* Container que sustenta os botões */
+    .btn-overlay {
         position: relative;
-        height: 0px;
-        top: -46px; 
-        float: right;
-        right: 15px;
-        z-index: 999;
         display: flex;
-        gap: 8px;
-    }}
+        justify-content: flex-end; /* Alinha os botões na direita */
+        gap: 15px;                 /* Espaço entre o X e a Lupa */
+        margin-top: -53px;         /* ESTE VALOR FAZ ELES SUBIREM. Tente -55px ou -60px se precisar subir mais */
+        margin-right: 20px;        /* Afasta da ponta direita da barra branca */
+        z-index: 9999;
+    }
 
-    /* Estilo exclusivo para os botões da barra (não afeta o título) */
-    button[key="btn_x_clear"], button[key="btn_lupa_search"] {{
+    /* Estilo individual para os botões ficarem limpos */
+    button[key="btn_x_clear"], button[key="btn_lupa_search"] {
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
-        font-size: 26px !important;
-        color: #444 !important;
-        padding: 0px !important;
-        min-height: 0px !important;
-    }}
+        font-size: 28px !important; /* Tamanho dos ícones */
+        padding: 0 !important;
+        cursor: pointer !important;
+        line-height: 1 !important;
+    }
     
     button[key="btn_x_clear"]:hover, button[key="btn_lupa_search"]:hover {{
         color: #007bff !important;
