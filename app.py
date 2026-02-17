@@ -13,10 +13,10 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# CSS PARA REMOVER O CABEÇALHO E FIXAR O VISUAL
+# CSS PARA REMOVER O CABEÇALHO E DINAMIZAR CORES
 st.markdown(f"""
     <style>
-    /* 1. REMOVE COMPLETAMENTE A BARRA DO TOPO (Ícones, Edit, GitHub) */
+    /* 1. Remove os ícones do topo */
     [data-testid="stHeader"] {{
         display: none !important;
     }}
@@ -36,20 +36,22 @@ st.markdown(f"""
         border-radius: 15px; 
     }}
 
-    /* 4. Forçar cores dos inputs */
-    .stForm input {{
-        color: black !important;
-        background-color: white !important;
-    }}
-
-    /* 5. Títulos com sombra */
-    h1, h3, p, label {{
+    /* 4. Títulos Principais (Sempre brancos para destacar no fundo) */
+    h1, h3, .stMarkdown p {{
         color: white !important;
         text-shadow: 2px 2px 4px #000000 !important;
         text-align: center;
     }}
 
-    /* Ajuste de margem para compensar a falta do header */
+    /* 5. DINAMISMO: Faz o texto do campo de entrada seguir o tema do sistema */
+    /* Removendo a cor fixa branca do label para ele respeitar o modo claro/escuro */
+    label {{
+        text-align: center;
+        display: block;
+        font-weight: bold;
+    }}
+
+    /* Ajuste de margem */
     .main .block-container {{
         padding-top: 3rem !important;
     }}
@@ -82,6 +84,7 @@ try:
     df['BUSCA'] = df['PORTUGUES'].apply(normalizar)
 
     with st.form("tradutor_form"):
+        # O label abaixo agora seguirá a cor automática do Streamlit
         texto = st.text_input("Ou digite uma palavra:", placeholder="Ex: Olá")
         submit = st.form_submit_button("🔍 TRADUZIR")
         
