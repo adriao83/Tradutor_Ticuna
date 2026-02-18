@@ -23,7 +23,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- CSS DEFINITIVO: REMOVE TUDO O QUE SOBROU ---
+# --- CSS REFEITO PARA MANTER O ALINHAMENTO DA LUPA ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -33,42 +33,56 @@ st.markdown(f"""
         background-position: center !important;
     }}
 
-    /* Título */
     h1, h1 span {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; }}
 
-    /* ESTILO DA BARRA ÚNICA: Sem cilindros extras em volta */
-    .stTextInput > div {{
-        background-color: white !important;
-        border-radius: 25px !important;
-        height: 55px !important;
-        padding-right: 100px !important;
-        border: none !important;
-        box-shadow: 0px 4px 15px rgba(0,0,0,0.4) !important;
+    /* Remove qualquer borda ou caixa extra do Streamlit */
+    [data-testid="stVerticalBlockBorderWrapper"] > div:has(.custom-search-bar) {{
+        background: transparent !important;
     }}
 
-    .stTextInput input {{
-        color: #333 !important;
-        font-size: 18px !important;
-    }}
-
-    /* BOTÕES DENTRO DA BARRA */
-    .btn-container-interno {{
-        position: relative;
+    /* ESTE É O MODELO QUE VOCÊ QUER: A BARRA ÚNICA */
+    .custom-search-bar {{
         display: flex;
-        justify-content: flex-end;
-        gap: 12px;
-        margin-top: -46px; 
-        margin-right: 25px;
-        z-index: 99;
+        align-items: center;
+        background-color: white;
+        border-radius: 25px;
+        height: 55px;
+        padding: 0 15px;
+        margin-top: 30px;
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
     }}
 
-    button[key="btn_x_clear"], button[key="btn_lupa_search"] {{
+    .custom-search-bar .stTextInput {{
+        flex-grow: 1;
+        margin-bottom: 0px !important;
+    }}
+    
+    .custom-search-bar .stTextInput > div {{
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }}
+    
+    .custom-search-bar .stTextInput input {{
+        background: transparent !important;
+        border: none !important;
+        height: 55px !important;
+        font-size: 18px !important;
+        color: #333 !important;
+    }}
+
+    /* Estilo dos botões alinhados na direita */
+    .custom-search-bar button {{
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
         font-size: 24px !important;
         color: #555 !important;
+        padding: 0 5px !important;
         cursor: pointer !important;
+        height: 55px !important;
+        display: flex;
+        align-items: center;
     }}
 
     [data-testid="InputInstructions"] {{ display: none !important; }}
@@ -82,31 +96,35 @@ try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
     df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
 except:
-    st.error("Erro ao carregar a planilha.")
+    st.error("Erro ao carregar planilha.")
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- INTERFACE (SEM A FRASE E SEM A CAIXA EXTRA) ---
-texto_busca = st.text_input(
-    "", 
-    placeholder="Pesquise uma palavra...", 
-    label_visibility="collapsed", 
-    key=f"input_{st.session_state.contador_limpar}"
-)
+# --- A ESTRUTURA ALINHADA QUE VOCÊ PEDIU ---
+st.markdown('<div class="custom-search-bar">', unsafe_allow_html=True)
 
-# Botões sobrepostos (X e Lupa)
-st.markdown('<div class="btn-container-interno">', unsafe_allow_html=True)
-col_vazia, col_btns = st.columns([0.85, 0.15])
-with col_btns:
-    sub1, sub2 = st.columns(2)
-    with sub1:
+# Colunas internas para manter tudo na mesma linha (Input + Botões)
+col_input, col_botoes = st.columns([0.85, 0.15])
+
+with col_input:
+    texto_busca = st.text_input(
+        "", 
+        placeholder="Pesquise uma palavra...", 
+        label_visibility="collapsed", 
+        key=f"input_{st.session_state.contador_limpar}"
+    )
+
+with col_botoes:
+    sub_c1, sub_c2 = st.columns(2)
+    with sub_c1:
         if texto_busca != "":
             st.button("✖", on_click=acao_limpar, key="btn_x_clear")
-    with sub2:
+    with sub_c2:
         st.button("🔍", key="btn_lupa_search")
+
 st.markdown('</div>', unsafe_allow_html=True)
 
-# --- TRADUÇÃO ---
+# --- LÓGICA DE RESULTADO ---
 if texto_busca and df is not None:
     t_norm = normalizar(texto_busca)
     res = df[df['BUSCA_PT'] == t_norm]
