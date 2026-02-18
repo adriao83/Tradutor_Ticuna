@@ -23,7 +23,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- CSS LIMPO (MANTÉM APENAS O INPUT E A LUPA) ---
+# --- CSS AJUSTADO PARA ALINHAMENTO ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -35,40 +35,33 @@ st.markdown(f"""
 
     h1, h1 span {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; }}
 
-    /* Removemos qualquer fundo branco ou 'cilindro' que estava por trás */
+    /* O Campo de texto com a borda vermelha que você gosta */
     .stTextInput > div {{
-        background-color: #f0f2f6 !important; /* Cor clara padrão para o input */
+        background-color: #f0f2f6 !important;
         border-radius: 10px !important;
-        border: 1px solid transparent !important;
     }}
 
-    /* Estilo para quando você clica dentro (Borda Vermelha) */
-    .stTextInput > div:focus-within {{
-        border: 1px solid red !important;
-        box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25) !important;
-    }}
-
-    /* Alinhamento da Lupa ao lado do Input */
-    .container-busca {{
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-top: 20px;
-    }}
-
+    /* Estilo da Lupa */
     .stButton button {{
         background-color: white !important;
         border-radius: 8px !important;
-        height: 45px !important;
-        width: 45px !important;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        height: 44px !important; /* Altura aproximada do input */
+        width: 44px !important;
         border: 1px solid #ccc !important;
+        margin-top: -5px; /* AJUSTE FINO PARA SUBIR A LUPA */
     }}
 
+    /* Remove instruções extras */
     [data-testid="InputInstructions"] {{ display: none !important; }}
-    .resultado-traducao {{ color: white !important; text-align: center; font-size: 34px; font-weight: 900; text-shadow: 2px 2px 15px #000; padding: 20px; }}
+    
+    .resultado-traducao {{ 
+        color: white !important; 
+        text-align: center; 
+        font-size: 34px; 
+        font-weight: 900; 
+        text-shadow: 2px 2px 15px #000; 
+        padding: 20px; 
+    }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -82,9 +75,9 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- INTERFACE: APENAS O QUE VOCÊ PRECISA ---
-# Criamos um container simples para alinhar o input e a lupa lado a lado
-col_texto, col_lupa = st.columns([0.9, 0.1])
+# --- INTERFACE ALINHADA ---
+# Usamos colunas para colocar um do lado do outro
+col_texto, col_lupa = st.columns([0.88, 0.12])
 
 with col_texto:
     texto_busca = st.text_input(
@@ -95,9 +88,8 @@ with col_texto:
     )
 
 with col_lupa:
-    st.write("<div style='margin-top: 0px;'>", unsafe_allow_html=True)
+    # O botão da lupa agora está alinhado via CSS (margin-top negativo)
     st.button("🔍", key="btn_lupa_search")
-    st.write("</div>", unsafe_allow_html=True)
 
 # --- LÓGICA DE TRADUÇÃO ---
 if texto_busca and df is not None:
