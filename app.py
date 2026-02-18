@@ -23,7 +23,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- CSS ÚNICO E ALINHADO ---
+# --- CSS LIMPO (MANTÉM APENAS O INPUT E A LUPA) ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -35,49 +35,36 @@ st.markdown(f"""
 
     h1, h1 span {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; }}
 
-    /* Esta é a ÚNICA caixa que vai existir */
-    .caixa-pesquisa-ticuna {{
+    /* Removemos qualquer fundo branco ou 'cilindro' que estava por trás */
+    .stTextInput > div {{
+        background-color: #f0f2f6 !important; /* Cor clara padrão para o input */
+        border-radius: 10px !important;
+        border: 1px solid transparent !important;
+    }}
+
+    /* Estilo para quando você clica dentro (Borda Vermelha) */
+    .stTextInput > div:focus-within {{
+        border: 1px solid red !important;
+        box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25) !important;
+    }}
+
+    /* Alinhamento da Lupa ao lado do Input */
+    .container-busca {{
         display: flex;
         align-items: center;
-        background-color: white;
-        border-radius: 25px;
-        height: 55px;
-        padding: 0 15px;
+        gap: 10px;
         margin-top: 20px;
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
     }}
 
-    /* Ajuste do campo de texto dentro da caixa */
-    .caixa-pesquisa-ticuna .stTextInput {{
-        flex-grow: 1;
-        margin-bottom: 0px !important;
-    }}
-    
-    .caixa-pesquisa-ticuna .stTextInput > div {{
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-    }}
-    
-    .caixa-pesquisa-ticuna .stTextInput input {{
-        background: transparent !important;
-        border: none !important;
-        height: 55px !important;
-        font-size: 18px !important;
-        color: #333 !important;
-    }}
-
-    /* Alinhamento dos botões (X e Lupa) */
-    .caixa-pesquisa-ticuna button {{
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        font-size: 24px !important;
-        color: #555 !important;
-        padding: 0 5px !important;
-        height: 55px !important;
+    .stButton button {{
+        background-color: white !important;
+        border-radius: 8px !important;
+        height: 45px !important;
+        width: 45px !important;
         display: flex;
         align-items: center;
+        justify-content: center;
+        border: 1px solid #ccc !important;
     }}
 
     [data-testid="InputInstructions"] {{ display: none !important; }}
@@ -91,17 +78,15 @@ try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
     df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
 except:
-    st.error("Erro ao carregar a planilha.")
+    st.error("Erro ao carregar planilha.")
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- INTERFACE LIMPA ---
-# Criamos a div com o nome novo para garantir que não puxe lixo do estilo antigo
-st.markdown('<div class="caixa-pesquisa-ticuna">', unsafe_allow_html=True)
+# --- INTERFACE: APENAS O QUE VOCÊ PRECISA ---
+# Criamos um container simples para alinhar o input e a lupa lado a lado
+col_texto, col_lupa = st.columns([0.9, 0.1])
 
-col_input, col_btns = st.columns([0.85, 0.15])
-
-with col_input:
+with col_texto:
     texto_busca = st.text_input(
         "", 
         placeholder="Pesquise uma palavra...", 
@@ -109,15 +94,10 @@ with col_input:
         key=f"input_{st.session_state.contador_limpar}"
     )
 
-with col_btns:
-    b1, b2 = st.columns(2)
-    with b1:
-        if texto_busca != "":
-            st.button("✖", on_click=acao_limpar, key="btn_x_clear")
-    with b2:
-        st.button("🔍", key="btn_lupa_search")
-
-st.markdown('</div>', unsafe_allow_html=True)
+with col_lupa:
+    st.write("<div style='margin-top: 0px;'>", unsafe_allow_html=True)
+    st.button("🔍", key="btn_lupa_search")
+    st.write("</div>", unsafe_allow_html=True)
 
 # --- LÓGICA DE TRADUÇÃO ---
 if texto_busca and df is not None:
