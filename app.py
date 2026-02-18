@@ -23,7 +23,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- CSS PARA LAYOUT RESPONSIVO (MOBILE + PC) ---
+# --- CSS DEFINITIVO PARA MOBILE E PC (BOTÕES SOBREPOSTOS) ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -33,95 +33,70 @@ st.markdown(f"""
         background-position: center !important;
     }}
 
-    h1, h1 span {{ 
-        color: white !important; 
-        text-shadow: 2px 2px 10px #000 !important; 
-        font-size: 2.2rem !important;
-        text-align: center;
-    }}
+    h1, h1 span {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; text-align: center; }}
 
-    /* Container que força tudo a ficar na mesma linha no celular */
-    .flex-container {{
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        width: 100%;
-        margin-top: 10px;
-    }}
-
-    /* Ajuste da caixa de texto */
-    .stTextInput {{
-        flex-grow: 1; /* Faz a caixa ocupar o máximo de espaço */
-    }}
-
+    /* ESTILO DA CAIXA DE TEXTO */
     .stTextInput > div {{
-        background-color: #f0f2f6 !important;
-        border-radius: 10px !important;
+        background-color: white !important;
+        border-radius: 25px !important;
+        height: 50px !important;
+        padding-right: 85px !important; /* Abre espaço para os botões internos */
+        border: none !important;
     }}
 
-    /* Botões X e Lupa pequenos e alinhados */
-    .stButton button {{
-        background-color: white !important;
-        border-radius: 8px !important;
-        height: 44px !important;
-        width: 44px !important;
-        border: 1px solid #ccc !important;
+    .stTextInput input {{
+        color: #333 !important;
+    }}
+
+    /* CONTAINER DOS BOTÕES (X e Lupa) */
+    /* Isso força eles a ficarem NA FRENTE da caixa, no final dela */
+    .botoes-sobrepostos {{
+        position: relative;
+        float: right;
+        margin-top: -42px; /* Sobe os botões para dentro da caixa */
+        margin-right: 15px;
         display: flex;
-        align-items: center;
-        justify-content: center;
+        gap: 10px;
+        z-index: 999;
+    }}
+
+    /* Estilo dos botões invisíveis (apenas ícones) */
+    .stButton button {{
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: #555 !important;
+        font-size: 22px !important;
         padding: 0 !important;
+        width: 30px !important;
+        height: 30px !important;
     }}
 
     [data-testid="InputInstructions"] {{ display: none !important; }}
-    
-    .resultado-traducao {{ 
-        color: white !important; 
-        text-align: center; 
-        font-size: 28px; 
-        font-weight: 900; 
-        text-shadow: 2px 2px 15px #000; 
-        padding: 20px; 
-    }}
-
-    /* Ajuste para o player de áudio não sumir no mobile */
-    audio {{
-        width: 100%;
-    }}
+    .resultado-traducao {{ color: white !important; text-align: center; font-size: 30px; font-weight: 900; text-shadow: 2px 2px 15px #000; padding: 20px; }}
 </style>
 """, unsafe_allow_html=True)
 
-# --- CARREGAR DADOS ---
-df = None
-try:
-    df = pd.read_excel("Tradutor_Ticuna.xlsx")
-    df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
-except:
-    st.error("Erro ao carregar planilha.")
-
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- INTERFACE RESPONSIVA ---
-# Usamos HTML puro para criar o container flexível que o Streamlit não quebra no mobile
-st.markdown('<div class="flex-container">', unsafe_allow_html=True)
+# --- INTERFACE ---
+# 1. Primeiro a caixa de texto (ela ocupa a largura toda)
+texto_busca = st.text_input(
+    "", 
+    placeholder="Pesquise...", 
+    label_visibility="collapsed", 
+    key=f"input_{st.session_state.contador_limpar}"
+)
 
-# Criamos colunas com larguras proporcionais para manter a linha única
-c_text, c_x, c_lupa = st.columns([0.7, 0.15, 0.15])
-
-with c_text:
-    texto_busca = st.text_input(
-        "", 
-        placeholder="Pesquise...", 
-        label_visibility="collapsed", 
-        key=f"input_{st.session_state.contador_limpar}"
-    )
-
+# 2. Agora os botões que "flutuam" para dentro da caixa acima
+# Criamos colunas bem pequenas só para os botões
+st.markdown('<div class="botoes-sobrepostos">', unsafe_allow_html=True)
+c_x, c_lupa = st.columns([1, 1])
 with c_x:
     if texto_busca:
         st.button("✖", on_click=acao_limpar, key="btn_limpar")
-
 with c_lupa:
     st.button("🔍", key="btn_lupa_search")
-
 st.markdown('</div>', unsafe_allow_html=True)
 
 # --- TRADUÇÃO ---
