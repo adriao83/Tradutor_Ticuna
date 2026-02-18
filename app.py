@@ -8,13 +8,13 @@ import google.generativeai as genai
 def normalizar(t):
     return re.sub(r'[^a-zA-Z0-9]', '', str(t)).lower() if pd.notna(t) else ""
 
-# Configuração da IA
+# Configuração da IA (ajuste conforme seu segredo)
 genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="centered")
 
-# --- CONTROLE DE ESTADO ---
+# --- CONTROLE DE ESTADO PARA LIMPAR ---
 if 'contador_limpar' not in st.session_state:
     st.session_state.contador_limpar = 0
 
@@ -23,7 +23,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- CSS AJUSTADO PARA ALINHAMENTO ---
+# --- CSS AJUSTADO PARA ALINHAR X E LUPA ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -35,23 +35,27 @@ st.markdown(f"""
 
     h1, h1 span {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; }}
 
-    /* O Campo de texto com a borda vermelha que você gosta */
+    /* Caixa de texto com borda vermelha no foco */
     .stTextInput > div {{
         background-color: #f0f2f6 !important;
         border-radius: 10px !important;
     }}
 
-    /* Estilo da Lupa */
+    /* Estilo comum para os botões X e Lupa */
     .stButton button {{
         background-color: white !important;
         border-radius: 8px !important;
-        height: 44px !important; /* Altura aproximada do input */
+        height: 44px !important;
         width: 44px !important;
         border: 1px solid #ccc !important;
-        margin-top: -5px; /* AJUSTE FINO PARA SUBIR A LUPA */
+        margin-top: -5px; /* Alinhamento vertical */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 !important;
     }}
 
-    /* Remove instruções extras */
+    /* Remove instruções do Streamlit */
     [data-testid="InputInstructions"] {{ display: none !important; }}
     
     .resultado-traducao {{ 
@@ -75,9 +79,9 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- INTERFACE ALINHADA ---
-# Usamos colunas para colocar um do lado do outro
-col_texto, col_lupa = st.columns([0.88, 0.12])
+# --- INTERFACE COM X E LUPA ---
+# Criamos 3 colunas: Texto (larga), Botão X (estreita), Lupa (estreita)
+col_texto, col_x, col_lupa = st.columns([0.76, 0.12, 0.12])
 
 with col_texto:
     texto_busca = st.text_input(
@@ -87,8 +91,12 @@ with col_texto:
         key=f"input_{st.session_state.contador_limpar}"
     )
 
+with col_x:
+    # O botão X só aparece se houver texto digitado
+    if texto_busca:
+        st.button("✖", on_click=acao_limpar, key="btn_limpar")
+
 with col_lupa:
-    # O botão da lupa agora está alinhado via CSS (margin-top negativo)
     st.button("🔍", key="btn_lupa_search")
 
 # --- LÓGICA DE TRADUÇÃO ---
