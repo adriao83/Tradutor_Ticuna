@@ -8,13 +8,13 @@ import google.generativeai as genai
 def normalizar(t):
     return re.sub(r'[^a-zA-Z0-9]', '', str(t)).lower() if pd.notna(t) else ""
 
-# Configuração da IA (ajuste conforme seu segredo)
+# Configuração da IA
 genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="centered")
 
-# --- CONTROLE DE ESTADO PARA LIMPAR ---
+# --- CONTROLE DE ESTADO ---
 if 'contador_limpar' not in st.session_state:
     st.session_state.contador_limpar = 0
 
@@ -23,7 +23,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- CSS AJUSTADO PARA ALINHAR X E LUPA ---
+# --- CSS PARA LAYOUT RESPONSIVO (MOBILE + PC) ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -33,38 +33,59 @@ st.markdown(f"""
         background-position: center !important;
     }}
 
-    h1, h1 span {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; }}
+    h1, h1 span {{ 
+        color: white !important; 
+        text-shadow: 2px 2px 10px #000 !important; 
+        font-size: 2.2rem !important;
+        text-align: center;
+    }}
 
-    /* Caixa de texto com borda vermelha no foco */
+    /* Container que força tudo a ficar na mesma linha no celular */
+    .flex-container {{
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        margin-top: 10px;
+    }}
+
+    /* Ajuste da caixa de texto */
+    .stTextInput {{
+        flex-grow: 1; /* Faz a caixa ocupar o máximo de espaço */
+    }}
+
     .stTextInput > div {{
         background-color: #f0f2f6 !important;
         border-radius: 10px !important;
     }}
 
-    /* Estilo comum para os botões X e Lupa */
+    /* Botões X e Lupa pequenos e alinhados */
     .stButton button {{
         background-color: white !important;
         border-radius: 8px !important;
         height: 44px !important;
         width: 44px !important;
         border: 1px solid #ccc !important;
-        margin-top: -5px; /* Alinhamento vertical */
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 0 !important;
     }}
 
-    /* Remove instruções do Streamlit */
     [data-testid="InputInstructions"] {{ display: none !important; }}
     
     .resultado-traducao {{ 
         color: white !important; 
         text-align: center; 
-        font-size: 34px; 
+        font-size: 28px; 
         font-weight: 900; 
         text-shadow: 2px 2px 15px #000; 
         padding: 20px; 
+    }}
+
+    /* Ajuste para o player de áudio não sumir no mobile */
+    audio {{
+        width: 100%;
     }}
 </style>
 """, unsafe_allow_html=True)
@@ -79,27 +100,31 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- INTERFACE COM X E LUPA ---
-# Criamos 3 colunas: Texto (larga), Botão X (estreita), Lupa (estreita)
-col_texto, col_x, col_lupa = st.columns([0.76, 0.12, 0.12])
+# --- INTERFACE RESPONSIVA ---
+# Usamos HTML puro para criar o container flexível que o Streamlit não quebra no mobile
+st.markdown('<div class="flex-container">', unsafe_allow_html=True)
 
-with col_texto:
+# Criamos colunas com larguras proporcionais para manter a linha única
+c_text, c_x, c_lupa = st.columns([0.7, 0.15, 0.15])
+
+with c_text:
     texto_busca = st.text_input(
         "", 
-        placeholder="Pesquise uma palavra...", 
+        placeholder="Pesquise...", 
         label_visibility="collapsed", 
         key=f"input_{st.session_state.contador_limpar}"
     )
 
-with col_x:
-    # O botão X só aparece se houver texto digitado
+with c_x:
     if texto_busca:
         st.button("✖", on_click=acao_limpar, key="btn_limpar")
 
-with col_lupa:
+with c_lupa:
     st.button("🔍", key="btn_lupa_search")
 
-# --- LÓGICA DE TRADUÇÃO ---
+st.markdown('</div>', unsafe_allow_html=True)
+
+# --- TRADUÇÃO ---
 if texto_busca and df is not None:
     t_norm = normalizar(texto_busca)
     res = df[df['BUSCA_PT'] == t_norm]
