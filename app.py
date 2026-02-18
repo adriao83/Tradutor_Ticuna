@@ -23,7 +23,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- CSS DEFINITIVO (SEM CAIXA EXTRA) ---
+# --- CSS DEFINITIVO: REMOVE TUDO O QUE SOBROU ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -33,43 +33,41 @@ st.markdown(f"""
         background-position: center !important;
     }}
 
+    /* Título */
     h1, h1 span {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; }}
 
-    /* ESTILIZAÇÃO DIRETA DA BARRA DE TEXTO (A ÚNICA QUE DEVE EXISTIR) */
-    [data-testid="stTextInput"] > div {{
+    /* ESTILO DA BARRA ÚNICA: Sem cilindros extras em volta */
+    .stTextInput > div {{
         background-color: white !important;
         border-radius: 25px !important;
         height: 55px !important;
-        padding-right: 100px !important; /* Espaço para os botões */
+        padding-right: 100px !important;
         border: none !important;
-        margin-top: 30px !important;
+        box-shadow: 0px 4px 15px rgba(0,0,0,0.4) !important;
     }}
 
-    [data-testid="stTextInput"] input {{
+    .stTextInput input {{
         color: #333 !important;
         font-size: 18px !important;
-        background: transparent !important;
     }}
 
-    /* CONTAINER DOS BOTÕES SOBREPOSTOS */
+    /* BOTÕES DENTRO DA BARRA */
     .btn-container-interno {{
+        position: relative;
         display: flex;
         justify-content: flex-end;
-        gap: 15px;
-        margin-top: -46px; /* Sobe os botões para dentro da barra */
+        gap: 12px;
+        margin-top: -46px; 
         margin-right: 25px;
-        position: relative;
-        z-index: 10;
+        z-index: 99;
     }}
 
-    /* Estilo dos ícones (X e Lupa) */
     button[key="btn_x_clear"], button[key="btn_lupa_search"] {{
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
         font-size: 24px !important;
         color: #555 !important;
-        padding: 0 !important;
         cursor: pointer !important;
     }}
 
@@ -84,11 +82,11 @@ try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
     df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
 except:
-    st.error("Erro: Arquivo 'Tradutor_Ticuna.xlsx' não encontrado.")
+    st.error("Erro ao carregar a planilha.")
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- CAMPO DE BUSCA ÚNICO (SEM MOLDURAS EXTRAS) ---
+# --- INTERFACE (SEM A FRASE E SEM A CAIXA EXTRA) ---
 texto_busca = st.text_input(
     "", 
     placeholder="Pesquise uma palavra...", 
@@ -96,19 +94,19 @@ texto_busca = st.text_input(
     key=f"input_{st.session_state.contador_limpar}"
 )
 
-# BOTÕES (X e Lupa) - Renderizados logo após o input para sobreposição
+# Botões sobrepostos (X e Lupa)
 st.markdown('<div class="btn-container-interno">', unsafe_allow_html=True)
-c1, c2 = st.columns([0.88, 0.12]) # Alinhamento fino
-with c2:
-    sub_col1, sub_col2 = st.columns(2)
-    with sub_col1:
+col_vazia, col_btns = st.columns([0.85, 0.15])
+with col_btns:
+    sub1, sub2 = st.columns(2)
+    with sub1:
         if texto_busca != "":
             st.button("✖", on_click=acao_limpar, key="btn_x_clear")
-    with sub_col2:
+    with sub2:
         st.button("🔍", key="btn_lupa_search")
 st.markdown('</div>', unsafe_allow_html=True)
 
-# --- LÓGICA DE TRADUÇÃO ---
+# --- TRADUÇÃO ---
 if texto_busca and df is not None:
     t_norm = normalizar(texto_busca)
     res = df[df['BUSCA_PT'] == t_norm]
@@ -122,4 +120,4 @@ if texto_busca and df is not None:
         except:
             pass
     else:
-        st.markdown('<div class="resultado-traducao">Palavra não encontrada</div>', unsafe_allow_html=True)
+        st.markdown('<div class="resultado-traducao">Não encontrado</div>', unsafe_allow_html=True)
