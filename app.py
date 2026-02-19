@@ -14,7 +14,7 @@ def normalizar(t):
 
 st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="centered")
 
-# --- CONTROLE DE ESTADO (SESSION STATE) ---
+# --- CONTROLE DE ESTADO ---
 if 'texto_pesquisa' not in st.session_state:
     st.session_state.texto_pesquisa = ""
 if 'contador' not in st.session_state:
@@ -42,8 +42,10 @@ st.markdown(f"""
     }}
     .stButton button {{
         border-radius: 10px !important;
-        height: 48px !important; width: 100% !important;
-        background-color: #f0f0f0 !important; color: black !important;
+        height: 48px !important;
+        width: 100% !important;
+        background-color: #f0f0f0 !important;
+        color: black !important;
         border: 1px solid #cccccc !important;
     }}
 </style>
@@ -63,65 +65,83 @@ st.title("🏹 Tradutor Ticuna v0.1")
 col_txt, col_x, col_mic = st.columns([0.60, 0.15, 0.25])
 
 with col_mic:
-    audio_gravado = mic_recorder(start_prompt="🎤 Falar", stop_prompt="🛑 Parar", key='gravador', just_once=True)
+    # Componente de voz
+    audio_gravado = mic_recorder(
+        start_prompt="🎤 Falar", 
+        stop_prompt="🛑 Parar", 
+        key='gravador_final', 
+        just_once=True
+    )
 
-# LÓGICA DO MICROFONE (MELHORADA PARA MOBILE)
+# Lógica de processamento de áudio imediata
 if audio_gravado:
     try:
         audio_seg = pydub.AudioSegment.from_file(io.BytesIO(audio_gravado['bytes']))
         wav_io = io.BytesIO()
         audio_seg.export(wav_io, format="wav")
         wav_io.seek(0)
+        
         r = sr.Recognizer()
         with sr.AudioFile(wav_io) as source:
             audio_data = r.record(source)
             texto_ouvido = r.recognize_google(audio_data, language='pt-BR')
             if texto_ouvido:
+                # Atualiza o estado ANTES de qualquer outra coisa
                 st.session_state.texto_pesquisa = texto_ouvido
-                st.rerun() # Reinicia para garantir que o texto_input capture a fala
-    except: pass
+    except:
+        pass
 
 with col_txt:
-    texto_busca = st.text_input("", value=st.session_state.texto_pesquisa, placeholder="Digite ou fale...", label_visibility="collapsed", key=f"in_{st.session_state.contador}")
+    # Vinculamos o valor diretamente ao estado da sessão
+    texto_busca = st.text_input(
+        "", 
+        value=st.session_state.texto_pesquisa, 
+        placeholder="Digite ou fale...", 
+        label_visibility="collapsed", 
+        key=f"in_{st.session_state.contador}"
+    )
 
 with col_x:
     if st.button("✖"):
         acao_limpar()
         st.rerun()
 
-# --- LÓGICA DE TRADUÇÃO (ESTÁVEL) ---
-if texto_busca:
-    t_norm = normalizar(texto_busca)
+# --- LÓGICA DE TRADUÇÃO ---
+# Se a voz preencheu o st.session_state.texto_pesquisa, 
+# usamos ele se o campo de texto estiver vazio ou recém-atualizado
+palavra_final = texto_busca if texto_busca else st.session_state.texto_pesquisa
+
+if palavra_final:
+    t_norm = normalizar(palavra_final)
     if not df.empty:
         res_pt = df[df['BUSCA_PT'] == t_norm]
         res_ti = df[df['BUSCA_TI'] == t_norm]
         
-        traducao_final = None
-        idioma_origem = ""
+        traducao = None
+        origem = ""
 
         if not res_pt.empty:
-            traducao_final = res_pt['TICUNA'].values[0]
-            idioma_origem = "Ticuna"
+            traducao = res_pt['TICUNA'].values[0]
+            origem = "Ticuna"
         elif not res_ti.empty:
-            traducao_final = res_ti['PORTUGUES'].values[0]
-            idioma_origem = "Português"
+            traducao = res_ti['PORTUGUES'].values[0]
+            origem = "Português"
 
-        if traducao_final:
+        if traducao:
             st.markdown(f'''
                 <div style="color: #333333; text-align:center; font-size:32px; font-weight:900; 
                 padding:40px; background: #f9f9f9; border: 1px solid #eeeeee; 
                 border-radius: 20px; margin-top: 20px; box-shadow: 2px 2px 10px rgba(0,0,0,0.05);">
-                    {idioma_origem}: {traducao_final}
+                    {origem}: {traducao}
                 </div>
             ''', unsafe_allow_html=True)
             
-            # Gerar áudio Base64 para tocar no celular
             try:
-                tts = gTTS(text=str(traducao_final), lang='pt-br')
+                tts = gTTS(text=str(traducao), lang='pt-br')
                 tts_fp = io.BytesIO()
                 tts.write_to_fp(tts_fp)
                 tts_fp.seek(0)
-                audio_base64 = base64.b64encode(tts_fp.read()).decode()
-                audio_html = f'<audio controls style="width: 100%; margin-top:10px;"><source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3"></audio>'
-                st.markdown(audio_html, unsafe_allow_html=True)
-            except: pass
+                audio_b64 = base64.b64encode(tts_fp.read()).decode()
+                st.markdown(f'<audio controls style="width: 100%; margin-top:10px;"><source src="data:audio/mp3;base64,{audio_b64}" type="audio/mp3"></audio>', unsafe_allow_html=True)
+            except:
+                pass
