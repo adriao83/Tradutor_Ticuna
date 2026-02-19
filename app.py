@@ -14,7 +14,7 @@ def normalizar(t):
 
 st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="centered")
 
-# --- CONTROLE DE ESTADO ---
+# --- CONTROLE DE ESTADO (SESSION STATE) ---
 if 'texto_pesquisa' not in st.session_state:
     st.session_state.texto_pesquisa = ""
 if 'contador' not in st.session_state:
@@ -38,18 +38,12 @@ st.markdown(f"""
     }}
     .stTextInput::before {{
         content: "🔍";
-        position: absolute;
-        left: 15px;
-        top: 10px;
-        z-index: 1;
-        font-size: 20px;
+        position: absolute; left: 15px; top: 10px; z-index: 1; font-size: 20px;
     }}
     .stButton button {{
         border-radius: 10px !important;
-        height: 48px !important;
-        width: 100% !important;
-        background-color: #f0f0f0 !important;
-        color: black !important;
+        height: 48px !important; width: 100% !important;
+        background-color: #f0f0f0 !important; color: black !important;
         border: 1px solid #cccccc !important;
     }}
 </style>
@@ -71,6 +65,7 @@ col_txt, col_x, col_mic = st.columns([0.60, 0.15, 0.25])
 with col_mic:
     audio_gravado = mic_recorder(start_prompt="🎤 Falar", stop_prompt="🛑 Parar", key='gravador', just_once=True)
 
+# LÓGICA DO MICROFONE (MELHORADA PARA MOBILE)
 if audio_gravado:
     try:
         audio_seg = pydub.AudioSegment.from_file(io.BytesIO(audio_gravado['bytes']))
@@ -83,18 +78,18 @@ if audio_gravado:
             texto_ouvido = r.recognize_google(audio_data, language='pt-BR')
             if texto_ouvido:
                 st.session_state.texto_pesquisa = texto_ouvido
-                st.rerun()
+                st.rerun() # Reinicia para garantir que o texto_input capture a fala
     except: pass
 
 with col_txt:
-    texto_busca = st.text_input("", value=st.session_state.texto_pesquisa, placeholder="Digite em PT ou Ticuna...", label_visibility="collapsed", key=f"in_{st.session_state.contador}")
+    texto_busca = st.text_input("", value=st.session_state.texto_pesquisa, placeholder="Digite ou fale...", label_visibility="collapsed", key=f"in_{st.session_state.contador}")
 
 with col_x:
     if st.button("✖"):
         acao_limpar()
         st.rerun()
 
-# --- LÓGICA DE TRADUÇÃO BIDIRECIONAL ---
+# --- LÓGICA DE TRADUÇÃO (ESTÁVEL) ---
 if texto_busca:
     t_norm = normalizar(texto_busca)
     if not df.empty:
@@ -120,19 +115,13 @@ if texto_busca:
                 </div>
             ''', unsafe_allow_html=True)
             
-            # --- SOLUÇÃO ROBUSTA PARA ÁUDIO NO CELULAR ---
+            # Gerar áudio Base64 para tocar no celular
             try:
                 tts = gTTS(text=str(traducao_final), lang='pt-br')
                 tts_fp = io.BytesIO()
                 tts.write_to_fp(tts_fp)
                 tts_fp.seek(0)
-                
-                # Convertemos o áudio para Base64 (texto) para que o navegador não se perca
                 audio_base64 = base64.b64encode(tts_fp.read()).decode()
-                audio_html = f'<audio controls style="width: 100%;"><source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3"></audio>'
-                
+                audio_html = f'<audio controls style="width: 100%; margin-top:10px;"><source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3"></audio>'
                 st.markdown(audio_html, unsafe_allow_html=True)
-            except Exception as e:
-                st.error("Erro ao gerar áudio.")
-        elif texto_busca.strip() != "":
-            st.markdown('<div style="color: #666666; text-align:center; font-size:20px; margin-top:20px;">Não encontrado</div>', unsafe_allow_html=True)
+            except: pass
