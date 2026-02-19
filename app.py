@@ -2,22 +2,13 @@ import streamlit as st
 import pandas as pd
 from gtts import gTTS
 import re
-import google.generativeai as genai
 from streamlit_mic_recorder import mic_recorder
 import speech_recognition as sr
 import io
-from pydub import AudioSegment # Importante para converter o áudio
 
-# --- FUNÇÕES DE APOIO ---
+# --- FUNÇÃO DE NORMALIZAÇÃO ---
 def normalizar(t):
     return re.sub(r'[^a-zA-Z0-9]', '', str(t)).lower().strip() if pd.notna(t) else ""
-
-# Configuração da IA (Opcional)
-try:
-    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-    model = genai.GenerativeModel('gemini-1.5-flash')
-except:
-    pass
 
 st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="centered")
 
@@ -42,7 +33,7 @@ st.markdown(f"""
         background-size: cover !important;
         background-position: center !important;
     }}
-    h1, h1 span {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; text-align: center; font-size: 2rem !important; }}
+    h1, h1 span {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; text-align: center; }}
     
     [data-testid="stHorizontalBlock"] {{
         display: flex !important;
@@ -75,7 +66,7 @@ try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
     df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
 except:
-    st.error("Erro ao carregar Tradutor_Ticuna.xlsx")
+    st.error("Erro ao carregar planilha.")
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
@@ -93,34 +84,30 @@ with col_lupa:
     st.button("🔍")
 
 with col_mic:
-    # O mic_recorder retorna um dicionário com os bytes do áudio
+    # Captura simplificada
     audio_voz = mic_recorder(start_prompt="🎤", stop_prompt="🛑", key='recorder')
 
-# --- LÓGICA DE PROCESSAMENTO DE VOZ ---
+# --- LÓGICA DE PROCESSAMENTO DE VOZ MELHORADA ---
 if audio_voz:
     try:
-        # 1. Lê os bytes do áudio gravado
-        audio_bytes = io.BytesIO(audio_voz['bytes'])
-        
-        # 2. Converte para formato WAV (que o Google entende melhor) usando Pydub
-        audio_segment = AudioSegment.from_file(audio_bytes)
-        wav_io = io.BytesIO()
-        audio_segment.export(wav_io, format="wav")
-        wav_io.seek(0)
-        
-        # 3. Reconhecimento de fala
         r = sr.Recognizer()
-        with sr.AudioFile(wav_io) as source:
-            audio_data = r.record(source)
-            texto_reconhecido = r.recognize_google(audio_data, language='pt-BR')
+        # Ajusta para ignorar ruído de fundo
+        r.dynamic_energy_threshold = True 
+        
+        audio_data = io.BytesIO(audio_voz['bytes'])
+        
+        with sr.AudioFile(audio_data) as source:
+            audio = r.record(source)
+            # Tenta reconhecer
+            texto_reconhecido = r.recognize_google(audio, language='pt-BR')
             
-            st.session_state.voz_texto = texto_reconhecido
-            st.rerun()
-            
-    except Exception as e:
-        # Se der erro, não mostramos código feio, apenas avisamos
-        st.warning("Ops! Não consegui ouvir bem. Tente falar mais perto do mic.")
-
+            if texto_reconhecido:
+                st.session_state.voz_texto = texto_reconhecido
+                st.rerun()
+                
+    except Exception:
+        # Se não entender, ele apenas limpa e deixa você tentar de novo
+        st.toast("Não foi possível entender o áudio. Tente novamente!")
 # --- LÓGICA DE TRADUÇÃO ---
 if texto_busca and df is not None:
     t_norm = normalizar(texto_busca)
@@ -128,7 +115,7 @@ if texto_busca and df is not None:
     
     if not res.empty:
         trad = res['TICUNA'].values[0]
-        st.markdown(f'<div class="resultado-traducao" style="color:white; text-align:center; font-size:28px; font-weight:900; text-shadow:2px 2px 15px #000; padding:20px;">Ticuna: {trad}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="color:white; text-align:center; font-size:28px; font-weight:900; text-shadow:2px 2px 15px #000; padding:20px;">Ticuna: {trad}</div>', unsafe_allow_html=True)
         try:
             tts = gTTS(text=str(trad), lang='pt-br')
             tts.save("voz.mp3")
@@ -136,4 +123,4 @@ if texto_busca and df is not None:
         except:
             pass
     else:
-        st.markdown('<div class="resultado-traducao" style="color:white; text-align:center; font-size:22px; font-weight:900; text-shadow:2px 2px 15px #000; padding:20px;">Palavra não encontrada no dicionário</div>', unsafe_allow_html=True)
+        st.markdown('<div style="color:white; text-align:center; font-size:22px; font-weight:900; text-shadow:2px 2px 15px #000; padding:20px;">Palavra não encontrada</div>', unsafe_allow_html=True)
