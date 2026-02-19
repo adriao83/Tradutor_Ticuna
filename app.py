@@ -12,7 +12,7 @@ def normalizar(t):
 
 st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="centered")
 
-# --- CONTROLE DE ESTADO ---
+# --- ESTADO DO APP ---
 if 'voz_texto' not in st.session_state:
     st.session_state.voz_texto = ""
 if 'contador' not in st.session_state:
@@ -22,19 +22,13 @@ def acao_limpar():
     st.session_state.voz_texto = ""
     st.session_state.contador += 1
 
-img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
-
 # --- CSS ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
-    [data-testid="stAppViewContainer"] {{
-        background-image: url("{img}");
-        background-size: cover !important;
-        background-position: center !important;
-    }}
     .stTextInput > div > div > input {{ background-color: white !important; color: black !important; }}
     [data-testid="stHorizontalBlock"] {{ display: flex !important; flex-direction: row !important; align-items: center !important; }}
+    .stButton button, .stMicRecorder button {{ background-color: white !important; color: black !important; border-radius: 8px !important; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -52,8 +46,7 @@ st.title("🏹 Tradutor Ticuna")
 col_txt, col_x, col_mic = st.columns([0.7, 0.15, 0.15])
 
 with col_txt:
-    # AQUI ESTÁ O SEGREDO: Usamos uma variável simples para o valor
-    texto_busca = st.text_input("Busca", value=st.session_state.voz_texto, placeholder="Fale agora...", label_visibility="collapsed", key=f"widget_{st.session_state.contador}")
+    texto_busca = st.text_input("Busca", value=st.session_state.voz_texto, placeholder="Fale ou digite...", label_visibility="collapsed", key=f"w_{st.session_state.contador}")
 
 with col_x:
     if st.button("✖"):
@@ -61,30 +54,31 @@ with col_x:
         st.rerun()
 
 with col_mic:
-    # Mudamos para o gravador mais estável
-    audio_voz = mic_recorder(start_prompt="🎤", stop_prompt="🛑", key='recorder', just_once=True)
+    # O segredo é não usar o just_once aqui para permitir novas tentativas
+    audio_voz = mic_recorder(start_prompt="🎤", stop_prompt="🛑", key='recorder')
 
-# --- PROCESSAMENTO DE VOZ ---
+# --- LÓGICA DE VOZ RESILIENTE ---
 if audio_voz:
     try:
         r = sr.Recognizer()
-        # O Google precisa de um áudio limpo, ajustamos aqui:
-        r.pause_threshold = 0.8
-        
+        # Transformamos os bytes em um arquivo de áudio na memória
         audio_data = io.BytesIO(audio_voz['bytes'])
         
         with sr.AudioFile(audio_data) as source:
+            # Captura o áudio
             audio_content = r.record(source)
-            # Tentativa de reconhecimento
+            # Tenta reconhecer (usando a chave gratuita do Google nativa da biblioteca)
             resultado = r.recognize_google(audio_content, language='pt-BR')
             
             if resultado:
-                st.session_state.voz_texto = resultado.lower()
-                # Debug: isso vai aparecer na tela para sabermos se ele ouviu
-                st.success(f"Ouvi: {resultado}")
-                st.rerun()
+                if resultado.lower() != st.session_state.voz_texto:
+                    st.session_state.voz_texto = resultado.lower()
+                    st.rerun()
+    except sr.UnknownValueError:
+        st.toast("O Google não entendeu o áudio. Fale mais perto do mic.")
     except Exception as e:
-        st.error("O sistema não conseguiu converter sua voz em texto. Tente falar mais pausadamente.")
+        # Se der erro de formato (WAV/PCM), tentaremos ler o áudio de outra forma
+        st.toast("Erro de formato. Tente falar palavras curtas.")
 
 # --- TRADUÇÃO ---
 if texto_busca and df is not None:
@@ -93,11 +87,11 @@ if texto_busca and df is not None:
     
     if not res.empty:
         trad = res['TICUNA'].values[0]
-        st.markdown(f'<div style="color:white; text-align:center; font-size:28px; font-weight:900; text-shadow:2px 2px 15px #000; padding:20px;">Ticuna: {trad}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="background: rgba(0,0,0,0.5); color:white; text-align:center; font-size:28px; font-weight:900; border-radius:15px; padding:20px;">Ticuna: {trad}</div>', unsafe_allow_html=True)
         try:
             tts = gTTS(text=str(trad), lang='pt-br')
             tts.save("voz.mp3")
             st.audio("voz.mp3", autoplay=True)
         except: pass
     elif texto_busca != "":
-        st.warning("Palavra não encontrada")
+        st.info("Palavra não encontrada no dicionário.")
