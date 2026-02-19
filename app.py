@@ -22,7 +22,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- DESIGN (AJUSTE DE ALTURA DOS BOTÕES) ---
+# --- DESIGN (ALTURA E TÍTULO) ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -39,13 +39,8 @@ st.markdown(f"""
         -webkit-text-fill-color: white !important; 
     }}
     
-    /* Alinhamento da linha de busca */
-    [data-testid="stHorizontalBlock"] {{ 
-        align-items: center !important; 
-        gap: 5px !important; 
-    }}
+    [data-testid="stHorizontalBlock"] {{ align-items: center !important; gap: 5px !important; }}
 
-    /* Input */
     .stTextInput > div > div > input {{
         background-color: white !important;
         color: black !important;
@@ -53,7 +48,6 @@ st.markdown(f"""
         height: 48px !important;
     }}
 
-    /* Botões X e Lupa */
     .stButton button {{
         background-color: white !important;
         color: black !important;
@@ -62,25 +56,20 @@ st.markdown(f"""
         width: 48px !important;
         border: none !important;
         box-shadow: 1px 1px 5px rgba(0,0,0,0.3) !important;
-        margin-top: 0px !important; /* Garante que não tenha margem */
     }}
 
-    /* O TRUQUE PARA SUBIR O MICROFONE: */
-    /* Remove o fundo e sobe o container do iframe */
-    div[data-testid="column"]:nth-of-type(4) {{
-        margin-top: -8px !important; 
-    }}
-    
-    iframe {{
-        background: transparent !important;
-    }}
+    /* Sobe a coluna do microfone para alinhar */
+    div[data-testid="column"]:nth-of-type(4) {{ margin-top: -8px !important; }}
+    iframe {{ background: transparent !important; }}
 </style>
 """, unsafe_allow_html=True)
 
 # --- CARREGAR DADOS ---
 try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
+    # Prepara buscas para os dois sentidos
     df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
+    df['BUSCA_TIC'] = df['TICUNA'].apply(normalizar)
 except:
     st.error("Erro ao carregar planilha.")
 
@@ -101,8 +90,9 @@ with col_lupa:
     st.button("🔍")
 
 with col_mic:
-    # BOTÃO MICROFONE COM ALINHAMENTO INTERNO
-    st.components.v1.html(f"""
+    # COMPONENTE DE VOZ COM AUTO-ENVIO
+    # O valor 'resultado_voz' captura o que o JS enviar
+    resultado_voz = st.components.v1.html(f"""
     <body style="margin:0; padding:0; background:transparent; display:flex; align-items:center; justify-content:center;">
         <button id="mic-btn" style="background:white; border-radius:10px; height:48px; width:48px; border:none; box-shadow: 1px 1px 5px rgba(0,0,0,0.3); cursor:pointer; font-size:22px;">🎤</button>
         <script>
@@ -117,7 +107,11 @@ with col_mic:
 
             recognition.onresult = (event) => {{
                 const transcript = event.results[0][0].transcript;
-                window.parent.postMessage({{type: 'streamlit:setComponentValue', value: transcript}}, '*');
+                // Este é o segredo: ele envia o texto direto para o componente do Streamlit
+                window.parent.postMessage({{
+                    type: 'streamlit:setComponentValue',
+                    value: transcript
+                }}, '*');
                 btn.style.background = 'white';
             }};
             
@@ -127,16 +121,35 @@ with col_mic:
     </body>
     """, height=50)
 
-# --- LÓGICA DE TRADUÇÃO ---
+# Se o microfone captou algo novo, atualiza o estado e recarrega para traduzir
+if resultado_voz and resultado_voz != st.session_state.voz_texto:
+    st.session_state.voz_texto = resultado_voz
+    st.rerun()
+
+# --- LÓGICA DE TRADUÇÃO (BIDIRECIONAL) ---
 if texto_busca:
     t_norm = normalizar(texto_busca)
-    res = df[df['BUSCA_PT'] == t_norm] if 'df' in locals() else pd.DataFrame()
     
-    if not res.empty:
-        trad = res['TICUNA'].values[0]
-        st.markdown(f'<div style="color:white; text-align:center; font-size:32px; font-weight:900; text-shadow:2px 2px 20px #000; padding:40px;">Ticuna: {trad}</div>', unsafe_allow_html=True)
+    # Busca em Português
+    res_pt = df[df['BUSCA_PT'] == t_norm] if 'df' in locals() else pd.DataFrame()
+    # Busca em Ticuna
+    res_tic = df[df['BUSCA_TIC'] == t_norm] if 'df' in locals() else pd.DataFrame()
+    
+    if not res_pt.empty:
+        # Tradução PT -> TIC
+        traducao = res_pt['TICUNA'].values[0]
+        label = "Ticuna"
+    elif not res_tic.empty:
+        # Tradução TIC -> PT
+        traducao = res_tic['PORTUGUES'].values[0]
+        label = "Português"
+    else:
+        traducao = None
+
+    if traducao:
+        st.markdown(f'<div style="color:white; text-align:center; font-size:32px; font-weight:900; text-shadow:2px 2px 20px #000; padding:40px;">{label}: {traducao}</div>', unsafe_allow_html=True)
         try:
-            tts = gTTS(text=str(trad), lang='pt-br')
+            tts = gTTS(text=str(traducao), lang='pt-br')
             tts_fp = io.BytesIO()
             tts.write_to_fp(tts_fp)
             st.audio(tts_fp, format="audio/mp3", autoplay=True)
