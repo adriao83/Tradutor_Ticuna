@@ -3,15 +3,13 @@ import pandas as pd
 from gtts import gTTS
 import re
 import google.generativeai as genai
-from streamlit_mic_recorder import mic_recorder # Nova biblioteca
-import speech_recognition as sr # Nova biblioteca
-import io
 
 # --- FUNÇÃO DE NORMALIZAÇÃO ---
 def normalizar(t):
+    # Remove espaços extras e caracteres especiais
     return re.sub(r'[^a-zA-Z0-9]', '', str(t)).lower().strip() if pd.notna(t) else ""
 
-# --- CONFIGURAÇÃO DA IA ---
+# Configuração da IA (Opcional)
 try:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
     model = genai.GenerativeModel('gemini-1.5-flash')
@@ -23,16 +21,13 @@ st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="cente
 # --- CONTROLE DE ESTADO ---
 if 'contador' not in st.session_state:
     st.session_state.contador = 0
-if 'voz_texto' not in st.session_state:
-    st.session_state.voz_texto = ""
 
 def acao_limpar():
-    st.session_state.voz_texto = ""
     st.session_state.contador += 1
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- CSS AJUSTADO ---
+# --- CSS DEFINITIVO ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -41,15 +36,18 @@ st.markdown(f"""
         background-size: cover !important;
         background-position: center !important;
     }}
+
     h1, h1 span {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; text-align: center; font-size: 2rem !important; }}
-    
+
+    /* FORÇAR ALINHAMENTO EM LINHA PARA MOBILE */
     [data-testid="stHorizontalBlock"] {{
         display: flex !important;
         flex-direction: row !important;
         align-items: center !important;
-        gap: 5px !important;
+        gap: 10px !important;
     }}
 
+    /* CAIXA DE TEXTO */
     .stTextInput > div > div > input {{
         background-color: white !important;
         color: black !important;
@@ -57,43 +55,41 @@ st.markdown(f"""
         height: 45px !important;
     }}
 
-    .stButton button, .stMicRecorder button {{
+    /* BOTÕES */
+    .stButton button {{
         background-color: white !important;
         color: black !important;
         border-radius: 8px !important;
         height: 45px !important;
-        min-width: 45px !important;
+        width: 45px !important;
         display: flex;
         align-items: center;
         justify-content: center;
         border: 1px solid #ccc !important;
     }}
+
+    [data-testid="InputInstructions"] {{ display: none !important; }}
+    .resultado-traducao {{ color: white !important; text-align: center; font-size: 28px; font-weight: 900; text-shadow: 2px 2px 15px #000; padding: 20px; }}
 </style>
 """, unsafe_allow_html=True)
 
 # --- CARREGAR DADOS ---
 df = None
 try:
+    # Carrega a planilha
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
+    # Cria coluna de busca normalizada para evitar erros com maiúsculas/acentos
     df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
 except:
-    st.error("Erro ao carregar Tradutor_Ticuna.xlsx")
+    st.error("Erro: Certifique-se que o arquivo 'Tradutor_Ticuna.xlsx' está na mesma pasta do código.")
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- BARRA DE PESQUISA COM VOZ ---
-# Ajustei as colunas para caber o microfone [Texto, Limpar, Lupa, Microfone]
-col_txt, col_x, col_lupa, col_mic = st.columns([0.6, 0.13, 0.13, 0.13])
+# --- BARRA DE PESQUISA ---
+col_txt, col_x, col_lupa = st.columns([0.7, 0.15, 0.15])
 
 with col_txt:
-    # O valor padrão agora pode vir da voz
-    texto_busca = st.text_input(
-        "", 
-        value=st.session_state.voz_texto,
-        placeholder="Digite ou use o microfone...", 
-        label_visibility="collapsed", 
-        key=f"in_{st.session_state.contador}"
-    )
+    texto_busca = st.text_input("", placeholder="Digite aqui...", label_visibility="collapsed", key=f"in_{st.session_state.contador}")
 
 with col_x:
     if texto_busca:
@@ -102,24 +98,6 @@ with col_x:
 with col_lupa:
     st.button("🔍")
 
-with col_mic:
-    # Componente de gravação
-    audio_voz = mic_recorder(start_prompt="🎤", stop_prompt="🛑", key='recorder')
-
-# Lógica para processar a voz
-if audio_voz:
-    try:
-        r = sr.Recognizer()
-        audio_data = io.BytesIO(audio_voz['bytes'])
-        with sr.AudioFile(audio_data) as source:
-            audio = r.record(source)
-        # Converte áudio em texto (Português)
-        texto_reconhecido = r.recognize_google(audio, language='pt-BR')
-        st.session_state.voz_texto = texto_reconhecido
-        st.rerun() # Reinicia para preencher o campo de busca
-    except Exception as e:
-        st.error("Não entendi o áudio. Tente novamente.")
-
 # --- LÓGICA DE TRADUÇÃO ---
 if texto_busca and df is not None:
     t_norm = normalizar(texto_busca)
@@ -127,12 +105,13 @@ if texto_busca and df is not None:
     
     if not res.empty:
         trad = res['TICUNA'].values[0]
-        st.markdown(f'<div class="resultado-traducao" style="color:white; text-align:center; font-size:28px; font-weight:900; text-shadow:2px 2px 15px #000; padding:20px;">Ticuna: {trad}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="resultado-traducao">Ticuna: {trad}</div>', unsafe_allow_html=True)
         try:
+            # Gera o áudio da tradução
             tts = gTTS(text=str(trad), lang='pt-br')
             tts.save("voz.mp3")
             st.audio("voz.mp3", autoplay=True)
         except:
             pass
     else:
-        st.markdown('<div class="resultado-traducao" style="color:white; text-align:center; font-size:28px; font-weight:900; text-shadow:2px 2px 15px #000; padding:20px;">Palavra não encontrada</div>', unsafe_allow_html=True)
+        st.markdown('<div class="resultado-traducao">Palavra não encontrada</div>', unsafe_allow_html=True)
