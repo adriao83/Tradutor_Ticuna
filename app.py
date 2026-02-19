@@ -25,7 +25,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- DESIGN CSS ---
+# --- DESIGN CSS (Lupa como Ícone, não Botão) ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -43,13 +43,22 @@ st.markdown(f"""
     .stTextInput > div > div > input {{
         border-radius: 10px !important;
         height: 48px !important;
+        padding-left: 40px !important; /* Espaço para a lupa visual */
+    }}
+    /* Criando a Lupa Visual sem ser um botão clicável */
+    .stTextInput::before {{
+        content: "🔍";
+        position: absolute;
+        left: 12px;
+        top: 10px;
+        z-index: 1;
+        font-size: 20px;
+        opacity: 0.5;
     }}
     .stButton button {{
         border-radius: 10px !important;
         height: 48px !important;
         width: 100% !important;
-        background-color: white !important;
-        color: black !important;
     }}
 </style>
 """, unsafe_allow_html=True)
@@ -63,9 +72,9 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- BARRA DE PESQUISA ---
-# Usei larguras que dão mais espaço para o microfone não ser "esmagado"
-col_txt, col_x, col_lupa, col_mic = st.columns([0.45, 0.10, 0.10, 0.35])
+# --- BARRA DE PESQUISA (Layout Simplificado para o Mic Funcionar) ---
+# Voltamos para apenas 3 colunas: Texto, Limpar e Microfone
+col_txt, col_x, col_mic = st.columns([0.60, 0.10, 0.30])
 
 with col_mic:
     audio_gravado = mic_recorder(
@@ -74,6 +83,23 @@ with col_mic:
         key='gravador',
         just_once=True,
     )
+
+# PROCESSAMENTO DO ÁUDIO (Exatamente como estava quando funcionava)
+if audio_gravado:
+    try:
+        audio_seg = pydub.AudioSegment.from_file(io.BytesIO(audio_gravado['bytes']))
+        wav_io = io.BytesIO()
+        audio_seg.export(wav_io, format="wav")
+        wav_io.seek(0)
+        r = sr.Recognizer()
+        with sr.AudioFile(wav_io) as source:
+            audio_data = r.record(source)
+            texto_ouvido = r.recognize_google(audio_data, language='pt-BR')
+            if texto_ouvido:
+                st.session_state.texto_pesquisa = texto_ouvido
+                st.rerun()
+    except:
+        pass
 
 with col_txt:
     texto_busca = st.text_input(
@@ -88,31 +114,6 @@ with col_x:
     if st.button("✖"):
         acao_limpar()
         st.rerun()
-
-with col_lupa:
-    if st.button("🔍"):
-        # Se clicar na lupa, ele usa o que está no texto_busca
-        st.session_state.texto_pesquisa = texto_busca
-        st.rerun()
-
-# --- PROCESSAMENTO DO ÁUDIO (IA) ---
-# Movido para baixo para garantir que o texto_input já exista antes do rerun
-if audio_gravado:
-    try:
-        audio_seg = pydub.AudioSegment.from_file(io.BytesIO(audio_gravado['bytes']))
-        wav_io = io.BytesIO()
-        audio_seg.export(wav_io, format="wav")
-        wav_io.seek(0)
-        
-        r = sr.Recognizer()
-        with sr.AudioFile(wav_io) as source:
-            audio_data = r.record(source)
-            texto_ouvido = r.recognize_google(audio_data, language='pt-BR')
-            if texto_ouvido:
-                st.session_state.texto_pesquisa = texto_ouvido
-                st.rerun()
-    except Exception as e:
-        pass # Silencioso para não atrapalhar a interface
 
 # --- LÓGICA DE TRADUÇÃO ---
 if texto_busca:
