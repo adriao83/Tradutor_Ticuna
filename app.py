@@ -25,7 +25,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- DESIGN CSS (Lupa como Ícone, não Botão) ---
+# --- DESIGN CSS (Lupa Visual + Correção de Caracteres) ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -40,20 +40,19 @@ st.markdown(f"""
         text-shadow: 2px 2px 10px #000 !important; 
         text-align: center; 
     }}
+    /* Colocando a Lupa como ícone dentro da caixa */
     .stTextInput > div > div > input {{
         border-radius: 10px !important;
         height: 48px !important;
-        padding-left: 40px !important; /* Espaço para a lupa visual */
+        padding-left: 45px !important;
     }}
-    /* Criando a Lupa Visual sem ser um botão clicável */
     .stTextInput::before {{
         content: "🔍";
         position: absolute;
-        left: 12px;
+        left: 15px;
         top: 10px;
         z-index: 1;
         font-size: 20px;
-        opacity: 0.5;
     }}
     .stButton button {{
         border-radius: 10px !important;
@@ -67,14 +66,13 @@ st.markdown(f"""
 try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
     df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
-except:
+except Exception as e:
     df = pd.DataFrame()
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- BARRA DE PESQUISA (Layout Simplificado para o Mic Funcionar) ---
-# Voltamos para apenas 3 colunas: Texto, Limpar e Microfone
-col_txt, col_x, col_mic = st.columns([0.60, 0.10, 0.30])
+# --- BARRA DE PESQUISA (LAYOUT IDÊNTICO AO QUE FUNCIONA) ---
+col_txt, col_x, col_mic = st.columns([0.60, 0.15, 0.25])
 
 with col_mic:
     audio_gravado = mic_recorder(
@@ -84,22 +82,25 @@ with col_mic:
         just_once=True,
     )
 
-# PROCESSAMENTO DO ÁUDIO (Exatamente como estava quando funcionava)
+# --- LÓGICA DE VOZ (Copiada da sua versão que funciona) ---
 if audio_gravado:
     try:
         audio_seg = pydub.AudioSegment.from_file(io.BytesIO(audio_gravado['bytes']))
         wav_io = io.BytesIO()
         audio_seg.export(wav_io, format="wav")
         wav_io.seek(0)
+
         r = sr.Recognizer()
         with sr.AudioFile(wav_io) as source:
             audio_data = r.record(source)
             texto_ouvido = r.recognize_google(audio_data, language='pt-BR')
-            if texto_ouvido:
-                st.session_state.texto_pesquisa = texto_ouvido
-                st.rerun()
-    except:
-        pass
+            st.session_state.texto_pesquisa = texto_ouvido
+            st.rerun() 
+            
+    except sr.UnknownValueError:
+        st.warning("Não entendi o áudio.")
+    except Exception as e:
+        st.error(f"Erro: {e}")
 
 with col_txt:
     texto_busca = st.text_input(
