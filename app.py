@@ -39,12 +39,10 @@ st.markdown(f"""
         -webkit-text-fill-color: white !important; 
     }}
     
-    /* Alinhamento da linha de busca */
     [data-testid="stHorizontalBlock"] {{ 
         align-items: center !important; 
     }}
 
-    /* Input */
     .stTextInput > div > div > input {{
         background-color: white !important;
         color: black !important;
@@ -52,7 +50,6 @@ st.markdown(f"""
         height: 48px !important;
     }}
 
-    /* Botões */
     .stButton button {{
         background-color: white !important;
         color: black !important;
@@ -63,7 +60,6 @@ st.markdown(f"""
         box-shadow: 1px 1px 5px rgba(0,0,0,0.3) !important;
     }}
 
-    /* Ajuste específico para o container do Microfone */
     div[data-testid="column"]:nth-of-type(4) {{
         margin-top: -4px !important; 
     }}
@@ -84,7 +80,7 @@ st.title("🏹 Tradutor Ticuna v0.1")
 col_txt, col_x, col_lupa, col_mic = st.columns([0.55, 0.15, 0.15, 0.15])
 
 with col_txt:
-    # O valor é persistido pelo session_state
+    # Vinculamos o valor à variável de estado
     texto_busca = st.text_input("", value=st.session_state.texto_input, placeholder="Digite ou fale...", label_visibility="collapsed", key=f"in_{st.session_state.contador}")
 
 with col_x:
@@ -93,12 +89,14 @@ with col_x:
         st.rerun()
 
 with col_lupa:
-    # O botão de lupa força o Streamlit a ler o que está no input
-    botao_lupa = st.button("🔍")
+    if st.button("🔍"):
+        st.session_state.texto_input = texto_busca # Garante a captura do que foi digitado
+        st.rerun()
 
 with col_mic:
-    # Microfone que envia o texto direto para o componente Streamlit
-    st.components.v1.html(f"""
+    # AJUSTE AQUI: O componente agora captura o clique e retorna o valor para o Streamlit
+    # Usamos uma técnica de "query params" ou o retorno direto do componente
+    fala_capturada = st.components.v1.html(f"""
     <body style="margin:0; padding:0; background:transparent; display:flex; align-items:center; justify-content:center;">
         <button id="mic-btn" style="background:white; border-radius:10px; height:48px; width:48px; border:none; box-shadow: 1px 1px 5px rgba(0,0,0,0.3); cursor:pointer; font-size:22px;">🎤</button>
         <script>
@@ -113,8 +111,11 @@ with col_mic:
 
             recognition.onresult = (event) => {{
                 const transcript = event.results[0][0].transcript;
-                // Envia o texto falado para o Streamlit
-                window.parent.postMessage({{type: 'streamlit:setComponentValue', value: transcript}}, '*');
+                // Envia o texto de volta para o Streamlit de forma que ele reconheça a mudança
+                window.parent.postMessage({{
+                    type: 'streamlit:setComponentValue',
+                    value: transcript
+                }}, '*');
                 btn.style.background = 'white';
             }};
             
@@ -124,11 +125,16 @@ with col_mic:
     </body>
     """, height=50)
 
-# --- LÓGICA DE TRADUÇÃO (SÓ ATIVA SE HOUVER TEXTO) ---
+# --- ATUALIZAÇÃO AUTOMÁTICA DO TEXTO ---
+# Se o microfone enviou algo novo (fala_capturada), atualizamos o estado
+if fala_capturada and fala_capturada != st.session_state.texto_input:
+    st.session_state.texto_input = fala_capturada
+    st.rerun()
+
+# --- LÓGICA DE TRADUÇÃO ---
 if texto_busca:
     t_norm = normalizar(texto_busca)
     
-    # Busca bidirecional
     res_pt = df[df['BUSCA_PT'] == t_norm] if 'df' in locals() else pd.DataFrame()
     res_tc = df[df['BUSCA_TC'] == t_norm] if 'df' in locals() else pd.DataFrame()
     
@@ -139,7 +145,8 @@ if texto_busca:
         traducao = res_pt['TICUNA'].values[0]
         encontrado = True
     elif not res_tc.empty:
-        traducao = res_pt['PORTUGUES'].values[0] if not res_pt.empty else res_tc['PORTUGUES'].values[0]
+        # Correção na lógica: se não achou em PT, pega o valor da coluna PORTUGUES do resultado TC
+        traducao = res_tc['PORTUGUES'].values[0]
         encontrado = True
 
     if encontrado:
