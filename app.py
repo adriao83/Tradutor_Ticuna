@@ -11,7 +11,6 @@ def normalizar(t):
 st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="centered")
 
 # --- CONTROLE DE ESTADO ---
-# Usamos o 'texto_input' para sincronizar o JS com o Python
 if 'texto_input' not in st.session_state:
     st.session_state.texto_input = ""
 if 'contador' not in st.session_state:
@@ -23,7 +22,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- DESIGN ---
+# --- DESIGN (CSS REFINADO) ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -37,19 +36,36 @@ st.markdown(f"""
         color: white !important; 
         text-shadow: 2px 2px 10px #000 !important; 
         text-align: center; 
+        -webkit-text-fill-color: white !important; 
     }}
+    
+    /* Alinhamento da linha de busca */
+    [data-testid="stHorizontalBlock"] {{ 
+        align-items: center !important; 
+    }}
+
+    /* Input */
     .stTextInput > div > div > input {{
         background-color: white !important;
         color: black !important;
         border-radius: 10px !important;
         height: 48px !important;
     }}
+
+    /* Botões */
     .stButton button {{
         background-color: white !important;
         color: black !important;
         border-radius: 10px !important;
         height: 48px !important;
         width: 100% !important;
+        border: none !important;
+        box-shadow: 1px 1px 5px rgba(0,0,0,0.3) !important;
+    }}
+
+    /* Ajuste específico para o container do Microfone */
+    div[data-testid="column"]:nth-of-type(4) {{
+        margin-top: -4px !important; 
     }}
 </style>
 """, unsafe_allow_html=True)
@@ -57,34 +73,33 @@ st.markdown(f"""
 # --- CARREGAR DADOS ---
 try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
-    # Pré-normalizamos as duas colunas para busca bidirecional
     df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
     df['BUSCA_TC'] = df['TICUNA'].apply(normalizar)
-except Exception as e:
-    st.error(f"Erro ao carregar planilha: {e}")
+except:
+    st.error("Erro ao carregar planilha Tradutor_Ticuna.xlsx.")
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- LÓGICA DO MICROFONE (COMUNICAÇÃO COM SESSION STATE) ---
-# O componente HTML envia o texto para o Streamlit via query params ou evento de clique
-from streamlit_mic_recorder import mic_recorder # Uma alternativa mais estável se preferir
-
-# Mantendo seu HTML, mas ajustando para que o Streamlit receba o valor
-col_txt, col_x, col_mic = st.columns([0.7, 0.15, 0.15])
+# --- BARRA DE PESQUISA ---
+col_txt, col_x, col_lupa, col_mic = st.columns([0.55, 0.15, 0.15, 0.15])
 
 with col_txt:
-    # O valor do input é vinculado ao session_state
-    texto_busca = st.text_input("", value=st.session_state.texto_input, placeholder="Digite ou fale...", label_visibility="collapsed", key=f"input_{st.session_state.contador}")
+    # O valor é persistido pelo session_state
+    texto_busca = st.text_input("", value=st.session_state.texto_input, placeholder="Digite ou fale...", label_visibility="collapsed", key=f"in_{st.session_state.contador}")
 
 with col_x:
     if st.button("✖"):
         acao_limpar()
         st.rerun()
 
+with col_lupa:
+    # O botão de lupa força o Streamlit a ler o que está no input
+    botao_lupa = st.button("🔍")
+
 with col_mic:
-    # Capturamos o retorno do JS usando um componente de retorno de valor
-    feedback = st.components.v1.html(f"""
-    <body style="margin:0; padding:0; background:transparent;">
+    # Microfone que envia o texto direto para o componente Streamlit
+    st.components.v1.html(f"""
+    <body style="margin:0; padding:0; background:transparent; display:flex; align-items:center; justify-content:center;">
         <button id="mic-btn" style="background:white; border-radius:10px; height:48px; width:48px; border:none; box-shadow: 1px 1px 5px rgba(0,0,0,0.3); cursor:pointer; font-size:22px;">🎤</button>
         <script>
             const btn = document.getElementById('mic-btn');
@@ -92,54 +107,49 @@ with col_mic:
             recognition.lang = 'pt-BR';
 
             btn.onclick = () => {{
-                btn.innerHTML = "⏳";
+                btn.style.background = '#ffcccc'; 
                 recognition.start();
             }};
 
             recognition.onresult = (event) => {{
                 const transcript = event.results[0][0].transcript;
-                // Envia para o Streamlit via URL ou disparando um evento
-                window.parent.postMessage({{
-                    type: 'streamlit:setComponentValue',
-                    value: transcript
-                }}, '*');
-                btn.innerHTML = "🎤";
+                // Envia o texto falado para o Streamlit
+                window.parent.postMessage({{type: 'streamlit:setComponentValue', value: transcript}}, '*');
+                btn.style.background = 'white';
             }};
-            recognition.onerror = () => {{ btn.innerHTML = "🎤"; }};
+            
+            recognition.onend = () => {{ btn.style.background = 'white'; }};
+            recognition.onerror = () => {{ btn.style.background = 'white'; }};
         </script>
     </body>
     """, height=50)
 
-# --- LÓGICA DE TRADUÇÃO BIDIRECIONAL ---
+# --- LÓGICA DE TRADUÇÃO (SÓ ATIVA SE HOUVER TEXTO) ---
 if texto_busca:
     t_norm = normalizar(texto_busca)
     
-    # Busca em Português
-    res_pt = df[df['BUSCA_PT'] == t_norm]
-    # Busca em Ticuna
-    res_tc = df[df['BUSCA_TC'] == t_norm]
+    # Busca bidirecional
+    res_pt = df[df['BUSCA_PT'] == t_norm] if 'df' in locals() else pd.DataFrame()
+    res_tc = df[df['BUSCA_TC'] == t_norm] if 'df' in locals() else pd.DataFrame()
     
-    traducao_final = None
-    idioma_destino = "pt-br"
+    traducao = ""
+    encontrado = False
 
     if not res_pt.empty:
-        traducao_final = res_pt['TICUNA'].values[0]
+        traducao = res_pt['TICUNA'].values[0]
+        encontrado = True
     elif not res_tc.empty:
-        traducao_final = res_tc['PORTUGUES'].values[0]
+        traducao = res_pt['PORTUGUES'].values[0] if not res_pt.empty else res_tc['PORTUGUES'].values[0]
+        encontrado = True
 
-    if traducao_final:
-        st.markdown(f'''
-            <div style="background: rgba(0,0,0,0.6); border-radius: 15px; padding: 20px; margin-top: 20px;">
-                <p style="color: #ccc; margin: 0; text-align: center;">Tradução:</p>
-                <h2 style="color: white; text-align: center; margin: 0;">{traducao_final}</h2>
-            </div>
-        ''', unsafe_allow_html=True)
-        
+    if encontrado:
+        st.markdown(f'<div style="color:white; text-align:center; font-size:32px; font-weight:900; text-shadow:2px 2px 20px #000; padding:40px;">Tradução: {traducao}</div>', unsafe_allow_html=True)
         try:
-            tts = gTTS(text=str(traducao_final), lang='pt-br')
+            tts = gTTS(text=str(traducao), lang='pt-br')
             tts_fp = io.BytesIO()
             tts.write_to_fp(tts_fp)
             st.audio(tts_fp, format="audio/mp3", autoplay=True)
-        except: pass
+        except:
+            pass
     else:
-        st.warning("Palavra não encontrada no dicionário.")
+        st.markdown('<div style="color:white; text-align:center; text-shadow:1px 1px 5px #000; font-size:20px;">Palavra não encontrada</div>', unsafe_allow_html=True)
