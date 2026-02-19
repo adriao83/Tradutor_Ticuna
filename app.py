@@ -24,7 +24,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- DESIGN COM "MATADOR" DE CAIXA BRANCA ---
+# --- DESIGN "EXTERMINADOR" DE CAIXA BRANCA ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -36,10 +36,11 @@ st.markdown(f"""
     }}
     h1 {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; text-align: center; }}
     
-    /* Remove qualquer espaçamento extra do bloco de colunas */
+    /* Força o alinhamento das colunas e remove fundos fantasmas */
     [data-testid="stHorizontalBlock"] {{
         align-items: center !important;
         gap: 5px !important;
+        background-color: transparent !important;
     }}
 
     /* Estilo do Input */
@@ -50,25 +51,17 @@ st.markdown(f"""
         height: 48px !important;
     }}
 
-    /* AQUI ESTÁ O TRUQUE: MATA A CAIXA BRANCA DO MICROFONE */
-    div[data-testid="stVerticalBlock"] > div:has(.stMicRecorder) {{
-        background-color: transparent !important;
-    }}
-
+    /* O "MARTELO": Remove fundos de todas as divs que contêm o gravador */
+    div[data-testid="column"]:has(iframe), 
+    div[data-testid="column"]:has(.stMicRecorder),
+    div[data-testid="stVerticalBlock"]:has(.stMicRecorder),
     .stMicRecorder {{
         background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
-        padding: 0 !important;
-        width: fit-content !important;
-    }}
-    
-    .stMicRecorder > div {{
-        background-color: transparent !important;
-        border: none !important;
     }}
 
-    /* Botões Unificados */
+    /* Estilo unificado para os botões brancos */
     .stButton button, .stMicRecorder button {{
         background-color: white !important;
         color: black !important;
@@ -81,6 +74,12 @@ st.markdown(f"""
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
+    }}
+    
+    /* Remove bordas focadas que criam sombras quadradas */
+    button:focus, button:active {{
+        outline: none !important;
+        box-shadow: none !important;
     }}
 </style>
 """, unsafe_allow_html=True)
