@@ -24,7 +24,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- DESIGN FINAL: ELIMINANDO O FUNDO DO MIC ---
+# --- DESIGN REPARADO (TÍTULO BRANCO E MICROFONE SEM FUNDO) ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -36,23 +36,35 @@ st.markdown(f"""
         background-attachment: fixed;
     }}
 
-    /* MATA A CAIXA DO MICROFONE: Ataca o iframe e o container do componente */
-    iframe[title="streamlit_mic_recorder.mic_recorder"] {{
+    /* FORÇA O TÍTULO A SER BRANCO - Usei !important em tudo */
+    h1, h2, h3, .stTitle {{
+        color: white !important;
+        text-shadow: 2px 2px 15px rgba(0,0,0,1) !important;
+        -webkit-text-fill-color: white !important;
+    }}
+    
+    /* MATA A CAIXA DO MICROFONE (O IFRAME) */
+    /* Esse é o comando que ataca a 'janelinha' do microfone */
+    iframe {{
         background-color: transparent !important;
+        background: transparent !important;
         border: none !important;
     }}
 
-    div[data-testid="column"] {{
+    /* Torna as colunas transparentes para a imagem de fundo aparecer */
+    [data-testid="column"], [data-testid="stHorizontalBlock"] {{
         background-color: transparent !important;
     }}
 
-    /* Garante que o container do gravador não tenha fundo */
-    .stMicRecorder {{
-        background: transparent !important;
-        background-color: transparent !important;
+    /* ESTILO DA BARRA BRANCA (INPUT) */
+    .stTextInput > div > div > input {{
+        background-color: white !important;
+        color: black !important;
+        border-radius: 10px !important;
+        height: 48px !important;
     }}
 
-    /* Botões: X e Lupa (Nativos) e o Mic (do Componente) */
+    /* BOTÕES (X, LUPA E MICROFONE) */
     .stButton button, .stMicRecorder button {{
         background-color: white !important;
         color: black !important;
@@ -60,22 +72,13 @@ st.markdown(f"""
         height: 48px !important;
         width: 48px !important;
         border: none !important;
-        box-shadow: 1px 1px 5px rgba(0,0,0,0.3) !important;
+        box-shadow: 1px 1px 10px rgba(0,0,0,0.5) !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
     }}
-
-    /* Input Branco */
-    .stTextInput > div > div > input {{
-        background-color: white !important;
-        color: black !important;
-        border-radius: 10px !important;
-        height: 48px !important;
-    }}
 </style>
 """, unsafe_allow_html=True)
-
 # --- CARREGAR DADOS ---
 try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
