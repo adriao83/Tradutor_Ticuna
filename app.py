@@ -5,7 +5,8 @@ import re
 from streamlit_mic_recorder import mic_recorder
 import speech_recognition as sr
 import io
-from pydub import AudioSegment  # Biblioteca para converter o áudio
+import os
+from pydub import AudioSegment
 
 # --- FUNÇÃO DE NORMALIZAÇÃO ---
 def normalizar(t):
@@ -25,7 +26,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- CSS DEFINITIVO ---
+# --- CSS ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -35,32 +36,9 @@ st.markdown(f"""
         background-position: center !important;
     }}
     h1, h1 span {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; text-align: center; font-size: 2rem !important; }}
-    
-    [data-testid="stHorizontalBlock"] {{
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: center !important;
-        gap: 5px !important;
-    }}
-
-    .stTextInput > div > div > input {{
-        background-color: white !important;
-        color: black !important;
-        border-radius: 10px !important;
-        height: 45px !important;
-    }}
-
-    .stButton button, .stMicRecorder button {{
-        background-color: white !important;
-        color: black !important;
-        border-radius: 8px !important;
-        height: 45px !important;
-        min-width: 45px !important;
-        border: 1px solid #ccc !important;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }}
+    [data-testid="stHorizontalBlock"] {{ display: flex !important; flex-direction: row !important; align-items: center !important; gap: 5px !important; }}
+    .stTextInput > div > div > input {{ background-color: white !important; color: black !important; border-radius: 10px !important; height: 45px !important; }}
+    .stButton button, .stMicRecorder button {{ background-color: white !important; color: black !important; border-radius: 8px !important; height: 45px !important; min-width: 45px !important; border: 1px solid #ccc !important; display: flex; align-items: center; justify-content: center; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -74,19 +52,19 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- BARRA DE PESQUISA (VERSÃO CORRIGIDA) ---
+# --- BARRA DE PESQUISA ---
 col_txt, col_x, col_lupa, col_mic = st.columns([0.6, 0.13, 0.13, 0.13])
 
 with col_txt:
-    # Adicionamos um label real "Busca" mas mantemos label_visibility="collapsed" 
-    # Isso resolve o erro que aparece nos seus logs
+    # IMPORTANTE: O label "Busca" evita o erro que vi nos seus logs
     texto_busca = st.text_input(
         "Busca", 
         value=st.session_state.voz_texto, 
         placeholder="Digite ou fale...", 
         label_visibility="collapsed", 
-        key=f"campo_busca_{st.session_state.contador}"
+        key=f"in_{st.session_state.contador}"
     )
+
 with col_x:
     if texto_busca:
         st.button("✖", on_click=acao_limpar)
@@ -97,30 +75,32 @@ with col_lupa:
 with col_mic:
     audio_voz = mic_recorder(start_prompt="🎤", stop_prompt="🛑", key='recorder')
 
-# --- LÓGICA DE VOZ AJUSTADA ---
+# --- LÓGICA DE VOZ (O QUE FOI CORRIGIDO) ---
 if audio_voz:
     try:
         r = sr.Recognizer()
-        audio_bytes = io.BytesIO(audio_voz['bytes'])
-        audio_segment = AudioSegment.from_file(audio_bytes)
+        # Converte bytes para áudio usando pydub
+        audio_data = io.BytesIO(audio_voz['bytes'])
+        audio_segment = AudioSegment.from_file(audio_data)
         
-        wav_buffer = io.BytesIO()
-        audio_segment.export(wav_buffer, format="wav")
-        wav_buffer.seek(0)
+        # Exporta como WAV (PCM) que é o que o Google Speech exige
+        wav_io = io.BytesIO()
+        audio_segment.export(wav_io, format="wav")
+        wav_io.seek(0)
         
-        with sr.AudioFile(wav_buffer) as source:
+        with sr.AudioFile(wav_io) as source:
+            r.adjust_for_ambient_noise(source)
             audio_content = r.record(source)
+            # Chama a API do Google
             resultado = r.recognize_google(audio_content, language='pt-BR')
             
             if resultado:
-                # Mudança crucial: Atribuímos o valor e forçamos a atualização
+                # ATUALIZA O ESTADO E RECARREGA A PÁGINA
                 st.session_state.voz_texto = resultado.lower().strip()
-                # O rerun precisa ser a última coisa para garantir que o texto 'cole' no input
-                st.rerun()
+                st.rerun() 
                 
     except Exception as e:
-        # Se o erro persistir, saberemos se é o áudio ou o Google
-        st.toast(f"Sem resposta: Verifique a permissão do microfone.")
+        st.toast("Não foi possível reconhecer a voz. Tente falar mais pausadamente.")
 
 # --- TRADUÇÃO ---
 if texto_busca and df is not None:
