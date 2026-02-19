@@ -4,89 +4,142 @@ from gtts import gTTS
 import re
 import io
 
-# 1. Configuração de Página (Primeira linha sempre)
+# --- FUNÇÃO DE NORMALIZAÇÃO ---
+def normalizar(t):
+    return re.sub(r'[^a-zA-Z0-9]', '', str(t)).lower().strip() if pd.notna(t) else ""
+
 st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="centered")
 
-# 2. Carregar Dados com Cache (Para não ler o Excel toda hora e travar)
-@st.cache_data
-def get_data():
-    try:
-        df_dados = pd.read_excel("Tradutor_Ticuna.xlsx")
-        df_dados['B_PT'] = df_dados['PORTUGUES'].astype(str).str.lower().str.strip()
-        df_dados['B_TIC'] = df_dados['TICUNA'].astype(str).str.lower().str.strip()
-        return df_dados
-    except:
-        return None
+# --- CONTROLE DE ESTADO ---
+if 'voz_texto' not in st.session_state:
+    st.session_state.voz_texto = ""
+if 'contador' not in st.session_state:
+    st.session_state.contador = 0
 
-df = get_data()
+def acao_limpar():
+    st.session_state.voz_texto = ""
+    st.session_state.contador += 1
 
-# 3. Inicializar Estado da Sessão
-if 'pesquisa' not in st.session_state:
-    st.session_state.pesquisa = ""
-
-# 4. Interface e CSS
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
+
+# --- DESIGN (AJUSTE DE ALTURA DOS BOTÕES) ---
 st.markdown(f"""
 <style>
-    [data-testid="stHeader"] {{ display: none; }}
+    [data-testid="stHeader"] {{ display: none !important; }}
     [data-testid="stAppViewContainer"] {{
         background-image: url("{img}");
-        background-size: cover;
-        background-position: center;
+        background-size: cover !important;
+        background-position: center !important;
         background-attachment: fixed;
     }}
-    .stTextInput input {{ background-color: white !important; color: black !important; border-radius: 10px; height: 48px; }}
-    .stButton button {{ background-color: white !important; color: black !important; border-radius: 10px; height: 48px; width: 100%; border: none; }}
-    h1 {{ color: white !important; text-shadow: 2px 2px 10px #000; text-align: center; }}
+    h1 {{ 
+        color: white !important; 
+        text-shadow: 2px 2px 10px #000 !important; 
+        text-align: center; 
+        -webkit-text-fill-color: white !important; 
+    }}
+    
+    /* Alinhamento da linha de busca */
+    [data-testid="stHorizontalBlock"] {{ 
+        align-items: center !important; 
+        gap: 5px !important; 
+    }}
+
+    /* Input */
+    .stTextInput > div > div > input {{
+        background-color: white !important;
+        color: black !important;
+        border-radius: 10px !important;
+        height: 48px !important;
+    }}
+
+    /* Botões X e Lupa */
+    .stButton button {{
+        background-color: white !important;
+        color: black !important;
+        border-radius: 10px !important;
+        height: 48px !important;
+        width: 48px !important;
+        border: none !important;
+        box-shadow: 1px 1px 5px rgba(0,0,0,0.3) !important;
+        margin-top: 0px !important; /* Garante que não tenha margem */
+    }}
+
+    /* O TRUQUE PARA SUBIR O MICROFONE: */
+    /* Remove o fundo e sobe o container do iframe */
+    div[data-testid="column"]:nth-of-type(4) {{
+        margin-top: -8px !important; 
+    }}
+    
+    iframe {{
+        background: transparent !important;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
+# --- CARREGAR DADOS ---
+try:
+    df = pd.read_excel("Tradutor_Ticuna.xlsx")
+    df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
+except:
+    st.error("Erro ao carregar planilha.")
+
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# 5. Colunas da Barra de Busca
-c1, c2, c3 = st.columns([0.6, 0.2, 0.2])
+# --- BARRA DE PESQUISA ---
+col_txt, col_x, col_lupa, col_mic = st.columns([0.55, 0.15, 0.15, 0.15])
 
-with c1:
-    # O valor vem do session_state para persistir após o microfone
-    busca_manual = st.text_input("Busca", value=st.session_state.pesquisa, label_visibility="collapsed", key="main_input")
+with col_txt:
+    texto_busca = st.text_input("", value=st.session_state.voz_texto, placeholder="Digite ou fale...", label_visibility="collapsed", key=f"in_{st.session_state.contador}")
 
-with c2:
-    if st.button("🔍"):
-        st.session_state.pesquisa = busca_manual
+with col_x:
+    if st.button("✖"):
+        acao_limpar()
+        st.rerun()
 
-with c3:
-    # Microfone com script de paragem forçada para evitar loops
-    val_voz = st.components.v1.html("""
-    <script>
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'pt-BR';
-        recognition.onresult = (event) => {
-            const text = event.results[0][0].transcript;
-            window.parent.postMessage({type: 'streamlit:setComponentValue', value: text}, '*');
-        };
-    </script>
-    <button onclick="recognition.start()" style="background:white; border-radius:10px; height:45px; width:100%; border:none; cursor:pointer; font-size:20px;">🎤</button>
+with col_lupa:
+    st.button("🔍")
+
+with col_mic:
+    # BOTÃO MICROFONE COM ALINHAMENTO INTERNO
+    st.components.v1.html(f"""
+    <body style="margin:0; padding:0; background:transparent; display:flex; align-items:center; justify-content:center;">
+        <button id="mic-btn" style="background:white; border-radius:10px; height:48px; width:48px; border:none; box-shadow: 1px 1px 5px rgba(0,0,0,0.3); cursor:pointer; font-size:22px;">🎤</button>
+        <script>
+            const btn = document.getElementById('mic-btn');
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'pt-BR';
+
+            btn.onclick = () => {{
+                btn.style.background = '#ffcccc'; 
+                recognition.start();
+            }};
+
+            recognition.onresult = (event) => {{
+                const transcript = event.results[0][0].transcript;
+                window.parent.postMessage({{type: 'streamlit:setComponentValue', value: transcript}}, '*');
+                btn.style.background = 'white';
+            }};
+            
+            recognition.onend = () => {{ btn.style.background = 'white'; }};
+            recognition.onerror = () => {{ btn.style.background = 'white'; }};
+        </script>
+    </body>
     """, height=50)
 
-# Lógica Anti-Loop: Só faz rerun se o microfone trouxer algo NOVO
-if val_voz and val_voz != st.session_state.pesquisa:
-    st.session_state.pesquisa = val_voz
-    st.rerun()
-
-# 6. Exibição da Tradução
-if st.session_state.pesquisa and df is not None:
-    alvo = st.session_state.pesquisa.lower().strip()
-    res = df[(df['B_PT'] == alvo) | (df['B_TIC'] == alvo)]
+# --- LÓGICA DE TRADUÇÃO ---
+if texto_busca:
+    t_norm = normalizar(texto_busca)
+    res = df[df['BUSCA_PT'] == t_norm] if 'df' in locals() else pd.DataFrame()
     
     if not res.empty:
-        is_pt = not df[df['B_PT'] == alvo].empty
-        traducao = res['TICUNA'].values[0] if is_pt else res['PORTUGUES'].values[0]
-        
-        st.markdown(f'<div style="color:white; text-align:center; font-size:35px; font-weight:bold; text-shadow:2px 2px 20px #000; padding:20px;">{traducao}</div>', unsafe_allow_html=True)
-        
+        trad = res['TICUNA'].values[0]
+        st.markdown(f'<div style="color:white; text-align:center; font-size:32px; font-weight:900; text-shadow:2px 2px 20px #000; padding:40px;">Ticuna: {trad}</div>', unsafe_allow_html=True)
         try:
-            tts = gTTS(text=str(traducao), lang='pt-br')
-            fp = io.BytesIO()
-            tts.write_to_fp(fp)
-            st.audio(fp, format="audio/mp3", autoplay=True)
+            tts = gTTS(text=str(trad), lang='pt-br')
+            tts_fp = io.BytesIO()
+            tts.write_to_fp(tts_fp)
+            st.audio(tts_fp, format="audio/mp3", autoplay=True)
         except: pass
+    elif texto_busca.strip() != "":
+        st.markdown('<div style="color:white; text-align:center; text-shadow:1px 1px 5px #000; font-size:20px;">Palavra não encontrada</div>', unsafe_allow_html=True)
