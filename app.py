@@ -24,7 +24,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- DESIGN REPARADO (TÍTULO BRANCO E MICROFONE SEM FUNDO) ---
+# --- DESIGN (MATADOR DE CAIXA DO MICROFONE E TÍTULO BRANCO) ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -36,27 +36,24 @@ st.markdown(f"""
         background-attachment: fixed;
     }}
 
-    /* FORÇA O TÍTULO A SER BRANCO - Usei !important em tudo */
-    h1, h2, h3, .stTitle {{
-        color: white !important;
-        text-shadow: 2px 2px 15px rgba(0,0,0,1) !important;
+    /* FORÇA O TÍTULO A SER BRANCO INDEPENDENTE DO MODO */
+    h1 {{ 
+        color: white !important; 
+        text-shadow: 2px 2px 10px #000 !important; 
+        text-align: center;
         -webkit-text-fill-color: white !important;
     }}
     
-    /* MATA A CAIXA DO MICROFONE (O IFRAME) */
-    /* Esse é o comando que ataca a 'janelinha' do microfone */
-    iframe {{
+    /* MATA A CAIXA BRANCA/PRETA DO MICROFONE (ATACA O IFRAME) */
+    /* Remove o fundo de todas as divs e iframes na área do microfone */
+    iframe, .stMicRecorder, div[data-testid="column"] {{
         background-color: transparent !important;
         background: transparent !important;
         border: none !important;
+        box-shadow: none !important;
     }}
 
-    /* Torna as colunas transparentes para a imagem de fundo aparecer */
-    [data-testid="column"], [data-testid="stHorizontalBlock"] {{
-        background-color: transparent !important;
-    }}
-
-    /* ESTILO DA BARRA BRANCA (INPUT) */
+    /* Estilo do Input de Texto */
     .stTextInput > div > div > input {{
         background-color: white !important;
         color: black !important;
@@ -64,7 +61,7 @@ st.markdown(f"""
         height: 48px !important;
     }}
 
-    /* BOTÕES (X, LUPA E MICROFONE) */
+    /* Botões: Unifica o visual do X, Lupa e Mic */
     .stButton button, .stMicRecorder button {{
         background-color: white !important;
         color: black !important;
@@ -72,13 +69,15 @@ st.markdown(f"""
         height: 48px !important;
         width: 48px !important;
         border: none !important;
-        box-shadow: 1px 1px 10px rgba(0,0,0,0.5) !important;
+        box-shadow: 1px 1px 5px rgba(0,0,0,0.3) !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
+        padding: 0 !important;
     }}
 </style>
 """, unsafe_allow_html=True)
+
 # --- CARREGAR DADOS ---
 try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
@@ -88,7 +87,7 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- BARRA DE PESQUISA ---
+# --- BARRA DE PESQUISA (DESIGN DAS IMAGENS) ---
 col_txt, col_x, col_lupa, col_mic = st.columns([0.55, 0.15, 0.15, 0.15])
 
 with col_txt:
@@ -103,10 +102,9 @@ with col_lupa:
     st.button("🔍")
 
 with col_mic:
-    # O microfone agora deve herdar o estilo de botão limpo
     audio_voz = mic_recorder(start_prompt="🎤", stop_prompt="🛑", key='recorder')
 
-# --- LÓGICA DE VOZ ---
+# --- LÓGICA AUTOMÁTICA (FALA -> PESQUISA -> AUDIO) ---
 if audio_voz:
     try:
         r = sr.Recognizer()
@@ -114,14 +112,13 @@ if audio_voz:
         with sr.AudioFile(audio_data) as source:
             audio_content = r.record(source)
             resultado = r.recognize_google(audio_content, language='pt-BR')
-            
             if resultado and resultado.lower() != st.session_state.voz_texto:
                 st.session_state.voz_texto = resultado.lower().strip()
                 st.rerun()
     except:
         pass
 
-# --- RESULTADO ---
+# --- RESULTADOS ---
 if texto_busca:
     t_norm = normalizar(texto_busca)
     res = df[df['BUSCA_PT'] == t_norm] if 'df' in locals() else pd.DataFrame()
