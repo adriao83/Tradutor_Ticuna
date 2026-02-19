@@ -22,7 +22,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- DESIGN (ALTURA UNIFICADA E TÍTULO BRANCO) ---
+# --- DESIGN (AJUSTE DE ALTURA DOS BOTÕES) ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -43,10 +43,9 @@ st.markdown(f"""
     [data-testid="stHorizontalBlock"] {{ 
         align-items: center !important; 
         gap: 5px !important; 
-        background: transparent !important;
     }}
 
-    /* Altura fixa para o Input */
+    /* Input */
     .stTextInput > div > div > input {{
         background-color: white !important;
         color: black !important;
@@ -54,7 +53,7 @@ st.markdown(f"""
         height: 48px !important;
     }}
 
-    /* Altura fixa para os botões X e Lupa */
+    /* Botões X e Lupa */
     .stButton button {{
         background-color: white !important;
         color: black !important;
@@ -63,29 +62,17 @@ st.markdown(f"""
         width: 48px !important;
         border: none !important;
         box-shadow: 1px 1px 5px rgba(0,0,0,0.3) !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
+        margin-top: 0px !important; /* Garante que não tenha margem */
     }}
 
-    /* Botão do Microfone (HTML) - Mesma altura e estilo */
-    .mic-container {{
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 48px;
+    /* O TRUQUE PARA SUBIR O MICROFONE: */
+    /* Remove o fundo e sobe o container do iframe */
+    div[data-testid="column"]:nth-of-type(4) {{
+        margin-top: -8px !important; 
     }}
     
-    .btn-mic {{
-        background-color: white;
-        border-radius: 10px;
-        height: 48px;
-        width: 48px;
-        border: none;
-        box-shadow: 1px 1px 5px rgba(0,0,0,0.3);
-        cursor: pointer;
-        font-size: 20px;
-        transition: 0.3s;
+    iframe {{
+        background: transparent !important;
     }}
 </style>
 """, unsafe_allow_html=True)
@@ -114,31 +101,31 @@ with col_lupa:
     st.button("🔍")
 
 with col_mic:
-    # BOTÃO MICROFONE NATIVO (ESTILO GOOGLE)
+    # BOTÃO MICROFONE COM ALINHAMENTO INTERNO
     st.components.v1.html(f"""
-    <div class="mic-container" style="display:flex; justify-content:center; align-items:center; height:48px;">
-        <button id="mic-btn" style="background:white; border-radius:10px; height:48px; width:48px; border:none; box-shadow: 1px 1px 5px rgba(0,0,0,0.3); cursor:pointer; font-size:20px;">🎤</button>
-    </div>
-    <script>
-        const btn = document.getElementById('mic-btn');
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'pt-BR';
+    <body style="margin:0; padding:0; background:transparent; display:flex; align-items:center; justify-content:center;">
+        <button id="mic-btn" style="background:white; border-radius:10px; height:48px; width:48px; border:none; box-shadow: 1px 1px 5px rgba(0,0,0,0.3); cursor:pointer; font-size:22px;">🎤</button>
+        <script>
+            const btn = document.getElementById('mic-btn');
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'pt-BR';
 
-        btn.onclick = () => {{
-            btn.style.background = '#ffcccc'; 
-            recognition.start();
-        }};
+            btn.onclick = () => {{
+                btn.style.background = '#ffcccc'; 
+                recognition.start();
+            }};
 
-        recognition.onresult = (event) => {{
-            const transcript = event.results[0][0].transcript;
-            // Envia para o Streamlit e força a atualização
-            window.parent.postMessage({{type: 'streamlit:setComponentValue', value: transcript}}, '*');
-            btn.style.background = 'white';
-        }};
-        
-        recognition.onend = () => {{ btn.style.background = 'white'; }};
-    </script>
-    """, height=48) # Altura do iframe igual à dos botões
+            recognition.onresult = (event) => {{
+                const transcript = event.results[0][0].transcript;
+                window.parent.postMessage({{type: 'streamlit:setComponentValue', value: transcript}}, '*');
+                btn.style.background = 'white';
+            }};
+            
+            recognition.onend = () => {{ btn.style.background = 'white'; }};
+            recognition.onerror = () => {{ btn.style.background = 'white'; }};
+        </script>
+    </body>
+    """, height=50)
 
 # --- LÓGICA DE TRADUÇÃO ---
 if texto_busca:
