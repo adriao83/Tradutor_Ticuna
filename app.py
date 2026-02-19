@@ -75,11 +75,12 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- BARRA DE PESQUISA ---
+# --- BARRA DE PESQUISA (AJUSTADA) ---
 col_txt, col_x, col_lupa, col_mic = st.columns([0.55, 0.15, 0.15, 0.15])
 
 with col_txt:
-    texto_busca = st.text_input("", value=st.session_state.voz_texto, placeholder="Digite ou fale...", label_visibility="collapsed", key=f"in_{st.session_state.contador}")
+    # Adicionamos um rótulo "Busca" para parar os avisos do log, mas mantemos label_visibility="collapsed"
+    texto_busca = st.text_input("Busca", value=st.session_state.voz_texto, placeholder="Digite ou fale...", label_visibility="collapsed", key=f"in_{st.session_state.contador}")
 
 with col_x:
     if st.button("✖"):
@@ -90,8 +91,7 @@ with col_lupa:
     st.button("🔍")
 
 with col_mic:
-    # COMPONENTE DE VOZ COM AUTO-ENVIO
-    # O valor 'resultado_voz' captura o que o JS enviar
+    # COMPONENTE DE VOZ COM TRAVA DE SEGURANÇA
     resultado_voz = st.components.v1.html(f"""
     <body style="margin:0; padding:0; background:transparent; display:flex; align-items:center; justify-content:center;">
         <button id="mic-btn" style="background:white; border-radius:10px; height:48px; width:48px; border:none; box-shadow: 1px 1px 5px rgba(0,0,0,0.3); cursor:pointer; font-size:22px;">🎤</button>
@@ -99,6 +99,7 @@ with col_mic:
             const btn = document.getElementById('mic-btn');
             const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
             recognition.lang = 'pt-BR';
+            recognition.continuous = false; // Garante que ele pare após uma frase
 
             btn.onclick = () => {{
                 btn.style.background = '#ffcccc'; 
@@ -107,25 +108,20 @@ with col_mic:
 
             recognition.onresult = (event) => {{
                 const transcript = event.results[0][0].transcript;
-                // Este é o segredo: ele envia o texto direto para o componente do Streamlit
-                window.parent.postMessage({{
-                    type: 'streamlit:setComponentValue',
-                    value: transcript
-                }}, '*');
+                // Envia o valor e para
+                window.parent.postMessage({{type: 'streamlit:setComponentValue', value: transcript}}, '*');
                 btn.style.background = 'white';
             }};
             
             recognition.onend = () => {{ btn.style.background = 'white'; }};
-            recognition.onerror = () => {{ btn.style.background = 'white'; }};
         </script>
     </body>
     """, height=50)
 
-# Se o microfone captou algo novo, atualiza o estado e recarrega para traduzir
+# SÓ RECARREGA SE O TEXTO FOR DIFERENTE E NÃO VAZIO
 if resultado_voz and resultado_voz != st.session_state.voz_texto:
     st.session_state.voz_texto = resultado_voz
     st.rerun()
-
 # --- LÓGICA DE TRADUÇÃO (BIDIRECIONAL) ---
 if texto_busca:
     t_norm = normalizar(texto_busca)
