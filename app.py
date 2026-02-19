@@ -23,7 +23,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- DESIGN CORRIGIDO (PARA NÃO PISCAR) ---
+# --- DESIGN ESTÁVEL (SEM PISCAR) ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -54,19 +54,24 @@ st.markdown(f"""
         box-shadow: 1px 1px 5px rgba(0,0,0,0.3) !important;
     }}
 
-    /* Alinhamento do microfone */
+    /* Alinhamento fino do microfone */
     div[data-testid="column"]:nth-of-type(4) {{ margin-top: -8px !important; }}
-    iframe {{ background: transparent !important; }}
+    iframe {{ background: transparent !important; border: none !important; }}
 </style>
 """, unsafe_allow_html=True)
 
 # --- CARREGAR DADOS ---
-try:
-    df = pd.read_excel("Tradutor_Ticuna.xlsx")
-    df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
-    df['BUSCA_TIC'] = df['TICUNA'].apply(normalizar)
-except Exception as e:
-    st.error(f"Erro ao carregar planilha: {e}")
+@st.cache_data
+def carregar_dados():
+    try:
+        df_dados = pd.read_excel("Tradutor_Ticuna.xlsx")
+        df_dados['BUSCA_PT'] = df_dados['PORTUGUES'].apply(normalizar)
+        df_dados['BUSCA_TIC'] = df_dados['TICUNA'].apply(normalizar)
+        return df_dados
+    except:
+        return None
+
+df = carregar_dados()
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
@@ -74,24 +79,24 @@ st.title("🏹 Tradutor Ticuna v0.1")
 col_txt, col_x, col_lupa, col_mic = st.columns([0.55, 0.15, 0.15, 0.15])
 
 with col_txt:
-    # Usamos um label invisível para evitar erros nos logs
+    # O rótulo "Busca" evita os erros que vi nos seus logs
     texto_busca = st.text_input("Busca", value=st.session_state.voz_texto, placeholder="Digite ou fale...", label_visibility="collapsed", key=f"in_{st.session_state.contador}")
 
 with col_x:
-    if st.button("✖"):
+    if st.button("✖", key="btn_limpar"):
         acao_limpar()
 
 with col_lupa:
-    st.button("🔍")
+    st.button("🔍", key="btn_pesquisar")
 
 with col_mic:
-    # Botão de voz simplificado (sem loop de rerun)
+    # Microfone JS ultra-estável
     resultado_voz = st.components.v1.html(f"""
     <body style="margin:0; padding:0; background:transparent; display:flex; align-items:center; justify-content:center;">
         <button id="mic-btn" style="background:white; border-radius:10px; height:48px; width:48px; border:none; box-shadow: 1px 1px 5px rgba(0,0,0,0.3); cursor:pointer; font-size:22px;">🎤</button>
         <script>
             const btn = document.getElementById('mic-btn');
-            const recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
             recognition.lang = 'pt-BR';
             
             btn.onclick = () => {{
@@ -105,20 +110,21 @@ with col_mic:
                 btn.style.background = 'white';
             }};
             recognition.onend = () => {{ btn.style.background = 'white'; }};
+            recognition.onerror = () => {{ btn.style.background = 'white'; }};
         </script>
     </body>
     """, height=50)
 
-# Só atualiza o estado se houver uma nova voz capturada
+# Só recarrega o app se o microfone de fato capturar algo novo
 if resultado_voz and resultado_voz != st.session_state.voz_texto:
     st.session_state.voz_texto = resultado_voz
     st.rerun()
 
-# --- TRADUÇÃO ---
-if texto_busca:
+# --- RESULTADOS ---
+if texto_busca and df is not None:
     t_norm = normalizar(texto_busca)
-    res_pt = df[df['BUSCA_PT'] == t_norm] if 'df' in locals() else pd.DataFrame()
-    res_tic = df[df['BUSCA_TIC'] == t_norm] if 'df' in locals() else pd.DataFrame()
+    res_pt = df[df['BUSCA_PT'] == t_norm]
+    res_tic = df[df['BUSCA_TIC'] == t_norm]
     
     traducao = None
     if not res_pt.empty:
@@ -137,4 +143,4 @@ if texto_busca:
             st.audio(tts_fp, format="audio/mp3", autoplay=True)
         except: pass
     elif texto_busca.strip() != "":
-        st.markdown('<div style="color:white; text-align:center; text-shadow:1px 1px 5px #000; font-size:20px;">Não encontrada</div>', unsafe_allow_html=True)
+        st.markdown('<div style="color:white; text-align:center; text-shadow:1px 1px 5px #000; font-size:20px;">Palavra não encontrada</div>', unsafe_allow_html=True)
