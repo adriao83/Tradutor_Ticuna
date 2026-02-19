@@ -24,7 +24,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- DESIGN AJUSTADO (REMOVENDO A CAIXA BRANCA DO MIC) ---
+# --- DESIGN COM "MATADOR" DE CAIXA BRANCA ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -36,16 +36,13 @@ st.markdown(f"""
     }}
     h1 {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; text-align: center; }}
     
-    /* Container da Barra de Busca */
+    /* Remove qualquer espaçamento extra do bloco de colunas */
     [data-testid="stHorizontalBlock"] {{
-        display: flex !important;
-        flex-direction: row !important;
         align-items: center !important;
-        gap: 4px !important;
-        padding: 5px;
+        gap: 5px !important;
     }}
 
-    /* Estilo do Input de Texto */
+    /* Estilo do Input */
     .stTextInput > div > div > input {{
         background-color: white !important;
         color: black !important;
@@ -53,25 +50,37 @@ st.markdown(f"""
         height: 48px !important;
     }}
 
-    /* REMOVE A CAIXA BRANCA FORTE DO MICROFONE */
-    .stMicRecorder {{
+    /* AQUI ESTÁ O TRUQUE: MATA A CAIXA BRANCA DO MICROFONE */
+    div[data-testid="stVerticalBlock"] > div:has(.stMicRecorder) {{
         background-color: transparent !important;
     }}
+
+    .stMicRecorder {{
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        width: fit-content !important;
+    }}
     
-    .stMicRecorder div {{
+    .stMicRecorder > div {{
         background-color: transparent !important;
         border: none !important;
     }}
 
-    /* Estilo unificado para todos os botões (X, Lupa e Mic) */
+    /* Botões Unificados */
     .stButton button, .stMicRecorder button {{
         background-color: white !important;
         color: black !important;
         border-radius: 10px !important;
         height: 48px !important;
-        min-width: 48px !important;
+        width: 48px !important;
         border: none !important;
         box-shadow: 1px 1px 5px rgba(0,0,0,0.3) !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }}
 </style>
 """, unsafe_allow_html=True)
