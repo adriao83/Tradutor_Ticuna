@@ -4,3 +4,6 @@ openpyxl
 gTTS
 streamlit-mic-recorder
 SpeechRecognition
+streamlit-mic-recorder
+SpeechRecognition
+pydub
