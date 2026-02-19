@@ -5,6 +5,7 @@ import re
 import io
 from streamlit_mic_recorder import mic_recorder
 import speech_recognition as sr
+import pydub
 
 # --- FUNÇÃO DE NORMALIZAÇÃO ---
 def normalizar(t):
@@ -43,7 +44,6 @@ st.markdown(f"""
         border-radius: 10px !important;
         height: 48px !important;
     }}
-    /* Estilo para os botões */
     .stButton button {{
         border-radius: 10px !important;
         height: 48px !important;
@@ -62,11 +62,11 @@ except Exception as e:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- BARRA DE PESQUISA ---
-col_txt, col_x, col_mic = st.columns([0.65, 0.15, 0.20])
+# --- BARRA DE PESQUISA (LAYOUT) ---
+col_txt, col_x, col_mic = st.columns([0.60, 0.15, 0.25])
 
 with col_mic:
-    # O componente de microfone grava o áudio
+    # Componente de gravação
     audio_gravado = mic_recorder(
         start_prompt="🎤 Falar",
         stop_prompt="🛑 Parar",
@@ -74,15 +74,27 @@ with col_mic:
         just_once=True,
     )
 
-# Lógica para converter áudio em texto usando IA de reconhecimento
+# --- LÓGICA DE RECONHECIMENTO DE VOZ (IA) ---
 if audio_gravado:
     try:
+        # Converte o áudio bruto para WAV (formato que a IA aceita melhor)
+        audio_seg = pydub.AudioSegment.from_file(io.BytesIO(audio_gravado['bytes']))
+        wav_io = io.BytesIO()
+        audio_seg.export(wav_io, format="wav")
+        wav_io.seek(0)
+
         r = sr.Recognizer()
-        audio_data = sr.AudioData(audio_gravado['bytes'], 16000, 2)
-        texto_ouvido = r.recognize_google(audio_data, language='pt-BR')
-        st.session_state.texto_pesquisa = texto_ouvido
+        with sr.AudioFile(wav_io) as source:
+            audio_data = r.record(source)
+            # Usa a IA do Google para transcrever
+            texto_ouvido = r.recognize_google(audio_data, language='pt-BR')
+            st.session_state.texto_pesquisa = texto_ouvido
+            st.rerun() # Atualiza a tela para o texto aparecer no campo
+            
+    except sr.UnknownValueError:
+        st.warning("Não entendi o áudio. Tente falar mais claro.")
     except Exception as e:
-        st.warning("Não consegui entender o áudio.")
+        st.error(f"Erro no microfone: {e}")
 
 with col_txt:
     texto_busca = st.text_input(
@@ -106,9 +118,15 @@ if texto_busca:
         
         if not res.empty:
             trad = res['TICUNA'].values[0]
-            st.markdown(f'<div style="color:white; text-align:center; font-size:32px; font-weight:900; text-shadow:2px 2px 20px #000; padding:40px;">Ticuna: {trad}</div>', unsafe_allow_html=True)
+            st.markdown(f'''
+                <div style="color:white; text-align:center; font-size:32px; font-weight:900; 
+                text-shadow:2px 2px 20px #000; padding:40px; background: rgba(0,0,0,0.4); 
+                border-radius: 20px; margin-top: 20px;">
+                    Ticuna: {trad}
+                </div>
+            ''', unsafe_allow_html=True)
             
-            # IA de Voz (gTTS)
+            # IA de Voz para falar a tradução
             try:
                 tts = gTTS(text=str(trad), lang='pt-br')
                 tts_fp = io.BytesIO()
@@ -116,5 +134,5 @@ if texto_busca:
                 st.audio(tts_fp, format="audio/mp3", autoplay=True)
             except:
                 pass
-        else:
-            st.markdown('<div style="color:white; text-align:center; text-shadow:1px 1px 5px #000; font-size:20px;">Palavra não encontrada</div>', unsafe_allow_html=True)
+        elif texto_busca.strip() != "":
+            st.markdown('<div style="color:white; text-align:center; text-shadow:1px 1px 5px #000; font-size:20px; margin-top:20px;">Palavra não encontrada no dicionário</div>', unsafe_allow_html=True)
