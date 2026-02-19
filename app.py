@@ -58,15 +58,14 @@ st.markdown(f"""
 try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
     df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
-except Exception as e:
-    st.error("Erro ao carregar planilha.")
+except:
     df = pd.DataFrame()
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- BARRA DE PESQUISA (LAYOUT COM LUPA) ---
-# Ajustei as colunas para caber a lupa: Texto, X, Lupa, Mic
-col_txt, col_x, col_lupa, col_mic = st.columns([0.50, 0.10, 0.10, 0.30])
+# --- BARRA DE PESQUISA ---
+# Usei larguras que dão mais espaço para o microfone não ser "esmagado"
+col_txt, col_x, col_lupa, col_mic = st.columns([0.45, 0.10, 0.10, 0.35])
 
 with col_mic:
     audio_gravado = mic_recorder(
@@ -75,21 +74,6 @@ with col_mic:
         key='gravador',
         just_once=True,
     )
-
-if audio_gravado:
-    try:
-        audio_seg = pydub.AudioSegment.from_file(io.BytesIO(audio_gravado['bytes']))
-        wav_io = io.BytesIO()
-        audio_seg.export(wav_io, format="wav")
-        wav_io.seek(0)
-        r = sr.Recognizer()
-        with sr.AudioFile(wav_io) as source:
-            audio_data = r.record(source)
-            texto_ouvido = r.recognize_google(audio_data, language='pt-BR')
-            st.session_state.texto_pesquisa = texto_ouvido
-            st.rerun()
-    except:
-        st.warning("Não entendi o áudio.")
 
 with col_txt:
     texto_busca = st.text_input(
@@ -106,9 +90,29 @@ with col_x:
         st.rerun()
 
 with col_lupa:
-    # O botão de lupa apenas dispara a atualização da página para buscar
     if st.button("🔍"):
+        # Se clicar na lupa, ele usa o que está no texto_busca
+        st.session_state.texto_pesquisa = texto_busca
         st.rerun()
+
+# --- PROCESSAMENTO DO ÁUDIO (IA) ---
+# Movido para baixo para garantir que o texto_input já exista antes do rerun
+if audio_gravado:
+    try:
+        audio_seg = pydub.AudioSegment.from_file(io.BytesIO(audio_gravado['bytes']))
+        wav_io = io.BytesIO()
+        audio_seg.export(wav_io, format="wav")
+        wav_io.seek(0)
+        
+        r = sr.Recognizer()
+        with sr.AudioFile(wav_io) as source:
+            audio_data = r.record(source)
+            texto_ouvido = r.recognize_google(audio_data, language='pt-BR')
+            if texto_ouvido:
+                st.session_state.texto_pesquisa = texto_ouvido
+                st.rerun()
+    except Exception as e:
+        pass # Silencioso para não atrapalhar a interface
 
 # --- LÓGICA DE TRADUÇÃO ---
 if texto_busca:
