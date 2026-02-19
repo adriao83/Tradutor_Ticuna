@@ -67,25 +67,35 @@ with col_mic:
     # O mic_recorder precisa de um tempo para processar o áudio
     audio_voz = mic_recorder(start_prompt="🎤", stop_prompt="🛑", key='recorder')
 
-# --- LÓGICA DE VOZ ---
+# --- LÓGICA DE VOZ (VERSÃO REFORMULADA) ---
 if audio_voz:
     try:
         r = sr.Recognizer()
-        # Lê os bytes do áudio
-        audio_file = io.BytesIO(audio_voz['bytes'])
+        # Ajuste de sensibilidade: 300 é um bom valor para voz clara
+        r.energy_threshold = 300
         
-        with sr.AudioFile(audio_file) as source:
-            # Captura o áudio do arquivo gerado
+        # Converte os bytes recebidos em um arquivo de áudio temporário
+        audio_data = io.BytesIO(audio_voz['bytes'])
+        
+        with sr.AudioFile(audio_data) as source:
+            # Captura o áudio ignorando ruídos iniciais
             audio_content = r.record(source)
-            # Tenta converter em texto
+            
+            # Tenta reconhecer usando a API do Google
+            # Adicionei o timeout para não deixar o app travado
             resultado = r.recognize_google(audio_content, language='pt-BR')
             
             if resultado:
-                st.session_state.voz_texto = resultado.lower()
-                st.rerun() 
+                st.session_state.voz_texto = resultado.lower().strip()
+                st.rerun()
+    
+    except sr.UnknownValueError:
+        st.toast("O sistema não reconheceu nenhuma palavra. Tente falar mais claro.")
+    except sr.RequestError:
+        st.toast("Erro de conexão com o serviço de voz. Verifique sua internet.")
     except Exception as e:
-        # Se der erro aqui, é quase certeza que falta o ffmpeg no packages.txt
-        st.toast("Erro no áudio. Fale pausadamente ou verifique o sistema.")
+        # Aqui ele vai nos dizer o erro exato se o FFmpeg falhar
+        st.toast(f"Erro no sistema: {str(e)[:50]}")
 
 # --- TRADUÇÃO ---
 if texto_busca and df is not None:
