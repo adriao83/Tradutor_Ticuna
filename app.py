@@ -23,28 +23,29 @@ def acao_limpar():
     st.session_state.texto_pesquisa = ""
     st.session_state.contador += 1
 
-img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
-
-# --- DESIGN CSS (Lupa Visual + Correção de Caracteres) ---
+# --- DESIGN CSS (Fundo Branco e Texto Escuro) ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
+    
+    /* Fundo Branco */
     [data-testid="stAppViewContainer"] {{
-        background-image: url("{img}");
-        background-size: cover !important;
-        background-position: center !important;
-        background-attachment: fixed;
+        background-color: #ffffff !important;
     }}
+    
+    /* Ajuste da cor do título para preto, já que o fundo agora é branco */
     h1 {{ 
-        color: white !important; 
-        text-shadow: 2px 2px 10px #000 !important; 
+        color: #000000 !important; 
         text-align: center; 
+        font-weight: bold;
     }}
-    /* Colocando a Lupa como ícone dentro da caixa */
+
+    /* Lupa Visual dentro da caixa */
     .stTextInput > div > div > input {{
         border-radius: 10px !important;
         height: 48px !important;
         padding-left: 45px !important;
+        border: 1px solid #cccccc !important;
     }}
     .stTextInput::before {{
         content: "🔍";
@@ -54,10 +55,15 @@ st.markdown(f"""
         z-index: 1;
         font-size: 20px;
     }}
+
+    /* Botões */
     .stButton button {{
         border-radius: 10px !important;
         height: 48px !important;
         width: 100% !important;
+        background-color: #f0f0f0 !important;
+        color: black !important;
+        border: 1px solid #cccccc !important;
     }}
 </style>
 """, unsafe_allow_html=True)
@@ -71,7 +77,7 @@ except Exception as e:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- BARRA DE PESQUISA (LAYOUT IDÊNTICO AO QUE FUNCIONA) ---
+# --- BARRA DE PESQUISA ---
 col_txt, col_x, col_mic = st.columns([0.60, 0.15, 0.25])
 
 with col_mic:
@@ -82,7 +88,7 @@ with col_mic:
         just_once=True,
     )
 
-# --- LÓGICA DE VOZ (Copiada da sua versão que funciona) ---
+# --- LÓGICA DE VOZ ---
 if audio_gravado:
     try:
         audio_seg = pydub.AudioSegment.from_file(io.BytesIO(audio_gravado['bytes']))
@@ -124,10 +130,11 @@ if texto_busca:
         
         if not res.empty:
             trad = res['TICUNA'].values[0]
+            # Ajustado para texto escuro no fundo branco
             st.markdown(f'''
-                <div style="color:white; text-align:center; font-size:32px; font-weight:900; 
-                text-shadow:2px 2px 20px #000; padding:40px; background: rgba(0,0,0,0.4); 
-                border-radius: 20px; margin-top: 20px;">
+                <div style="color: #333333; text-align:center; font-size:32px; font-weight:900; 
+                padding:40px; background: #f9f9f9; border: 1px solid #eeeeee; 
+                border-radius: 20px; margin-top: 20px; box-shadow: 2px 2px 10px rgba(0,0,0,0.05);">
                     Ticuna: {trad}
                 </div>
             ''', unsafe_allow_html=True)
@@ -140,4 +147,4 @@ if texto_busca:
             except:
                 pass
         elif texto_busca.strip() != "":
-            st.markdown('<div style="color:white; text-align:center; text-shadow:1px 1px 5px #000; font-size:20px; margin-top:20px;">Palavra não encontrada</div>', unsafe_allow_html=True)
+            st.markdown('<div style="color: #666666; text-align:center; font-size:20px; margin-top:20px;">Palavra não encontrada</div>', unsafe_allow_html=True)
