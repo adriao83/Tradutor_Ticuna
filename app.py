@@ -17,17 +17,14 @@ if 'voz_texto' not in st.session_state:
     st.session_state.voz_texto = ""
 if 'contador' not in st.session_state:
     st.session_state.contador = 0
-if 'ultimo_audio' not in st.session_state:
-    st.session_state.ultimo_audio = None
 
 def acao_limpar():
     st.session_state.voz_texto = ""
-    st.session_state.ultimo_audio = None # Limpa o rastro do áudio
     st.session_state.contador += 1
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- CSS (SEU DESIGN ORIGINAL) ---
+# --- CSS (DESIGN ORIGINAL) ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -76,10 +73,11 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- BARRA DE PESQUISA (DESIGN ORIGINAL) ---
+# --- BARRA DE PESQUISA ---
 col_txt, col_x, col_lupa, col_mic = st.columns([0.55, 0.15, 0.15, 0.15])
 
 with col_txt:
+    # O valor aqui é amarrado à voz para atualizar instantaneamente
     texto_busca = st.text_input("", value=st.session_state.voz_texto, placeholder="Digite ou fale...", label_visibility="collapsed", key=f"in_{st.session_state.contador}")
 
 with col_x:
@@ -92,35 +90,36 @@ with col_lupa:
     st.button("🔍")
 
 with col_mic:
-    # Captura o áudio
+    # Gravador de áudio
     audio_voz = mic_recorder(start_prompt="🎤", stop_prompt="🛑", key='recorder')
 
-# --- LÓGICA DE VOZ (CORRIGIDA PARA NÃO DAR ERRO AO CLICAR EM OUTROS BOTÕES) ---
-if audio_voz and audio_voz.get('bytes') != st.session_state.ultimo_audio:
+# --- LÓGICA DE VOZ (O MOTOR QUE FAZ TUDO AUTOMÁTICO) ---
+if audio_voz:
     try:
         r = sr.Recognizer()
         audio_data = io.BytesIO(audio_voz['bytes'])
         with sr.AudioFile(audio_data) as source:
             audio_content = r.record(source)
+            # Transforma voz em texto
             resultado = r.recognize_google(audio_content, language='pt-BR')
             
-            if resultado:
+            if resultado and resultado.lower() != st.session_state.voz_texto:
                 st.session_state.voz_texto = resultado.lower().strip()
-                st.session_state.ultimo_audio = audio_voz.get('bytes') # Marca esse áudio como "já processado"
+                # O rerun força o app a traduzir o texto que acabou de chegar
                 st.rerun()
-    except Exception:
-        # Só mostra erro se realmente tentamos processar um áudio novo e falhou
-        st.toast("Não foi possível entender o áudio.")
-        st.session_state.ultimo_audio = audio_voz.get('bytes')
+    except:
+        pass # Silencia erros para não atrapalhar o visual
 
-# --- TRADUÇÃO ---
-if texto_busca and 'df' in locals():
+# --- RESULTADO DA TRADUÇÃO (IGUAL AO DIGITADO) ---
+if texto_busca:
     t_norm = normalizar(texto_busca)
-    res = df[df['BUSCA_PT'] == t_norm]
+    res = df[df['BUSCA_PT'] == t_norm] if 'df' in locals() else pd.DataFrame()
     
     if not res.empty:
         trad = res['TICUNA'].values[0]
+        # Mostra o texto da tradução
         st.markdown(f'<div style="color:white; text-align:center; font-size:30px; font-weight:900; text-shadow:2px 2px 15px #000; padding:30px;">Ticuna: {trad}</div>', unsafe_allow_html=True)
+        # Toca o áudio automaticamente
         try:
             tts = gTTS(text=str(trad), lang='pt-br')
             tts_fp = io.BytesIO()
@@ -128,5 +127,5 @@ if texto_busca and 'df' in locals():
             st.audio(tts_fp, format="audio/mp3", autoplay=True)
         except:
             pass
-    elif texto_busca != "":
+    elif texto_busca.strip() != "":
         st.markdown('<div style="color:white; text-align:center; text-shadow:1px 1px 5px #000;">Palavra não encontrada</div>', unsafe_allow_html=True)
