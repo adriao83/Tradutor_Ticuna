@@ -3,15 +3,16 @@ import pandas as pd
 from gtts import gTTS
 import re
 import google.generativeai as genai
-from streamlit_mic_recorder import mic_recorder # Nova biblioteca
-import speech_recognition as sr # Nova biblioteca
+from streamlit_mic_recorder import mic_recorder
+import speech_recognition as sr
 import io
+from pydub import AudioSegment # Importante para converter o áudio
 
-# --- FUNÇÃO DE NORMALIZAÇÃO ---
+# --- FUNÇÕES DE APOIO ---
 def normalizar(t):
     return re.sub(r'[^a-zA-Z0-9]', '', str(t)).lower().strip() if pd.notna(t) else ""
 
-# --- CONFIGURAÇÃO DA IA ---
+# Configuração da IA (Opcional)
 try:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
     model = genai.GenerativeModel('gemini-1.5-flash')
@@ -32,7 +33,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- CSS AJUSTADO ---
+# --- CSS DEFINITIVO ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -63,9 +64,6 @@ st.markdown(f"""
         border-radius: 8px !important;
         height: 45px !important;
         min-width: 45px !important;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         border: 1px solid #ccc !important;
     }}
 </style>
@@ -81,19 +79,11 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- BARRA DE PESQUISA COM VOZ ---
-# Ajustei as colunas para caber o microfone [Texto, Limpar, Lupa, Microfone]
+# --- BARRA DE PESQUISA ---
 col_txt, col_x, col_lupa, col_mic = st.columns([0.6, 0.13, 0.13, 0.13])
 
 with col_txt:
-    # O valor padrão agora pode vir da voz
-    texto_busca = st.text_input(
-        "", 
-        value=st.session_state.voz_texto,
-        placeholder="Digite ou use o microfone...", 
-        label_visibility="collapsed", 
-        key=f"in_{st.session_state.contador}"
-    )
+    texto_busca = st.text_input("", value=st.session_state.voz_texto, placeholder="Digite ou fale...", label_visibility="collapsed", key=f"in_{st.session_state.contador}")
 
 with col_x:
     if texto_busca:
@@ -103,22 +93,33 @@ with col_lupa:
     st.button("🔍")
 
 with col_mic:
-    # Componente de gravação
+    # O mic_recorder retorna um dicionário com os bytes do áudio
     audio_voz = mic_recorder(start_prompt="🎤", stop_prompt="🛑", key='recorder')
 
-# Lógica para processar a voz
+# --- LÓGICA DE PROCESSAMENTO DE VOZ ---
 if audio_voz:
     try:
+        # 1. Lê os bytes do áudio gravado
+        audio_bytes = io.BytesIO(audio_voz['bytes'])
+        
+        # 2. Converte para formato WAV (que o Google entende melhor) usando Pydub
+        audio_segment = AudioSegment.from_file(audio_bytes)
+        wav_io = io.BytesIO()
+        audio_segment.export(wav_io, format="wav")
+        wav_io.seek(0)
+        
+        # 3. Reconhecimento de fala
         r = sr.Recognizer()
-        audio_data = io.BytesIO(audio_voz['bytes'])
-        with sr.AudioFile(audio_data) as source:
-            audio = r.record(source)
-        # Converte áudio em texto (Português)
-        texto_reconhecido = r.recognize_google(audio, language='pt-BR')
-        st.session_state.voz_texto = texto_reconhecido
-        st.rerun() # Reinicia para preencher o campo de busca
+        with sr.AudioFile(wav_io) as source:
+            audio_data = r.record(source)
+            texto_reconhecido = r.recognize_google(audio_data, language='pt-BR')
+            
+            st.session_state.voz_texto = texto_reconhecido
+            st.rerun()
+            
     except Exception as e:
-        st.error("Não entendi o áudio. Tente novamente.")
+        # Se der erro, não mostramos código feio, apenas avisamos
+        st.warning("Ops! Não consegui ouvir bem. Tente falar mais perto do mic.")
 
 # --- LÓGICA DE TRADUÇÃO ---
 if texto_busca and df is not None:
@@ -135,4 +136,4 @@ if texto_busca and df is not None:
         except:
             pass
     else:
-        st.markdown('<div class="resultado-traducao" style="color:white; text-align:center; font-size:28px; font-weight:900; text-shadow:2px 2px 15px #000; padding:20px;">Palavra não encontrada</div>', unsafe_allow_html=True)
+        st.markdown('<div class="resultado-traducao" style="color:white; text-align:center; font-size:22px; font-weight:900; text-shadow:2px 2px 15px #000; padding:20px;">Palavra não encontrada no dicionário</div>', unsafe_allow_html=True)
