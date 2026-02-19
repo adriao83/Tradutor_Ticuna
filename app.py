@@ -5,6 +5,7 @@ import re
 from streamlit_mic_recorder import mic_recorder
 import speech_recognition as sr
 import io
+from pydub import AudioSegment  # Biblioteca para converter o áudio
 
 # --- FUNÇÃO DE NORMALIZAÇÃO ---
 def normalizar(t):
@@ -24,7 +25,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- CSS ---
+# --- CSS DEFINITIVO ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -33,10 +34,33 @@ st.markdown(f"""
         background-size: cover !important;
         background-position: center !important;
     }}
-    h1, h1 span {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; text-align: center; }}
-    [data-testid="stHorizontalBlock"] {{ display: flex !important; flex-direction: row !important; align-items: center !important; gap: 5px !important; }}
-    .stTextInput > div > div > input {{ background-color: white !important; color: black !important; border-radius: 10px !important; height: 45px !important; }}
-    .stButton button, .stMicRecorder button {{ background-color: white !important; color: black !important; border-radius: 8px !important; height: 45px !important; min-width: 45px !important; border: 1px solid #ccc !important; }}
+    h1, h1 span {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; text-align: center; font-size: 2rem !important; }}
+    
+    [data-testid="stHorizontalBlock"] {{
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 5px !important;
+    }}
+
+    .stTextInput > div > div > input {{
+        background-color: white !important;
+        color: black !important;
+        border-radius: 10px !important;
+        height: 45px !important;
+    }}
+
+    .stButton button, .stMicRecorder button {{
+        background-color: white !important;
+        color: black !important;
+        border-radius: 8px !important;
+        height: 45px !important;
+        min-width: 45px !important;
+        border: 1px solid #ccc !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -64,28 +88,25 @@ with col_lupa:
     st.button("🔍")
 
 with col_mic:
-    # O mic_recorder precisa de um tempo para processar o áudio
     audio_voz = mic_recorder(start_prompt="🎤", stop_prompt="🛑", key='recorder')
 
-from pydub import AudioSegment
-
-# --- LÓGICA DE VOZ (VERSÃO RESOLVE PCM WAV) ---
+# --- LÓGICA DE VOZ (CORREÇÃO PCM WAV) ---
 if audio_voz:
     try:
         r = sr.Recognizer()
         
-        # 1. Converte os bytes originais (WebM/Ogg) para WAV na memória
+        # 1. Converte os bytes originais para um objeto de áudio
         audio_bytes = io.BytesIO(audio_voz['bytes'])
         audio_segment = AudioSegment.from_file(audio_bytes)
         
-        # 2. Exporta como WAV para o Recognizer entender
+        # 2. Exporta como WAV (o formato que o Recognizer exige)
         wav_buffer = io.BytesIO()
         audio_segment.export(wav_buffer, format="wav")
         wav_buffer.seek(0)
         
         with sr.AudioFile(wav_buffer) as source:
             audio_content = r.record(source)
-            # 3. Manda para o Google
+            # 3. Reconhecimento via Google
             resultado = r.recognize_google(audio_content, language='pt-BR')
             
             if resultado:
@@ -93,8 +114,8 @@ if audio_voz:
                 st.rerun()
                 
     except Exception as e:
-        # Se o erro do ffmpeg persistir, ele vai avisar aqui
-        st.toast("O servidor ainda está configurando o suporte de áudio. Tente em 1 minuto.")
+        st.toast(f"Aguarde o sistema configurar o áudio...")
+
 # --- TRADUÇÃO ---
 if texto_busca and df is not None:
     t_norm = normalizar(texto_busca)
