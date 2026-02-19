@@ -67,36 +67,34 @@ with col_mic:
     # O mic_recorder precisa de um tempo para processar o áudio
     audio_voz = mic_recorder(start_prompt="🎤", stop_prompt="🛑", key='recorder')
 
-# --- LÓGICA DE VOZ (VERSÃO REFORMULADA) ---
+from pydub import AudioSegment
+
+# --- LÓGICA DE VOZ (VERSÃO RESOLVE PCM WAV) ---
 if audio_voz:
     try:
         r = sr.Recognizer()
-        # Ajuste de sensibilidade: 300 é um bom valor para voz clara
-        r.energy_threshold = 300
         
-        # Converte os bytes recebidos em um arquivo de áudio temporário
-        audio_data = io.BytesIO(audio_voz['bytes'])
+        # 1. Converte os bytes originais (WebM/Ogg) para WAV na memória
+        audio_bytes = io.BytesIO(audio_voz['bytes'])
+        audio_segment = AudioSegment.from_file(audio_bytes)
         
-        with sr.AudioFile(audio_data) as source:
-            # Captura o áudio ignorando ruídos iniciais
+        # 2. Exporta como WAV para o Recognizer entender
+        wav_buffer = io.BytesIO()
+        audio_segment.export(wav_buffer, format="wav")
+        wav_buffer.seek(0)
+        
+        with sr.AudioFile(wav_buffer) as source:
             audio_content = r.record(source)
-            
-            # Tenta reconhecer usando a API do Google
-            # Adicionei o timeout para não deixar o app travado
+            # 3. Manda para o Google
             resultado = r.recognize_google(audio_content, language='pt-BR')
             
             if resultado:
                 st.session_state.voz_texto = resultado.lower().strip()
                 st.rerun()
-    
-    except sr.UnknownValueError:
-        st.toast("O sistema não reconheceu nenhuma palavra. Tente falar mais claro.")
-    except sr.RequestError:
-        st.toast("Erro de conexão com o serviço de voz. Verifique sua internet.")
+                
     except Exception as e:
-        # Aqui ele vai nos dizer o erro exato se o FFmpeg falhar
-        st.toast(f"Erro no sistema: {str(e)[:50]}")
-
+        # Se o erro do ffmpeg persistir, ele vai avisar aqui
+        st.toast("O servidor ainda está configurando o suporte de áudio. Tente em 1 minuto.")
 # --- TRADUÇÃO ---
 if texto_busca and df is not None:
     t_norm = normalizar(texto_busca)
