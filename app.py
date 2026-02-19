@@ -17,14 +17,17 @@ if 'voz_texto' not in st.session_state:
     st.session_state.voz_texto = ""
 if 'contador' not in st.session_state:
     st.session_state.contador = 0
+if 'ultimo_audio' not in st.session_state:
+    st.session_state.ultimo_audio = None
 
 def acao_limpar():
     st.session_state.voz_texto = ""
+    st.session_state.ultimo_audio = None # Limpa o rastro do áudio
     st.session_state.contador += 1
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- CSS DEFINITIVO (VISUAL QUE VOCÊ GOSTA) ---
+# --- CSS (SEU DESIGN ORIGINAL) ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -73,31 +76,27 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- BARRA DE PESQUISA (LAYOUT ORIGINAL RESTAURADO) ---
+# --- BARRA DE PESQUISA (DESIGN ORIGINAL) ---
 col_txt, col_x, col_lupa, col_mic = st.columns([0.55, 0.15, 0.15, 0.15])
 
 with col_txt:
-    texto_busca = st.text_input(
-        "", 
-        value=st.session_state.voz_texto, 
-        placeholder="Digite ou fale...", 
-        label_visibility="collapsed", 
-        key=f"in_{st.session_state.contador}"
-    )
+    texto_busca = st.text_input("", value=st.session_state.voz_texto, placeholder="Digite ou fale...", label_visibility="collapsed", key=f"in_{st.session_state.contador}")
 
 with col_x:
     if texto_busca:
-        st.button("✖", on_click=acao_limpar)
+        if st.button("✖"):
+            acao_limpar()
+            st.rerun()
 
 with col_lupa:
     st.button("🔍")
 
 with col_mic:
-    # O gravador volta para o lugar dele na linha principal
+    # Captura o áudio
     audio_voz = mic_recorder(start_prompt="🎤", stop_prompt="🛑", key='recorder')
 
-# --- LÓGICA DE PROCESSAMENTO DE VOZ ---
-if audio_voz:
+# --- LÓGICA DE VOZ (CORRIGIDA PARA NÃO DAR ERRO AO CLICAR EM OUTROS BOTÕES) ---
+if audio_voz and audio_voz.get('bytes') != st.session_state.ultimo_audio:
     try:
         r = sr.Recognizer()
         audio_data = io.BytesIO(audio_voz['bytes'])
@@ -106,13 +105,15 @@ if audio_voz:
             resultado = r.recognize_google(audio_content, language='pt-BR')
             
             if resultado:
-                # Atualiza o texto e reinicia para preencher a caixa
                 st.session_state.voz_texto = resultado.lower().strip()
+                st.session_state.ultimo_audio = audio_voz.get('bytes') # Marca esse áudio como "já processado"
                 st.rerun()
-    except:
+    except Exception:
+        # Só mostra erro se realmente tentamos processar um áudio novo e falhou
         st.toast("Não foi possível entender o áudio.")
+        st.session_state.ultimo_audio = audio_voz.get('bytes')
 
-# --- RESULTADO DA TRADUÇÃO ---
+# --- TRADUÇÃO ---
 if texto_busca and 'df' in locals():
     t_norm = normalizar(texto_busca)
     res = df[df['BUSCA_PT'] == t_norm]
