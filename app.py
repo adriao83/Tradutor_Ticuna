@@ -2,8 +2,6 @@ import streamlit as st
 import pandas as pd
 from gtts import gTTS
 import re
-from streamlit_mic_recorder import mic_recorder
-import speech_recognition as sr
 import io
 
 # --- FUNÇÃO DE NORMALIZAÇÃO ---
@@ -24,36 +22,20 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- DESIGN (MATADOR DE CAIXA DO MICROFONE E TÍTULO BRANCO) ---
+# --- DESIGN (TÍTULO BRANCO E SEM CAIXAS) ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
-    
     [data-testid="stAppViewContainer"] {{
         background-image: url("{img}");
         background-size: cover !important;
         background-position: center !important;
         background-attachment: fixed;
     }}
-
-    /* FORÇA O TÍTULO A SER BRANCO INDEPENDENTE DO MODO */
-    h1 {{ 
-        color: white !important; 
-        text-shadow: 2px 2px 10px #000 !important; 
-        text-align: center;
-        -webkit-text-fill-color: white !important;
-    }}
+    h1 {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; text-align: center; -webkit-text-fill-color: white !important; }}
     
-    /* MATA A CAIXA BRANCA/PRETA DO MICROFONE (ATACA O IFRAME) */
-    /* Remove o fundo de todas as divs e iframes na área do microfone */
-    iframe, .stMicRecorder, div[data-testid="column"] {{
-        background-color: transparent !important;
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-    }}
+    [data-testid="stHorizontalBlock"] {{ align-items: center !important; gap: 5px !important; }}
 
-    /* Estilo do Input de Texto */
     .stTextInput > div > div > input {{
         background-color: white !important;
         color: black !important;
@@ -61,8 +43,7 @@ st.markdown(f"""
         height: 48px !important;
     }}
 
-    /* Botões: Unifica o visual do X, Lupa e Mic */
-    .stButton button, .stMicRecorder button {{
+    .stButton button {{
         background-color: white !important;
         color: black !important;
         border-radius: 10px !important;
@@ -70,10 +51,21 @@ st.markdown(f"""
         width: 48px !important;
         border: none !important;
         box-shadow: 1px 1px 5px rgba(0,0,0,0.3) !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        padding: 0 !important;
+    }}
+
+    /* Botão customizado para o Microfone JS */
+    .btn-mic {{
+        background-color: white;
+        border-radius: 10px;
+        height: 48px;
+        width: 48px;
+        border: none;
+        box-shadow: 1px 1px 5px rgba(0,0,0,0.3);
+        cursor: pointer;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }}
 </style>
 """, unsafe_allow_html=True)
@@ -87,7 +79,7 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- BARRA DE PESQUISA (DESIGN DAS IMAGENS) ---
+# --- BARRA DE PESQUISA ---
 col_txt, col_x, col_lupa, col_mic = st.columns([0.55, 0.15, 0.15, 0.15])
 
 with col_txt:
@@ -102,23 +94,32 @@ with col_lupa:
     st.button("🔍")
 
 with col_mic:
-    audio_voz = mic_recorder(start_prompt="🎤", stop_prompt="🛑", key='recorder')
+    # BOTÃO MACRO COM JAVASCRIPT (ABRE O MICROFONE DO GOOGLE/BROWSER)
+    st.components.v1.html(f"""
+    <button id="mic-btn" class="btn-mic" style="width:48px; height:48px; background:white; border-radius:10px; border:none; box-shadow: 1px 1px 5px rgba(0,0,0,0.3); cursor:pointer;">🎤</button>
+    <script>
+        const btn = document.getElementById('mic-btn');
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'pt-BR';
 
-# --- LÓGICA AUTOMÁTICA (FALA -> PESQUISA -> AUDIO) ---
-if audio_voz:
-    try:
-        r = sr.Recognizer()
-        audio_data = io.BytesIO(audio_voz['bytes'])
-        with sr.AudioFile(audio_data) as source:
-            audio_content = r.record(source)
-            resultado = r.recognize_google(audio_content, language='pt-BR')
-            if resultado and resultado.lower() != st.session_state.voz_texto:
-                st.session_state.voz_texto = resultado.lower().strip()
-                st.rerun()
-    except:
-        pass
+        btn.onclick = () => {{
+            btn.style.background = '#ffcccc'; // Fica vermelhinho enquanto ouve
+            recognition.start();
+        }};
 
-# --- RESULTADOS ---
+        recognition.onresult = (event) => {{
+            const transcript = event.results[0][0].transcript;
+            // Envia o texto de volta para o Streamlit
+            window.parent.postMessage({{type: 'streamlit:setComponentValue', value: transcript}}, '*');
+            btn.style.background = 'white';
+        }};
+        
+        recognition.onerror = () => {{ btn.style.background = 'white'; }};
+        recognition.onend = () => {{ btn.style.background = 'white'; }};
+    </script>
+    """, height=55)
+
+# --- LÓGICA DE TRADUÇÃO ---
 if texto_busca:
     t_norm = normalizar(texto_busca)
     res = df[df['BUSCA_PT'] == t_norm] if 'df' in locals() else pd.DataFrame()
@@ -131,7 +132,6 @@ if texto_busca:
             tts_fp = io.BytesIO()
             tts.write_to_fp(tts_fp)
             st.audio(tts_fp, format="audio/mp3", autoplay=True)
-        except:
-            pass
+        except: pass
     elif texto_busca.strip() != "":
         st.markdown('<div style="color:white; text-align:center; text-shadow:1px 1px 5px #000; font-size:20px;">Palavra não encontrada</div>', unsafe_allow_html=True)
