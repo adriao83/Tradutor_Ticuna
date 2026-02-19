@@ -24,7 +24,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- DESIGN ORIGINAL REESTABELECIDO ---
+# --- CSS DEFINITIVO (VISUAL QUE VOCÊ GOSTA) ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -40,9 +40,7 @@ st.markdown(f"""
         display: flex !important;
         flex-direction: row !important;
         align-items: center !important;
-        background: rgba(0,0,0,0.2);
-        padding: 10px;
-        border-radius: 15px;
+        gap: 5px !important;
     }}
 
     .stTextInput > div > div > input {{
@@ -67,40 +65,15 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # --- CARREGAR DADOS ---
-@st.cache_data
-def load_data():
-    try:
-        data = pd.read_excel("Tradutor_Ticuna.xlsx")
-        data['BUSCA_PT'] = data['PORTUGUES'].apply(normalizar)
-        return data
-    except:
-        return None
-
-df = load_data()
+try:
+    df = pd.read_excel("Tradutor_Ticuna.xlsx")
+    df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
+except:
+    st.error("Erro ao carregar planilha.")
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- LÓGICA DE PROCESSAMENTO DE VOZ (ANTES DA INTERFACE) ---
-# Capturamos o áudio primeiro para que a variável texto_busca já receba o valor
-# Criamos uma linha invisível para o gravador
-with st.sidebar:
-    st.write("Configurações de Áudio")
-    audio_voz = mic_recorder(start_prompt="🎤 Iniciar Voz", stop_prompt="🛑 Parar", key='recorder')
-
-if audio_voz:
-    try:
-        r = sr.Recognizer()
-        audio_data = io.BytesIO(audio_voz['bytes'])
-        with sr.AudioFile(audio_data) as source:
-            audio_content = r.record(source)
-            resultado = r.recognize_google(audio_content, language='pt-BR')
-            if resultado:
-                st.session_state.voz_texto = resultado.lower().strip()
-                st.rerun()
-    except:
-        st.toast("Erro ao processar áudio.")
-
-# --- BARRA DE PESQUISA ---
+# --- BARRA DE PESQUISA (LAYOUT ORIGINAL RESTAURADO) ---
 col_txt, col_x, col_lupa, col_mic = st.columns([0.55, 0.15, 0.15, 0.15])
 
 with col_txt:
@@ -120,10 +93,27 @@ with col_lupa:
     st.button("🔍")
 
 with col_mic:
-    st.write("Use o botão acima 👆") # O mic_recorder foi movido para garantir foco no input
+    # O gravador volta para o lugar dele na linha principal
+    audio_voz = mic_recorder(start_prompt="🎤", stop_prompt="🛑", key='recorder')
+
+# --- LÓGICA DE PROCESSAMENTO DE VOZ ---
+if audio_voz:
+    try:
+        r = sr.Recognizer()
+        audio_data = io.BytesIO(audio_voz['bytes'])
+        with sr.AudioFile(audio_data) as source:
+            audio_content = r.record(source)
+            resultado = r.recognize_google(audio_content, language='pt-BR')
+            
+            if resultado:
+                # Atualiza o texto e reinicia para preencher a caixa
+                st.session_state.voz_texto = resultado.lower().strip()
+                st.rerun()
+    except:
+        st.toast("Não foi possível entender o áudio.")
 
 # --- RESULTADO DA TRADUÇÃO ---
-if texto_busca and df is not None:
+if texto_busca and 'df' in locals():
     t_norm = normalizar(texto_busca)
     res = df[df['BUSCA_PT'] == t_norm]
     
@@ -132,9 +122,9 @@ if texto_busca and df is not None:
         st.markdown(f'<div style="color:white; text-align:center; font-size:30px; font-weight:900; text-shadow:2px 2px 15px #000; padding:30px;">Ticuna: {trad}</div>', unsafe_allow_html=True)
         try:
             tts = gTTS(text=str(trad), lang='pt-br')
-            tts_io = io.BytesIO()
-            tts.write_to_fp(tts_io)
-            st.audio(tts_io, format="audio/mp3", autoplay=True)
+            tts_fp = io.BytesIO()
+            tts.write_to_fp(tts_fp)
+            st.audio(tts_fp, format="audio/mp3", autoplay=True)
         except:
             pass
     elif texto_busca != "":
