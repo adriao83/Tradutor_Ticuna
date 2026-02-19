@@ -3,4 +3,4 @@ pandas
 openpyxl
 gTTS
 streamlit-mic-recorder
-SpeechRecognition
+speechrecognition
