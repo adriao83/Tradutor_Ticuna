@@ -4,4 +4,3 @@ openpyxl
 gTTS
 streamlit-mic-recorder
 SpeechRecognition
-google-generativeai
