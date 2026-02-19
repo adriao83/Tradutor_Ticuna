@@ -48,6 +48,8 @@ st.markdown(f"""
         border-radius: 10px !important;
         height: 48px !important;
         width: 100% !important;
+        background-color: white !important;
+        color: black !important;
     }}
 </style>
 """, unsafe_allow_html=True)
@@ -57,16 +59,16 @@ try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
     df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
 except Exception as e:
-    st.error("Erro ao carregar planilha. Verifique o arquivo Tradutor_Ticuna.xlsx")
+    st.error("Erro ao carregar planilha.")
     df = pd.DataFrame()
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- BARRA DE PESQUISA (LAYOUT) ---
-col_txt, col_x, col_mic = st.columns([0.60, 0.15, 0.25])
+# --- BARRA DE PESQUISA (LAYOUT COM LUPA) ---
+# Ajustei as colunas para caber a lupa: Texto, X, Lupa, Mic
+col_txt, col_x, col_lupa, col_mic = st.columns([0.50, 0.10, 0.10, 0.30])
 
 with col_mic:
-    # Componente de gravação
     audio_gravado = mic_recorder(
         start_prompt="🎤 Falar",
         stop_prompt="🛑 Parar",
@@ -74,27 +76,20 @@ with col_mic:
         just_once=True,
     )
 
-# --- LÓGICA DE RECONHECIMENTO DE VOZ (IA) ---
 if audio_gravado:
     try:
-        # Converte o áudio bruto para WAV (formato que a IA aceita melhor)
         audio_seg = pydub.AudioSegment.from_file(io.BytesIO(audio_gravado['bytes']))
         wav_io = io.BytesIO()
         audio_seg.export(wav_io, format="wav")
         wav_io.seek(0)
-
         r = sr.Recognizer()
         with sr.AudioFile(wav_io) as source:
             audio_data = r.record(source)
-            # Usa a IA do Google para transcrever
             texto_ouvido = r.recognize_google(audio_data, language='pt-BR')
             st.session_state.texto_pesquisa = texto_ouvido
-            st.rerun() # Atualiza a tela para o texto aparecer no campo
-            
-    except sr.UnknownValueError:
-        st.warning("Não entendi o áudio. Tente falar mais claro.")
-    except Exception as e:
-        st.error(f"Erro no microfone: {e}")
+            st.rerun()
+    except:
+        st.warning("Não entendi o áudio.")
 
 with col_txt:
     texto_busca = st.text_input(
@@ -108,6 +103,11 @@ with col_txt:
 with col_x:
     if st.button("✖"):
         acao_limpar()
+        st.rerun()
+
+with col_lupa:
+    # O botão de lupa apenas dispara a atualização da página para buscar
+    if st.button("🔍"):
         st.rerun()
 
 # --- LÓGICA DE TRADUÇÃO ---
@@ -126,7 +126,6 @@ if texto_busca:
                 </div>
             ''', unsafe_allow_html=True)
             
-            # IA de Voz para falar a tradução
             try:
                 tts = gTTS(text=str(trad), lang='pt-br')
                 tts_fp = io.BytesIO()
@@ -135,4 +134,4 @@ if texto_busca:
             except:
                 pass
         elif texto_busca.strip() != "":
-            st.markdown('<div style="color:white; text-align:center; text-shadow:1px 1px 5px #000; font-size:20px; margin-top:20px;">Palavra não encontrada no dicionário</div>', unsafe_allow_html=True)
+            st.markdown('<div style="color:white; text-align:center; text-shadow:1px 1px 5px #000; font-size:20px; margin-top:20px;">Palavra não encontrada</div>', unsafe_allow_html=True)
