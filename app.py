@@ -24,7 +24,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- DESIGN (LAYOUT IGUAL À IMAGEM) ---
+# --- DESIGN AJUSTADO (REMOVENDO A CAIXA BRANCA DO MIC) ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -42,9 +42,7 @@ st.markdown(f"""
         flex-direction: row !important;
         align-items: center !important;
         gap: 4px !important;
-        background: rgba(255, 255, 255, 0.15); /* Fundo leve para destacar */
-        padding: 8px;
-        border-radius: 12px;
+        padding: 5px;
     }}
 
     /* Estilo do Input de Texto */
@@ -53,10 +51,19 @@ st.markdown(f"""
         color: black !important;
         border-radius: 10px !important;
         height: 48px !important;
-        font-size: 16px !important;
     }}
 
-    /* Estilo dos Botões (X, Lupa, Mic) */
+    /* REMOVE A CAIXA BRANCA FORTE DO MICROFONE */
+    .stMicRecorder {{
+        background-color: transparent !important;
+    }}
+    
+    .stMicRecorder div {{
+        background-color: transparent !important;
+        border: none !important;
+    }}
+
+    /* Estilo unificado para todos os botões (X, Lupa e Mic) */
     .stButton button, .stMicRecorder button {{
         background-color: white !important;
         color: black !important;
@@ -64,7 +71,7 @@ st.markdown(f"""
         height: 48px !important;
         min-width: 48px !important;
         border: none !important;
-        box-shadow: 1px 1px 5px rgba(0,0,0,0.2) !important;
+        box-shadow: 1px 1px 5px rgba(0,0,0,0.3) !important;
     }}
 </style>
 """, unsafe_allow_html=True)
@@ -78,7 +85,7 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- BARRA DE PESQUISA (EXATAMENTE COMO NA IMAGEM) ---
+# --- BARRA DE PESQUISA ---
 col_txt, col_x, col_lupa, col_mic = st.columns([0.55, 0.15, 0.15, 0.15])
 
 with col_txt:
@@ -93,10 +100,10 @@ with col_lupa:
     st.button("🔍")
 
 with col_mic:
-    # O microfone volta a ser um botão elegante na linha
+    # O microfone agora deve herdar o estilo de botão limpo
     audio_voz = mic_recorder(start_prompt="🎤", stop_prompt="🛑", key='recorder')
 
-# --- LÓGICA DE VOZ (O GATILHO AUTOMÁTICO) ---
+# --- LÓGICA DE VOZ ---
 if audio_voz:
     try:
         r = sr.Recognizer()
@@ -107,12 +114,11 @@ if audio_voz:
             
             if resultado and resultado.lower() != st.session_state.voz_texto:
                 st.session_state.voz_texto = resultado.lower().strip()
-                # O Rerun faz o app pesquisar sozinho assim que você para de falar
                 st.rerun()
     except:
-        pass # Silencioso para não estragar a interface se não entender nada
+        pass
 
-# --- RESULTADO DA TRADUÇÃO (SÓ APARECE SE HOUVER TEXTO) ---
+# --- RESULTADO ---
 if texto_busca:
     t_norm = normalizar(texto_busca)
     res = df[df['BUSCA_PT'] == t_norm] if 'df' in locals() else pd.DataFrame()
