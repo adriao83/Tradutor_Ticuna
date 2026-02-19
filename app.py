@@ -74,12 +74,19 @@ except:
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
-# --- BARRA DE PESQUISA ---
+# --- BARRA DE PESQUISA (VERSÃO CORRIGIDA) ---
 col_txt, col_x, col_lupa, col_mic = st.columns([0.6, 0.13, 0.13, 0.13])
 
 with col_txt:
-    texto_busca = st.text_input("", value=st.session_state.voz_texto, placeholder="Digite ou fale...", label_visibility="collapsed", key=f"in_{st.session_state.contador}")
-
+    # Adicionamos um label real "Busca" mas mantemos label_visibility="collapsed" 
+    # Isso resolve o erro que aparece nos seus logs
+    texto_busca = st.text_input(
+        "Busca", 
+        value=st.session_state.voz_texto, 
+        placeholder="Digite ou fale...", 
+        label_visibility="collapsed", 
+        key=f"campo_busca_{st.session_state.contador}"
+    )
 with col_x:
     if texto_busca:
         st.button("✖", on_click=acao_limpar)
@@ -90,31 +97,30 @@ with col_lupa:
 with col_mic:
     audio_voz = mic_recorder(start_prompt="🎤", stop_prompt="🛑", key='recorder')
 
-# --- LÓGICA DE VOZ (CORREÇÃO PCM WAV) ---
+# --- LÓGICA DE VOZ AJUSTADA ---
 if audio_voz:
     try:
         r = sr.Recognizer()
-        
-        # 1. Converte os bytes originais para um objeto de áudio
         audio_bytes = io.BytesIO(audio_voz['bytes'])
         audio_segment = AudioSegment.from_file(audio_bytes)
         
-        # 2. Exporta como WAV (o formato que o Recognizer exige)
         wav_buffer = io.BytesIO()
         audio_segment.export(wav_buffer, format="wav")
         wav_buffer.seek(0)
         
         with sr.AudioFile(wav_buffer) as source:
             audio_content = r.record(source)
-            # 3. Reconhecimento via Google
             resultado = r.recognize_google(audio_content, language='pt-BR')
             
             if resultado:
+                # Mudança crucial: Atribuímos o valor e forçamos a atualização
                 st.session_state.voz_texto = resultado.lower().strip()
+                # O rerun precisa ser a última coisa para garantir que o texto 'cole' no input
                 st.rerun()
                 
     except Exception as e:
-        st.toast(f"Aguarde o sistema configurar o áudio...")
+        # Se o erro persistir, saberemos se é o áudio ou o Google
+        st.toast(f"Sem resposta: Verifique a permissão do microfone.")
 
 # --- TRADUÇÃO ---
 if texto_busca and df is not None:
