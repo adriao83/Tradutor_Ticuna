@@ -13,6 +13,7 @@ def normalizar(t):
 st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="centered")
 
 # --- CONTROLE DE ESTADO ---
+# Usamos o session_state para que o texto da voz persista entre as recargas
 if 'contador' not in st.session_state:
     st.session_state.contador = 0
 if 'voz_texto' not in st.session_state:
@@ -24,7 +25,7 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- CSS DEFINITIVO ---
+# --- CSS PARA MOBILE E PC ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
@@ -33,8 +34,9 @@ st.markdown(f"""
         background-size: cover !important;
         background-position: center !important;
     }}
-    h1, h1 span {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; text-align: center; }}
+    h1, h1 span {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; text-align: center; font-size: 2rem !important; }}
     
+    /* Força os botões a ficarem na mesma linha no celular */
     [data-testid="stHorizontalBlock"] {{
         display: flex !important;
         flex-direction: row !important;
@@ -56,6 +58,10 @@ st.markdown(f"""
         height: 45px !important;
         min-width: 45px !important;
         border: 1px solid #ccc !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 !important;
     }}
 </style>
 """, unsafe_allow_html=True)
@@ -66,7 +72,7 @@ try:
     df = pd.read_excel("Tradutor_Ticuna.xlsx")
     df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
 except:
-    st.error("Erro ao carregar planilha.")
+    st.error("Erro ao carregar a planilha Tradutor_Ticuna.xlsx")
 
 st.title("🏹 Tradutor Ticuna v0.1")
 
@@ -74,41 +80,50 @@ st.title("🏹 Tradutor Ticuna v0.1")
 col_txt, col_x, col_lupa, col_mic = st.columns([0.6, 0.13, 0.13, 0.13])
 
 with col_txt:
-    texto_busca = st.text_input("", value=st.session_state.voz_texto, placeholder="Digite ou fale...", label_visibility="collapsed", key=f"in_{st.session_state.contador}")
+    texto_busca = st.text_input(
+        "", 
+        value=st.session_state.voz_texto, 
+        placeholder="Digite ou fale...", 
+        label_visibility="collapsed", 
+        key=f"in_{st.session_state.contador}"
+    )
 
 with col_x:
     if texto_busca:
-        st.button("✖", on_click=acao_limpar)
+        st.button("✖", on_click=acao_limpar, key="btn_clear")
 
 with col_lupa:
-    st.button("🔍")
+    st.button("🔍", key="btn_search")
 
 with col_mic:
-    # Captura simplificada
+    # Componente de microfone
     audio_voz = mic_recorder(start_prompt="🎤", stop_prompt="🛑", key='recorder')
 
-# --- LÓGICA DE PROCESSAMENTO DE VOZ MELHORADA ---
+# --- LÓGICA DE PROCESSAMENTO DE VOZ ---
 if audio_voz:
     try:
         r = sr.Recognizer()
-        # Ajusta para ignorar ruído de fundo
-        r.dynamic_energy_threshold = True 
+        audio_bytes = io.BytesIO(audio_voz['bytes'])
         
-        audio_data = io.BytesIO(audio_voz['bytes'])
-        
-        with sr.AudioFile(audio_data) as source:
+        with sr.AudioFile(audio_bytes) as source:
+            # Ajusta para ruído de fundo (importante para celular)
+            r.adjust_for_ambient_noise(source, duration=0.5)
             audio = r.record(source)
-            # Tenta reconhecer
+            
+            # Converte áudio para texto
             texto_reconhecido = r.recognize_google(audio, language='pt-BR')
             
             if texto_reconhecido:
                 st.session_state.voz_texto = texto_reconhecido
-                st.rerun()
+                st.rerun() # Reinicia para aplicar o texto na caixa de busca
                 
-    except Exception:
-        # Se não entender, ele apenas limpa e deixa você tentar de novo
-        st.toast("Não foi possível entender o áudio. Tente novamente!")
+    except sr.UnknownValueError:
+        st.toast("Não entendi o áudio. Tente falar mais claro.")
+    except Exception as e:
+        st.toast("Erro no processamento. Fale um pouco mais longo.")
+
 # --- LÓGICA DE TRADUÇÃO ---
+# Se houver texto na caixa (seja por digitação ou por voz)
 if texto_busca and df is not None:
     t_norm = normalizar(texto_busca)
     res = df[df['BUSCA_PT'] == t_norm]
