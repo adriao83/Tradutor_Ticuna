@@ -24,26 +24,35 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- DESIGN "EXTERMINADOR" DE CAIXA BRANCA ---
+# --- DESIGN TRANSPARENTE (MODO CLARO E ESCURO) ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
+    
+    /* Configura o fundo geral */
     [data-testid="stAppViewContainer"] {{
         background-image: url("{img}");
         background-size: cover !important;
         background-position: center !important;
         background-attachment: fixed;
     }}
-    h1 {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; text-align: center; }}
-    
-    /* Força o alinhamento das colunas e remove fundos fantasmas */
-    [data-testid="stHorizontalBlock"] {{
-        align-items: center !important;
-        gap: 5px !important;
+
+    /* MATA A CAIXA BRANCA/PRETA: Torna todos os containers transparentes */
+    [data-testid="stAppViewBlockContainer"], 
+    [data-testid="stVerticalBlock"], 
+    [data-testid="stHorizontalBlock"],
+    [data-testid="column"],
+    div[data-testid="stVerticalBlock"] > div {{
         background-color: transparent !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
     }}
 
-    /* Estilo do Input */
+    /* Ajuste do Título */
+    h1 {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; text-align: center; }}
+
+    /* Caixa de texto branca (mantida para leitura) */
     .stTextInput > div > div > input {{
         background-color: white !important;
         color: black !important;
@@ -51,17 +60,7 @@ st.markdown(f"""
         height: 48px !important;
     }}
 
-    /* O "MARTELO": Remove fundos de todas as divs que contêm o gravador */
-    div[data-testid="column"]:has(iframe), 
-    div[data-testid="column"]:has(.stMicRecorder),
-    div[data-testid="stVerticalBlock"]:has(.stMicRecorder),
-    .stMicRecorder {{
-        background-color: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-    }}
-
-    /* Estilo unificado para os botões brancos */
+    /* Botões Unificados e Limpos */
     .stButton button, .stMicRecorder button {{
         background-color: white !important;
         color: black !important;
@@ -70,16 +69,22 @@ st.markdown(f"""
         width: 48px !important;
         border: none !important;
         box-shadow: 1px 1px 5px rgba(0,0,0,0.3) !important;
-        padding: 0 !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
     }}
+
+    /* Remove o fundo específico que o componente de mic cria */
+    .stMicRecorder {{
+        background: transparent !important;
+        background-color: transparent !important;
+    }}
     
-    /* Remove bordas focadas que criam sombras quadradas */
-    button:focus, button:active {{
+    /* Remove a borda de foco azul/preta que o Streamlit coloca */
+    button:focus, button:active, div:focus {{
         outline: none !important;
         box-shadow: none !important;
+        background-color: transparent !important;
     }}
 </style>
 """, unsafe_allow_html=True)
