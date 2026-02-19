@@ -44,8 +44,7 @@ st.markdown(f"""
         border-radius: 10px !important;
         height: 48px !important;
         width: 100% !important;
-        background-color: #f0f0f0 !important;
-        color: black !important;
+        background-color: #f0f0f0 !important; color: black !important;
         border: 1px solid #cccccc !important;
     }}
 </style>
@@ -65,15 +64,14 @@ st.title("🏹 Tradutor Ticuna v0.1")
 col_txt, col_x, col_mic = st.columns([0.60, 0.15, 0.25])
 
 with col_mic:
-    # Componente de voz
     audio_gravado = mic_recorder(
         start_prompt="🎤 Falar", 
         stop_prompt="🛑 Parar", 
-        key='gravador_final', 
+        key='gravador_v3', 
         just_once=True
     )
 
-# Lógica de processamento de áudio imediata
+# Lógica de processamento de áudio
 if audio_gravado:
     try:
         audio_seg = pydub.AudioSegment.from_file(io.BytesIO(audio_gravado['bytes']))
@@ -84,15 +82,14 @@ if audio_gravado:
         r = sr.Recognizer()
         with sr.AudioFile(wav_io) as source:
             audio_data = r.record(source)
+            # No celular, o Google tenta traduzir a fonética para o que mais se parece em PT-BR
             texto_ouvido = r.recognize_google(audio_data, language='pt-BR')
             if texto_ouvido:
-                # Atualiza o estado ANTES de qualquer outra coisa
                 st.session_state.texto_pesquisa = texto_ouvido
     except:
         pass
 
 with col_txt:
-    # Vinculamos o valor diretamente ao estado da sessão
     texto_busca = st.text_input(
         "", 
         value=st.session_state.texto_pesquisa, 
@@ -106,23 +103,24 @@ with col_x:
         acao_limpar()
         st.rerun()
 
-# --- LÓGICA DE TRADUÇÃO ---
-# Se a voz preencheu o st.session_state.texto_pesquisa, 
-# usamos ele se o campo de texto estiver vazio ou recém-atualizado
+# --- LÓGICA DE TRADUÇÃO BIDIRECIONAL (AJUSTADA) ---
 palavra_final = texto_busca if texto_busca else st.session_state.texto_pesquisa
 
 if palavra_final:
     t_norm = normalizar(palavra_final)
     if not df.empty:
+        # Procuramos nas duas colunas
         res_pt = df[df['BUSCA_PT'] == t_norm]
         res_ti = df[df['BUSCA_TI'] == t_norm]
         
         traducao = None
         origem = ""
 
+        # Prioridade: se o que foi escrito/dito está em Português, traduz para Ticuna
         if not res_pt.empty:
             traducao = res_pt['TICUNA'].values[0]
             origem = "Ticuna"
+        # Se não está em Português, mas está em Ticuna, traduz para Português
         elif not res_ti.empty:
             traducao = res_ti['PORTUGUES'].values[0]
             origem = "Português"
@@ -136,6 +134,7 @@ if palavra_final:
                 </div>
             ''', unsafe_allow_html=True)
             
+            # Gerador de áudio
             try:
                 tts = gTTS(text=str(traducao), lang='pt-br')
                 tts_fp = io.BytesIO()
@@ -145,3 +144,5 @@ if palavra_final:
                 st.markdown(f'<audio controls style="width: 100%; margin-top:10px;"><source src="data:audio/mp3;base64,{audio_b64}" type="audio/mp3"></audio>', unsafe_allow_html=True)
             except:
                 pass
+        elif palavra_final.strip() != "":
+            st.markdown('<div style="color: #666666; text-align:center; font-size:20px; margin-top:20px;">Palavra não encontrada</div>', unsafe_allow_html=True)
