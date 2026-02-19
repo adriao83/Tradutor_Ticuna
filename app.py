@@ -24,12 +24,11 @@ def acao_limpar():
 
 img = "https://raw.githubusercontent.com/adriao83/Tradutor_Ticuna/main/fundo.png"
 
-# --- DESIGN TRANSPARENTE (MODO CLARO E ESCURO) ---
+# --- DESIGN FINAL: ELIMINANDO O FUNDO DO MIC ---
 st.markdown(f"""
 <style>
     [data-testid="stHeader"] {{ display: none !important; }}
     
-    /* Configura o fundo geral */
     [data-testid="stAppViewContainer"] {{
         background-image: url("{img}");
         background-size: cover !important;
@@ -37,30 +36,23 @@ st.markdown(f"""
         background-attachment: fixed;
     }}
 
-    /* MATA A CAIXA BRANCA/PRETA: Torna todos os containers transparentes */
-    [data-testid="stAppViewBlockContainer"], 
-    [data-testid="stVerticalBlock"], 
-    [data-testid="stHorizontalBlock"],
-    [data-testid="column"],
-    div[data-testid="stVerticalBlock"] > div {{
+    /* MATA A CAIXA DO MICROFONE: Ataca o iframe e o container do componente */
+    iframe[title="streamlit_mic_recorder.mic_recorder"] {{
         background-color: transparent !important;
-        background: transparent !important;
         border: none !important;
-        box-shadow: none !important;
     }}
 
-    /* Ajuste do Título */
-    h1 {{ color: white !important; text-shadow: 2px 2px 10px #000 !important; text-align: center; }}
-
-    /* Caixa de texto branca (mantida para leitura) */
-    .stTextInput > div > div > input {{
-        background-color: white !important;
-        color: black !important;
-        border-radius: 10px !important;
-        height: 48px !important;
+    div[data-testid="column"] {{
+        background-color: transparent !important;
     }}
 
-    /* Botões Unificados e Limpos */
+    /* Garante que o container do gravador não tenha fundo */
+    .stMicRecorder {{
+        background: transparent !important;
+        background-color: transparent !important;
+    }}
+
+    /* Botões: X e Lupa (Nativos) e o Mic (do Componente) */
     .stButton button, .stMicRecorder button {{
         background-color: white !important;
         color: black !important;
@@ -74,17 +66,12 @@ st.markdown(f"""
         justify-content: center !important;
     }}
 
-    /* Remove o fundo específico que o componente de mic cria */
-    .stMicRecorder {{
-        background: transparent !important;
-        background-color: transparent !important;
-    }}
-    
-    /* Remove a borda de foco azul/preta que o Streamlit coloca */
-    button:focus, button:active, div:focus {{
-        outline: none !important;
-        box-shadow: none !important;
-        background-color: transparent !important;
+    /* Input Branco */
+    .stTextInput > div > div > input {{
+        background-color: white !important;
+        color: black !important;
+        border-radius: 10px !important;
+        height: 48px !important;
     }}
 </style>
 """, unsafe_allow_html=True)
