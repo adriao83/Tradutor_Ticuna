@@ -12,7 +12,45 @@ import pydub
 def normalizar(t):
     return re.sub(r'[^a-zA-Z0-9]', '', str(t)).lower().strip() if pd.notna(t) else ""
 
-st.set_page_config(page_title="Tradutor Ticuna", page_icon="🏹", layout="centered")
+# --- CONFIGURAÇÃO DA PÁGINA ---
+st.set_page_config(
+    page_title="Tradutor Ticuna", 
+    page_icon="🏹", 
+    layout="centered",
+    initial_sidebar_state="collapsed"
+)
+
+# --- CSS PARA APARÊNCIA DE APLICATIVO NATIVO ---
+st.markdown("""
+<style>
+    /* Esconde menus do Streamlit para parecer App */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    /* Background e Fontes */
+    .main { background-color: #ffffff; }
+    
+    /* Estilização do Resultado */
+    .resultado-card {
+        color: #333333; 
+        text-align:center; 
+        font-size:28px; 
+        font-weight:800; 
+        padding:30px; 
+        background: #fdfdfd; 
+        border: 2px solid #4CAF50; 
+        border-radius: 25px; 
+        margin-top: 20px; 
+        box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    /* Ajuste para Mobile */
+    @media (max-width: 640px) {
+        .resultado-card { font-size: 22px; padding: 20px; }
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # --- CONTROLE DE ESTADO ---
 if 'texto_pesquisa' not in st.session_state:
@@ -24,54 +62,49 @@ def acao_limpar():
     st.session_state.texto_pesquisa = ""
     st.session_state.contador += 1
 
-# --- DESIGN CSS (MANTIDO) ---
-st.markdown(f"""
-<style>
-    [data-testid="stHeader"] {{ display: none !important; }}
-    [data-testid="stAppViewContainer"] {{ background-color: #ffffff !important; }}
-    h1 {{ color: #000000 !important; text-align: center; font-weight: bold; }}
-    .stTextInput > div > div > input {{
-        border-radius: 10px !important;
-        height: 48px !important;
-        padding-left: 45px !important;
-        border: 1px solid #cccccc !important;
-    }}
-    .stTextInput::before {{
-        content: "🔍";
-        position: absolute; left: 15px; top: 10px; z-index: 1; font-size: 20px;
-    }}
-    .stButton button {{
-        border-radius: 10px !important;
-        height: 48px !important;
-        width: 100% !important;
-        background-color: #f0f0f0 !important; color: black !important;
-        border: 1px solid #cccccc !important;
-    }}
-</style>
-""", unsafe_allow_html=True)
-
 # --- CARREGAR DADOS ---
-try:
-    df = pd.read_excel("Tradutor_Ticuna.xlsx")
-    df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
-    df['BUSCA_TI'] = df['TICUNA'].apply(normalizar)
-except:
-    df = pd.DataFrame()
+@st.cache_data # Cache para carregar a planilha apenas uma vez e ficar rápido
+def carregar_dados():
+    try:
+        # Tenta carregar a planilha (certifique-se que o nome do arquivo está correto no GitHub)
+        df = pd.read_excel("Tradutor_Ticuna.xlsx")
+        df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
+        df['BUSCA_TI'] = df['TICUNA'].apply(normalizar)
+        return df
+    except:
+        return pd.DataFrame()
 
-st.title("🏹 Tradutor Ticuna v0.1")
+df = carregar_dados()
 
-# --- BARRA DE PESQUISA ---
-col_txt, col_x, col_mic = st.columns([0.60, 0.15, 0.25])
+st.title("🏹 Tradutor Ticuna")
 
-with col_mic:
-    audio_gravado = mic_recorder(
-        start_prompt="🎤 Falar", 
-        stop_prompt="🛑 Parar", 
-        key='gravador_v3', 
-        just_once=True
+# --- ÁREA DE ENTRADA (MÓVEL) ---
+col_txt, col_x = st.columns([0.85, 0.15])
+
+with col_txt:
+    texto_busca = st.text_input(
+        "", 
+        value=st.session_state.texto_pesquisa, 
+        placeholder="Digite em Português ou Ticuna...", 
+        label_visibility="collapsed", 
+        key=f"in_{st.session_state.contador}"
     )
 
-# Lógica de processamento de áudio
+with col_x:
+    if st.button("✖"):
+        acao_limpar()
+        st.rerun()
+
+# Botão de Microfone centralizado
+st.markdown("<p style='text-align: center; color: gray;'>Ou use o microfone:</p>", unsafe_allow_html=True)
+audio_gravado = mic_recorder(
+    start_prompt="🎤 Iniciar Voz", 
+    stop_prompt="🛑 Parar e Traduzir", 
+    key='gravador_v3', 
+    just_once=True
+)
+
+# Lógica de processamento de áudio (Speech-to-Text)
 if audio_gravado:
     try:
         audio_seg = pydub.AudioSegment.from_file(io.BytesIO(audio_gravado['bytes']))
@@ -82,67 +115,49 @@ if audio_gravado:
         r = sr.Recognizer()
         with sr.AudioFile(wav_io) as source:
             audio_data = r.record(source)
-            # No celular, o Google tenta traduzir a fonética para o que mais se parece em PT-BR
             texto_ouvido = r.recognize_google(audio_data, language='pt-BR')
             if texto_ouvido:
                 st.session_state.texto_pesquisa = texto_ouvido
+                st.rerun()
     except:
-        pass
+        st.error("Não entendi o áudio. Tente novamente.")
 
-with col_txt:
-    texto_busca = st.text_input(
-        "", 
-        value=st.session_state.texto_pesquisa, 
-        placeholder="Digite ou fale...", 
-        label_visibility="collapsed", 
-        key=f"in_{st.session_state.contador}"
-    )
-
-with col_x:
-    if st.button("✖"):
-        acao_limpar()
-        st.rerun()
-
-# --- LÓGICA DE TRADUÇÃO BIDIRECIONAL (AJUSTADA) ---
+# --- LÓGICA DE TRADUÇÃO ---
 palavra_final = texto_busca if texto_busca else st.session_state.texto_pesquisa
 
 if palavra_final:
     t_norm = normalizar(palavra_final)
     if not df.empty:
-        # Procuramos nas duas colunas
         res_pt = df[df['BUSCA_PT'] == t_norm]
         res_ti = df[df['BUSCA_TI'] == t_norm]
         
         traducao = None
         origem = ""
 
-        # Prioridade: se o que foi escrito/dito está em Português, traduz para Ticuna
         if not res_pt.empty:
             traducao = res_pt['TICUNA'].values[0]
             origem = "Ticuna"
-        # Se não está em Português, mas está em Ticuna, traduz para Português
         elif not res_ti.empty:
             traducao = res_ti['PORTUGUES'].values[0]
             origem = "Português"
 
         if traducao:
             st.markdown(f'''
-                <div style="color: #333333; text-align:center; font-size:32px; font-weight:900; 
-                padding:40px; background: #f9f9f9; border: 1px solid #eeeeee; 
-                border-radius: 20px; margin-top: 20px; box-shadow: 2px 2px 10px rgba(0,0,0,0.05);">
-                    {origem}: {traducao}
+                <div class="resultado-card">
+                    <small style="font-size: 14px; color: #666;">Tradução para {origem}:</small><br>
+                    {traducao}
                 </div>
             ''', unsafe_allow_html=True)
             
-            # Gerador de áudio
+            # Gerador de áudio (Text-to-Speech)
             try:
                 tts = gTTS(text=str(traducao), lang='pt-br')
                 tts_fp = io.BytesIO()
                 tts.write_to_fp(tts_fp)
                 tts_fp.seek(0)
                 audio_b64 = base64.b64encode(tts_fp.read()).decode()
-                st.markdown(f'<audio controls style="width: 100%; margin-top:10px;"><source src="data:audio/mp3;base64,{audio_b64}" type="audio/mp3"></audio>', unsafe_allow_html=True)
+                st.markdown(f'<audio autoplay controls style="width: 100%; margin-top:20px;"><source src="data:audio/mp3;base64,{audio_b64}" type="audio/mp3"></audio>', unsafe_allow_html=True)
             except:
                 pass
-        elif palavra_final.strip() != "":
-            st.markdown('<div style="color: #666666; text-align:center; font-size:20px; margin-top:20px;">Palavra não encontrada</div>', unsafe_allow_html=True)
+        else:
+            st.warning("Palavra não encontrada no dicionário.")
