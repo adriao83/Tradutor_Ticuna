@@ -23,15 +23,17 @@ st.set_page_config(
 # --- CSS PARA APARÊNCIA DE APLICATIVO NATIVO ---
 st.markdown("""
 <style>
-    /* Esconde menus do Streamlit para parecer App */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
-    /* Background e Fontes */
+    /* Ajuste de margem superior para mobile */
+    .block-container {
+        padding-top: 2rem !important;
+    }
+    
     .main { background-color: #ffffff; }
     
-    /* Estilização do Resultado */
     .resultado-card {
         color: #333333; 
         text-align:center; 
@@ -45,7 +47,6 @@ st.markdown("""
         box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
     }
     
-    /* Ajuste para Mobile */
     @media (max-width: 640px) {
         .resultado-card { font-size: 22px; padding: 20px; }
     }
@@ -63,10 +64,9 @@ def acao_limpar():
     st.session_state.contador += 1
 
 # --- CARREGAR DADOS ---
-@st.cache_data # Cache para carregar a planilha apenas uma vez e ficar rápido
+@st.cache_data
 def carregar_dados():
     try:
-        # Tenta carregar a planilha (certifique-se que o nome do arquivo está correto no GitHub)
         df = pd.read_excel("Tradutor_Ticuna.xlsx")
         df['BUSCA_PT'] = df['PORTUGUES'].apply(normalizar)
         df['BUSCA_TI'] = df['TICUNA'].apply(normalizar)
@@ -95,16 +95,17 @@ with col_x:
         acao_limpar()
         st.rerun()
 
-# Botão de Microfone centralizado
-st.markdown("<p style='text-align: center; color: gray;'>Ou use o microfone:</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: gray; margin-top: 10px;'>Pressione para falar:</p>", unsafe_allow_html=True)
+
+# AJUSTE NO GRAVADOR PARA MELHOR COMPATIBILIDADE
 audio_gravado = mic_recorder(
     start_prompt="🎤 Iniciar Voz", 
     stop_prompt="🛑 Parar e Traduzir", 
-    key='gravador_v3', 
+    key='gravador_final_v1', # Nova chave
+    use_container_width=True,
     just_once=True
 )
 
-# Lógica de processamento de áudio (Speech-to-Text)
 if audio_gravado:
     try:
         audio_seg = pydub.AudioSegment.from_file(io.BytesIO(audio_gravado['bytes']))
@@ -119,8 +120,8 @@ if audio_gravado:
             if texto_ouvido:
                 st.session_state.texto_pesquisa = texto_ouvido
                 st.rerun()
-    except:
-        st.error("Não entendi o áudio. Tente novamente.")
+    except Exception as e:
+        st.error("Microfone não detectado ou áudio inválido.")
 
 # --- LÓGICA DE TRADUÇÃO ---
 palavra_final = texto_busca if texto_busca else st.session_state.texto_pesquisa
@@ -149,7 +150,6 @@ if palavra_final:
                 </div>
             ''', unsafe_allow_html=True)
             
-            # Gerador de áudio (Text-to-Speech)
             try:
                 tts = gTTS(text=str(traducao), lang='pt-br')
                 tts_fp = io.BytesIO()
@@ -160,4 +160,4 @@ if palavra_final:
             except:
                 pass
         else:
-            st.warning("Palavra não encontrada no dicionário.")
+            st.warning("Palavra não encontrada.")
