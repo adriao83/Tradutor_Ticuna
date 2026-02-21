@@ -42,7 +42,6 @@ st.markdown("""
         box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
     }
     
-    /* Estilo para o botão de microfone ficar maior no celular */
     .stButton button {
         width: 100%;
         border-radius: 20px;
@@ -92,22 +91,21 @@ with col_x:
         acao_limpar()
         st.rerun()
 
-# --- COMPONENTE DE VOZ ATUALIZADO ---
+# --- COMPONENTE DE VOZ ATUALIZADO (NOVA KEY PARA RESETAR) ---
 st.write("---")
 st.markdown("<p style='text-align: center; font-weight: bold;'>Tradução por Voz:</p>", unsafe_allow_html=True)
 
-# Mudamos a KEY para 'gravador_v10' para o app entender que é um novo componente
+# Mudamos para 'gravador_v25' para limpar o cache do componente no celular
 audio_gravado = mic_recorder(
     start_prompt="🎤 CLIQUE PARA FALAR", 
     stop_prompt="🛑 PARAR E TRADUZIR", 
-    key='gravador_v10',
+    key='gravador_v25',
     use_container_width=True,
     format="wav"
 )
 
 if audio_gravado:
     try:
-        # Converter bytes para áudio
         audio_data_bytes = audio_gravado['bytes']
         r = sr.Recognizer()
         
@@ -120,7 +118,7 @@ if audio_gravado:
                 st.session_state.texto_pesquisa = texto_ouvido
                 st.rerun()
     except Exception as e:
-        st.error("Erro ao processar voz. Verifique as permissões do microfone.")
+        st.info("Aguardando áudio... Certifique-se de que o microfone está autorizado nas configurações do celular.")
 
 # --- LÓGICA DE TRADUÇÃO ---
 palavra_final = texto_busca if texto_busca else st.session_state.texto_pesquisa
@@ -128,6 +126,7 @@ palavra_final = texto_busca if texto_busca else st.session_state.texto_pesquisa
 if palavra_final:
     t_norm = normalizar(palavra_final)
     if not df.empty:
+        # Busca nas duas colunas
         res_pt = df[df['BUSCA_PT'] == t_norm]
         res_ti = df[df['BUSCA_TI'] == t_norm]
         
@@ -159,4 +158,4 @@ if palavra_final:
             except:
                 pass
         else:
-            st.warning("Palavra não encontrada.")
+            st.warning("Palavra não encontrada no dicionário.")
