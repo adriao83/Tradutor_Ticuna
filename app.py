@@ -28,7 +28,6 @@ st.markdown("""
     header {visibility: hidden;}
     .block-container { padding-top: 2rem !important; }
     .main { background-color: #ffffff; }
-    
     .resultado-card {
         color: #333333; 
         text-align:center; 
@@ -41,10 +40,8 @@ st.markdown("""
         margin-top: 20px; 
         box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
     }
-    
-    .stButton button {
-        width: 100%;
-        border-radius: 20px;
+    @media (max-width: 640px) {
+        .resultado-card { font-size: 22px; padding: 20px; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -81,7 +78,7 @@ with col_txt:
     texto_busca = st.text_input(
         "", 
         value=st.session_state.texto_pesquisa, 
-        placeholder="Digite ou use o microfone...", 
+        placeholder="Digite em Português ou Ticuna...", 
         label_visibility="collapsed", 
         key=f"in_{st.session_state.contador}"
     )
@@ -91,34 +88,32 @@ with col_x:
         acao_limpar()
         st.rerun()
 
-# --- COMPONENTE DE VOZ ATUALIZADO (NOVA KEY PARA RESETAR) ---
-st.write("---")
-st.markdown("<p style='text-align: center; font-weight: bold;'>Tradução por Voz:</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: gray;'>Ou use o microfone:</p>", unsafe_allow_html=True)
 
-# Mudamos para 'gravador_v25' para limpar o cache do componente no celular
+# VOLTANDO PARA O SEU MODELO ORIGINAL QUE FUNCIONAVA
 audio_gravado = mic_recorder(
-    start_prompt="🎤 CLIQUE PARA FALAR", 
-    stop_prompt="🛑 PARAR E TRADUZIR", 
-    key='gravador_v25',
-    use_container_width=True,
-    format="wav"
+    start_prompt="🎤 Iniciar Voz", 
+    stop_prompt="🛑 Parar e Traduzir", 
+    key='gravador_original_v1', # Mudei apenas o nome da chave
+    just_once=True
 )
 
 if audio_gravado:
     try:
-        audio_data_bytes = audio_gravado['bytes']
-        r = sr.Recognizer()
+        audio_seg = pydub.AudioSegment.from_file(io.BytesIO(audio_gravado['bytes']))
+        wav_io = io.BytesIO()
+        audio_seg.export(wav_io, format="wav")
+        wav_io.seek(0)
         
-        audio_file = io.BytesIO(audio_data_bytes)
-        with sr.AudioFile(audio_file) as source:
-            audio_content = r.record(source)
-            texto_ouvido = r.recognize_google(audio_content, language='pt-BR')
-            
+        r = sr.Recognizer()
+        with sr.AudioFile(wav_io) as source:
+            audio_data = r.record(source)
+            texto_ouvido = r.recognize_google(audio_data, language='pt-BR')
             if texto_ouvido:
                 st.session_state.texto_pesquisa = texto_ouvido
                 st.rerun()
-    except Exception as e:
-        st.info("Aguardando áudio... Certifique-se de que o microfone está autorizado nas configurações do celular.")
+    except:
+        st.error("Não entendi o áudio. Tente novamente.")
 
 # --- LÓGICA DE TRADUÇÃO ---
 palavra_final = texto_busca if texto_busca else st.session_state.texto_pesquisa
@@ -126,7 +121,6 @@ palavra_final = texto_busca if texto_busca else st.session_state.texto_pesquisa
 if palavra_final:
     t_norm = normalizar(palavra_final)
     if not df.empty:
-        # Busca nas duas colunas
         res_pt = df[df['BUSCA_PT'] == t_norm]
         res_ti = df[df['BUSCA_TI'] == t_norm]
         
@@ -158,4 +152,4 @@ if palavra_final:
             except:
                 pass
         else:
-            st.warning("Palavra não encontrada no dicionário.")
+            st.warning("Palavra não encontrada.")
