@@ -26,12 +26,7 @@ st.markdown("""
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
-    
-    /* Ajuste de margem superior para mobile */
-    .block-container {
-        padding-top: 2rem !important;
-    }
-    
+    .block-container { padding-top: 2rem !important; }
     .main { background-color: #ffffff; }
     
     .resultado-card {
@@ -47,8 +42,10 @@ st.markdown("""
         box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
     }
     
-    @media (max-width: 640px) {
-        .resultado-card { font-size: 22px; padding: 20px; }
+    /* Estilo para o botão de microfone ficar maior no celular */
+    .stButton button {
+        width: 100%;
+        border-radius: 20px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -78,14 +75,14 @@ df = carregar_dados()
 
 st.title("🏹 Tradutor Ticuna")
 
-# --- ÁREA DE ENTRADA (MÓVEL) ---
+# --- ÁREA DE ENTRADA ---
 col_txt, col_x = st.columns([0.85, 0.15])
 
 with col_txt:
     texto_busca = st.text_input(
         "", 
         value=st.session_state.texto_pesquisa, 
-        placeholder="Digite em Português ou Ticuna...", 
+        placeholder="Digite ou use o microfone...", 
         label_visibility="collapsed", 
         key=f"in_{st.session_state.contador}"
     )
@@ -95,33 +92,35 @@ with col_x:
         acao_limpar()
         st.rerun()
 
-st.markdown("<p style='text-align: center; color: gray; margin-top: 10px;'>Pressione para falar:</p>", unsafe_allow_html=True)
+# --- COMPONENTE DE VOZ ATUALIZADO ---
+st.write("---")
+st.markdown("<p style='text-align: center; font-weight: bold;'>Tradução por Voz:</p>", unsafe_allow_html=True)
 
-# AJUSTE NO GRAVADOR PARA MELHOR COMPATIBILIDADE
+# Mudamos a KEY para 'gravador_v10' para o app entender que é um novo componente
 audio_gravado = mic_recorder(
-    start_prompt="🎤 Iniciar Voz", 
-    stop_prompt="🛑 Parar e Traduzir", 
-    key='gravador_final_v1', # Nova chave
+    start_prompt="🎤 CLIQUE PARA FALAR", 
+    stop_prompt="🛑 PARAR E TRADUZIR", 
+    key='gravador_v10',
     use_container_width=True,
-    just_once=True
+    format="wav"
 )
 
 if audio_gravado:
     try:
-        audio_seg = pydub.AudioSegment.from_file(io.BytesIO(audio_gravado['bytes']))
-        wav_io = io.BytesIO()
-        audio_seg.export(wav_io, format="wav")
-        wav_io.seek(0)
-        
+        # Converter bytes para áudio
+        audio_data_bytes = audio_gravado['bytes']
         r = sr.Recognizer()
-        with sr.AudioFile(wav_io) as source:
-            audio_data = r.record(source)
-            texto_ouvido = r.recognize_google(audio_data, language='pt-BR')
+        
+        audio_file = io.BytesIO(audio_data_bytes)
+        with sr.AudioFile(audio_file) as source:
+            audio_content = r.record(source)
+            texto_ouvido = r.recognize_google(audio_content, language='pt-BR')
+            
             if texto_ouvido:
                 st.session_state.texto_pesquisa = texto_ouvido
                 st.rerun()
     except Exception as e:
-        st.error("Microfone não detectado ou áudio inválido.")
+        st.error("Erro ao processar voz. Verifique as permissões do microfone.")
 
 # --- LÓGICA DE TRADUÇÃO ---
 palavra_final = texto_busca if texto_busca else st.session_state.texto_pesquisa
