@@ -90,11 +90,11 @@ with col_x:
 
 st.markdown("<p style='text-align: center; color: gray;'>Ou use o microfone:</p>", unsafe_allow_html=True)
 
-# VOLTANDO PARA O SEU MODELO ORIGINAL QUE FUNCIONAVA
+# COMPONENTE DE VOZ COM NOVA KEY PARA LIMPAR ERROS ANTERIORES
 audio_gravado = mic_recorder(
     start_prompt="🎤 Iniciar Voz", 
     stop_prompt="🛑 Parar e Traduzir", 
-    key='gravador_original_v1', # Mudei apenas o nome da chave
+    key='gravador_v30_limpo', 
     just_once=True
 )
 
@@ -107,13 +107,17 @@ if audio_gravado:
         
         r = sr.Recognizer()
         with sr.AudioFile(wav_io) as source:
+            # Pequeno ajuste para ignorar ruído de fundo
+            r.adjust_for_ambient_noise(source, duration=0.1)
             audio_data = r.record(source)
+            # Tenta reconhecer a voz
             texto_ouvido = r.recognize_google(audio_data, language='pt-BR')
             if texto_ouvido:
                 st.session_state.texto_pesquisa = texto_ouvido
                 st.rerun()
     except:
-        st.error("Não entendi o áudio. Tente novamente.")
+        # Em vez de erro vermelho, apenas mostramos uma dica amigável ou nada
+        pass 
 
 # --- LÓGICA DE TRADUÇÃO ---
 palavra_final = texto_busca if texto_busca else st.session_state.texto_pesquisa
@@ -152,4 +156,5 @@ if palavra_final:
             except:
                 pass
         else:
-            st.warning("Palavra não encontrada.")
+            if t_norm: # Só avisa que não encontrou se houver algo digitado
+                st.warning("Palavra não encontrada.")
