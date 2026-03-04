@@ -1,2 +1,3 @@
 # Tradutor_Ticuna
-Pode colocar: Protótipo de tradutor Português-Ticuna para o Edital Centelha.
+Sejam Bem vindos ao Prototipo de Tradução da lingua indigena para portugues! 
+Ainda está em fase de desenvolvimento!
