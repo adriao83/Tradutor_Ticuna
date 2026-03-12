@@ -6,7 +6,3 @@ gTTS
 streamlit-mic-recorder
 speechrecognition
 pydub
-# Bibliotecas do Gerador de Relatório (adicione estas)
-streamlit
-requests
-python-docx
